@@ -6,7 +6,12 @@ enum EnmeyTrigger
     Alive,
     Dead
 }
-public class Enemy : MonoBehaviour, IDamageable, IPointDrop
+public enum DeathType
+{
+    Normal,
+    SelfDestruct
+}
+public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 {
     [Header("Data Reference")]
     [SerializeField] private EnemyData enemyData;
@@ -18,7 +23,7 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
     [SerializeField] private float knockbackForce = 5f;
     [SerializeField] private float knockbackDuration = 0.2f;
     [SerializeField] private int pointReward = 10;
-    public static event Action<Enemy> OnEnemyDeath;
+    public static event Action<Enemy, DeathType> OnEnemyDeath;
 
     private float currentHealth;
     private float maxHealth;
@@ -26,15 +31,22 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
     private float moveSpeed;
 
     private Transform playerTransform;
+    protected Transform PlayerTransform => playerTransform;
     private Rigidbody2D rb;
     private bool isKnockedBack;
+    protected bool IsKnockedBack => isKnockedBack;
     private bool isDead;
+    protected bool IsDead => isDead;
 
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
     public float BaseDamage => baseDamage;
+    [SerializeField] private CodeDropTable codeDropTable;
 
-    private void Awake()
+
+    public CodeDropTable CodeDropTable => codeDropTable;
+
+    protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
 
@@ -44,7 +56,7 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
         }
     }
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         currentHealth = maxHealth;
         isKnockedBack = false;
@@ -82,7 +94,7 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
     }
 
     // 넉백 방향을 직접 전달받는 TakeDamage Overload
-    public void TakeDamage(float damage, Vector2 hitDirection)
+    public virtual void TakeDamage(float damage, Vector2 hitDirection)
     {
         currentHealth -= damage;
         currentHealth = Mathf.Max(0f, currentHealth);
@@ -118,23 +130,23 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
     {
         isKnockedBack = true;
 
-        if (rb != null)
+        Vector2 dir = direction.normalized;
+        float t = 0f;
+
+        while (t < knockbackDuration)
         {
-            rb.linearVelocity = Vector2.zero;
-            rb.AddForce(direction.normalized * knockbackForce, ForceMode2D.Impulse);
+            float ratio = 1f - (t / knockbackDuration);
+            rb.linearVelocity = dir * knockbackForce * ratio;
+
+            t += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
         }
 
-        yield return new WaitForSeconds(knockbackDuration);
-
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-        }
-
+        rb.linearVelocity = Vector2.zero;
         isKnockedBack = false;
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         // 넉백 중일 때는 플레이어를 향해 자력 이동하지 않음
         if (!isKnockedBack)
@@ -143,58 +155,56 @@ public class Enemy : MonoBehaviour, IDamageable, IPointDrop
         }
     }
 
-    private void MoveToPlayer()
+    protected void MoveToPlayer()
     {
-        if (playerTransform == null) return;
+        if (playerTransform == null || rb == null)
+            return;
 
-        Vector2 direction = (playerTransform.position - transform.position).normalized;
+        Vector2 direction =
+            (playerTransform.position - transform.position).normalized;
 
+        rb.linearVelocity = direction * moveSpeed;
+    }
+    protected void StopMovement()
+    {
         if (rb != null)
-        {
-            rb.MovePosition(rb.position + direction * moveSpeed * Time.deltaTime);
-        }
-        else
-        {
-            transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
-        }
+            rb.linearVelocity = Vector2.zero;
     }
 
-    private void Die()
+    protected virtual void Die(DeathType deathType = DeathType.Normal)
     {
-        // 같은 프레임에 여러 트리거가 겹쳐서 TakeDamage가
-        // 중복 호출돼도 Die()가 두 번 실행되지 않도록 방지
         if (isDead)
         {
-            Debug.Log("[Enemy] 이미 사망 처리됨, Die() 중복 호출 무시");
+            // Debug.Log(
+            //     "[Enemy] 이미 사망 처리됨, Die() 중복 호출 무시"
+            // );
+
             return;
         }
 
         isDead = true;
 
-        Debug.Log($"[Enemy] ===== Die() 시작 =====");
-        Debug.Log($"[Enemy] {name} 사망");
-        Debug.Log($"[Enemy] Point Reward: {pointReward}");
-
-        Debug.Log($"[Enemy] OnEnemyDeath 이벤트 발생 전");
+        Debug.Log(
+            $"[Enemy] {name} 사망 / DeathType: {deathType}"
+        );
 
         try
         {
-            OnEnemyDeath?.Invoke(this);
-            Debug.Log($"[Enemy] OnEnemyDeath 이벤트 발생 완료 (예외 없음)");
+            OnEnemyDeath?.Invoke(
+                this,
+                deathType
+            );
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Debug.LogError($"[Enemy] OnEnemyDeath 이벤트 중 예외 발생!!!");
-            Debug.LogError($"[Enemy] 예외 메시지: {ex.Message}");
-            Debug.LogError($"[Enemy] 스택 트레이스:\n{ex.StackTrace}");
-        }
+            Debug.LogError(
+                $"[Enemy] OnEnemyDeath 예외: {ex.Message}"
+            );
 
-        Debug.Log($"[Enemy] SetActive(false) 호출 전 - gameObject.activeSelf: {gameObject.activeSelf}");
+            Debug.LogError(ex.StackTrace);
+        }
 
         gameObject.SetActive(false);
-
-        Debug.Log($"[Enemy] SetActive(false) 호출 후 - gameObject.activeSelf: {gameObject.activeSelf}");
-        Debug.Log($"[Enemy] ===== Die() 종료 =====");
     }
 
     public int GetPointAmount()

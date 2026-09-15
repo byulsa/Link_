@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: NewWeaponDefinition
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: 
-  damage: 100
+  damage: 20
   distance: 5
-  rotationSpeed: 1000
+  rotationSpeed: 360
   size: 2
   icon: {fileID: 0}
   prefab: {fileID: 0}

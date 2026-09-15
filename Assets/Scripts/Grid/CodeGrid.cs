@@ -150,4 +150,28 @@ public class CodeGrid : MonoBehaviour
 
         editor.RefreshCode();
     }
+    public bool TryFindEmptyPosition(
+    int blockWidth,
+    out Vector2Int position)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Vector2Int candidate =
+                    new Vector2Int(x, y);
+
+                if (CanPlace(
+                        candidate,
+                        blockWidth))
+                {
+                    position = candidate;
+                    return true;
+                }
+            }
+        }
+
+        position = default;
+        return false;
+    }
 }

@@ -146,83 +146,29 @@ public class CodeController : MonoBehaviour
 
     public void ExecuteDeath(Entity target)
     {
-        Debug.Log("[CodeController] ===== ExecuteDeath 시작 =====");
-
-        if (editor == null)
-        {
-            Debug.LogError(
-                "[CodeController] CodeEditor가 없습니다."
-            );
-            return;
-        }
-
-        if (owner == null)
-        {
-            Debug.LogError(
-                "[CodeController] Owner가 없습니다."
-            );
-            return;
-        }
-
-        if (!editor.IsReady)
-        {
-            Debug.LogWarning(
-                "[CodeController] " +
-                "CodeEditor가 아직 준비되지 않았습니다."
-            );
-            return;
-        }
-
         IReadOnlyList<CodeChain> chains = editor.Chains;
-
-        Debug.Log(
-            $"[CodeController] ExecuteDeath() 실행 - Chain Count: {chains.Count}"
-        );
 
         foreach (CodeChain chain in chains)
         {
-            if (chain == null ||
-                chain.nodes == null ||
-                chain.nodes.Count == 0)
-            {
-                Debug.Log("[CodeController] 빈 체인 스킵");
+            if (chain == null || chain.nodes == null || chain.nodes.Count == 0)
                 continue;
-            }
-
-            Debug.Log(
-                $"[CodeController] 체인 확인: {chain.nodes[0].blockType}"
-            );
 
             if (chain.nodes[0].blockType != BlockType.DTH)
-            {
-                Debug.Log(
-                    $"[CodeController] DTH 아님, 스킵"
-                );
                 continue;
-            }
 
-            Debug.Log(
-                $"[CodeController] DTH 체인 발견 - Node Count: {chain.nodes.Count}"
-            );
+            CodeExecutor.Instance.Execute(chain, owner, target);
 
-            try
-            {
-                Debug.Log("[CodeController] CodeExecutor.Execute() 호출 전");
-                CodeExecutor.Instance.Execute(
-                    chain,
-                    owner,
-                    target
-                );
-                Debug.Log("[CodeController] CodeExecutor.Execute() 호출 완료");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError("[CodeController] CodeExecutor.Execute() 중 예외!!!");
-                Debug.LogError($"[CodeController] 예외: {ex.Message}");
-                Debug.LogError($"[CodeController] 스택:\n{ex.StackTrace}");
-            }
+            return;
         }
 
-        Debug.Log("[CodeController] ===== ExecuteDeath 종료 =====");
+        // DTH 코드가 없으면 기본 Point 지급
+        Enemy enemy = target.GetComponent<Enemy>();
+
+        if (enemy != null)
+        {
+            PointManager.Instance.AddPoint(
+                enemy.GetPointAmount()
+            );
+        }
     }
 }

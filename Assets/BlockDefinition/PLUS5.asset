@@ -14,5 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
   blockType: 7
   category: 3
-  displayText: +5
-  value: 5
+  displayText: +
+  hasValue: 1
+  minValue: 1
+  maxValue: 5

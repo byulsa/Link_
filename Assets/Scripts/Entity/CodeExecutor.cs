@@ -234,9 +234,9 @@ public class CodeExecutor : MonoBehaviour
         if (chain.nodes.Count < 2 || chain.nodes[1].blockType != BlockType.POINT)
         {
             // 코드 없음 → 기본값만 지급
-            Debug.Log(
-                $"[CodeExecutor] POINT 블록 없음, 기본값만 지급"
-            );
+            // Debug.Log(
+            //     $"[CodeExecutor] POINT 블록 없음, 기본값만 지급"
+            // );
 
             try
             {
@@ -251,14 +251,14 @@ public class CodeExecutor : MonoBehaviour
                 return false;
             }
 
-            Debug.Log("[CodeExecutor] ===== ExecuteDeath 종료 (기본값) =====");
+            //Debug.Log("[CodeExecutor] ===== ExecuteDeath 종료 (기본값) =====");
             return true;
         }
 
         // ⭐ DTH → POINT 코드 있음 → 수정자 적용
-        Debug.Log(
-            $"[CodeExecutor] DTH → POINT 체인 발견"
-        );
+        // Debug.Log(
+        //     $"[CodeExecutor] DTH → POINT 체인 발견"
+        // );
 
         float finalPoint = 0f;
 

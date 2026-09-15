@@ -109,8 +109,10 @@ public class CodeEditor : MonoBehaviour
 
     private int GetBlockWidth(CodeBlock block)
     {
-        if (block == null || block.Definition == null || string.IsNullOrEmpty(block.Definition.displayText)) return 1;
-        return block.Definition.displayText.Length;
+        if (block == null)
+            return 1;
+
+        return block.GridWidth;
     }
 
     private List<CodeBlock> GetBlocks()
@@ -126,7 +128,7 @@ public class CodeEditor : MonoBehaviour
         return new CodeNode
         {
             blockType = block.Definition.blockType,
-            value = block.Definition.value,
+            value = block.Value,
             sourceBlock = block
         };
     }
@@ -180,20 +182,34 @@ public class CodeEditor : MonoBehaviour
 
         CreateBlock(testWEAP, new Vector2Int(0, 0));
         CreateBlock(testDMG, new Vector2Int(4, 0));
-        CreateBlock(testPLUS5, new Vector2Int(7, 0));
-        CreateBlock(testMULT, new Vector2Int(9, 0));
+        // CreateBlock(testPLUS5, new Vector2Int(7, 0));
+        // CreateBlock(testMULT, new Vector2Int(9, 0));
 
         RefreshCode();
     }
 
-    private CodeBlock CreateBlock(BlockDefinition definition, Vector2Int position)
+    private CodeBlock CreateBlock(BlockDefinition definition, Vector2Int position, int value = 0)
     {
-        if (definition == null) return null;
+        if (definition == null)
+            return null;
 
         CodeBlock block = Instantiate(blockPrefab, grid.transform);
-        block.Initialize(definition, grid);
+
+        block.Initialize(definition, grid, value);
+
         block.SetGridPosition(position);
         grid.RegisterBlock(block);
+
+        return block;
+    }
+    public CodeBlock CreateDropBlock(BlockDefinition definition, Vector2Int position, int value)
+    {
+        Debug.Log(
+            $"[CodeEditor] CreateDropBlock 호출: {definition.displayText} / Value: {value} / Position: {position}"
+        );
+        CodeBlock block = CreateBlock(definition, position, value);
+
+        RefreshCode();
 
         return block;
     }

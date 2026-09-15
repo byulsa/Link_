@@ -9,14 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e06fd069d628bdf41aa8263e168f8aba, type: 3}
-  m_Name: EnemyData_
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  m_Script: {fileID: 11500000, guid: daa2f2ebb7c94b74e81b7a53d3726d76, type: 3}
+  m_Name: MeleeEnemyData_
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyData
   enemyName: Dummy
   maxHealth: 100
   baseDamage: 5
-  moveSpeed: 50
-  knockbackForce: 3
+  moveSpeed: 5
+  knockbackForce: 2
   knockbackDuration: 0.1
   enemyPrefab: {fileID: 2171883001476934377, guid: d55bdcc9b641b0c42b28c61617f29161, type: 3}
-  PointDropNum: 50
+  PointDropNum: 5
+  attackRange: 1.5
+  attackCooldown: 1

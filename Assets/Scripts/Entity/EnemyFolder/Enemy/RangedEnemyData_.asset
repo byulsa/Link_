@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd5f7255e558e8b41bc41c067d770067, type: 3}
+  m_Name: RangedEnemyData_
+  m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyData
+  enemyName: Dummy
+  maxHealth: 20
+  baseDamage: 5
+  moveSpeed: 3
+  knockbackForce: 5
+  knockbackDuration: 0.2
+  enemyPrefab: {fileID: 2171883001476934377, guid: f0617289909795a499d43246c5355190, type: 3}
+  PointDropNum: 0
+  attackRange: 7
+  retreatRange: 3
+  retreatEndRange: 5
+  attackCooldown: 1
+  behavior: 1
+  attackType: 0
+  projectilePrefab: {fileID: 4196148461194105619, guid: a7296dd39faf79e4c903e5c674dda589, type: 3}
+  projectileCount: 3
+  projectileAngles:
+  - 20
+  - 0
+  - -20

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, IDamageable
 {
     [Header("References")]
     [SerializeField]
@@ -8,6 +8,15 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private CodeController codeController;
+
+    [Header("Health")]
+    [SerializeField]
+    private float maxHealth = 100f;
+
+    private float currentHealth;
+
+    public float MaxHealth => maxHealth;
+    public float CurrentHealth => currentHealth;
 
     private void Awake()
     {
@@ -20,10 +29,14 @@ public class Player : MonoBehaviour
         {
             codeController = GetComponent<CodeController>();
         }
+
+        currentHealth = maxHealth;
     }
 
     private void OnEnable()
     {
+        currentHealth = maxHealth;
+
         Debug.Log("[Player] OnEnemyDeath 구독");
         Enemy.OnEnemyDeath += HandleEnemyDeath;
     }
@@ -31,6 +44,29 @@ public class Player : MonoBehaviour
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= HandleEnemyDeath;
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (damage <= 0f)
+            return;
+
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(0f, currentHealth);
+
+        Debug.Log(
+            $"[Player] 피해: {damage} / HP: {currentHealth}/{maxHealth}"
+        );
+
+        if (currentHealth <= 0f)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        Debug.Log("[Player] 사망");
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -51,42 +87,26 @@ public class Player : MonoBehaviour
         codeController.ExecuteTouch(target);
     }
 
-    private void HandleEnemyDeath(Enemy enemy)
+    private void HandleEnemyDeath(
+        Enemy enemy,
+        DeathType deathType)
     {
-        Debug.Log("[Player] ===== HandleEnemyDeath 시작 =====");
-
         if (enemy == null)
-        {
-            Debug.LogError("[Player] enemy == null!");
             return;
-        }
 
-        Debug.Log($"[Player] enemy: {enemy.name}");
+        Debug.Log(
+            $"[Player] Enemy 사망 감지: {enemy.name} / {deathType}"
+        );
 
-        Entity target = enemy.GetComponent<Entity>();
-
-        if (target == null)
+        if (deathType == DeathType.Normal)
         {
-            Debug.LogError("[Player] target == null!");
-            return;
-        }
+            codeController.ExecuteDeath(
+                enemy.GetComponent<Entity>()
+            );
 
-        Debug.Log($"[Player] target: {target.name}");
-        Debug.Log($"[Player] Enemy 사망 감지: {enemy.name}");
-
-        try
-        {
-            Debug.Log("[Player] ExecuteDeath() 호출 전");
-            codeController.ExecuteDeath(target);
-            Debug.Log("[Player] ExecuteDeath() 호출 완료");
+            CodeDropManager.Instance.TryDrop(
+                enemy.CodeDropTable
+            );
         }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("[Player] ExecuteDeath() 중 예외 발생!!!");
-            Debug.LogError($"[Player] 예외 메시지: {ex.Message}");
-            Debug.LogError($"[Player] 스택 트레이스:\n{ex.StackTrace}");
-        }
-
-        Debug.Log("[Player] ===== HandleEnemyDeath 종료 =====");
     }
 }

@@ -14,9 +14,14 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
     private RectTransform rectTransform;
     private Canvas canvas;
 
+    // 드래그 시작 시 마우스가 잡은 셀의 위치
+    private int dragCellOffset;
+
     public BlockDefinition Definition => definition;
 
     public Vector2Int GridPosition { get; private set; }
+    private int value;
+    public int Value => value;
 
     public int GridWidth
     {
@@ -25,7 +30,7 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
             if (definition == null)
                 return 0;
 
-            return definition.displayText.Length;
+            return GetDisplayText().Length;
         }
     }
 
@@ -46,19 +51,28 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
         ClearError();
     }
 
-    public void Initialize(
-        BlockDefinition definition,
-        CodeGrid grid)
+    public void Initialize(BlockDefinition definition, CodeGrid grid, int value = 0)
     {
         this.definition = definition;
         this.grid = grid;
+        this.value = value;
 
         if (text != null)
-            text.text = definition.displayText;
+            text.text = GetDisplayText();
 
         UpdateSize();
 
         ClearError();
+    }
+    private string GetDisplayText()
+    {
+        if (definition == null)
+            return string.Empty;
+
+        if (!definition.hasValue)
+            return definition.displayText;
+
+        return $"{definition.displayText}{value}";
     }
 
     private void UpdateSize()
@@ -134,26 +148,65 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
         );
 
         transform.SetAsLastSibling();
+
+        // 현재 마우스 위치를 그리드 좌표로 변환
+        Vector2Int mouseGridPosition =
+            grid.WorldToGrid(
+                GetWorldPosition(eventData)
+            );
+
+        // 마우스가 블록의 몇 번째 셀을 잡았는지 계산
+        dragCellOffset =
+            mouseGridPosition.x -
+            GridPosition.x;
+
+        // 범위를 안전하게 제한
+        dragCellOffset =
+            Mathf.Clamp(
+                dragCellOffset,
+                0,
+                GridWidth - 1
+            );
     }
 
     public void OnDrag(
         PointerEventData eventData)
     {
-        if (canvas == null)
+        if (canvas == null || grid == null)
             return;
 
-        RectTransform canvasRect =
-            canvas.transform as RectTransform;
+        Vector3 worldPosition =
+            GetWorldPosition(eventData);
 
-        if (RectTransformUtility
-            .ScreenPointToWorldPointInRectangle(
-                canvasRect,
-                eventData.position,
-                eventData.pressEventCamera,
-                out Vector3 worldPosition))
+        // 마우스가 위치한 그리드 셀
+        Vector2Int mouseGridPosition =
+            grid.WorldToGrid(worldPosition);
+
+        // 마우스가 잡았던 셀이
+        // 현재 마우스 셀에 오도록 시작 위치 계산
+        Vector2Int targetPosition =
+            new Vector2Int(
+                mouseGridPosition.x - dragCellOffset,
+                mouseGridPosition.y
+            );
+
+        // 화면에서 실제 블록도 해당 위치로 Snap
+        if (grid.CanPlace(
+                targetPosition,
+                GridWidth,
+                this))
         {
             rectTransform.position =
-                worldPosition;
+                grid.GridToWorldCenter(
+                    targetPosition,
+                    GridWidth
+                );
+        }
+        else
+        {
+            // 배치할 수 없는 위치라면
+            // 일단 마우스를 따라가도록 하지 않고
+            // 마지막 정상 위치 유지
         }
     }
 
@@ -164,9 +217,15 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
             $"드래그 종료: {definition.displayText}"
         );
 
-        Vector2Int targetPosition =
+        Vector2Int mouseGridPosition =
             grid.WorldToGrid(
-                transform.position
+                GetWorldPosition(eventData)
+            );
+
+        Vector2Int targetPosition =
+            new Vector2Int(
+                mouseGridPosition.x - dragCellOffset,
+                mouseGridPosition.y
             );
 
         if (!grid.CanPlace(
@@ -185,6 +244,23 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
         grid.RegisterBlock(this);
 
         grid.NotifyCodeChanged();
+    }
+
+    private Vector3 GetWorldPosition(
+        PointerEventData eventData)
+    {
+        RectTransform canvasRect =
+            canvas.transform as RectTransform;
+
+        RectTransformUtility
+            .ScreenPointToWorldPointInRectangle(
+                canvasRect,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector3 worldPosition
+            );
+
+        return worldPosition;
     }
 
     public bool IsRightNextTo(
