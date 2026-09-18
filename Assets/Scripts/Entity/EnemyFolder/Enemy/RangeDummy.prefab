@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4676632457033186552}
   - component: {fileID: 7590530730773506295}
   - component: {fileID: 5584690846479424072}
+  - component: {fileID: 6953875105434917480}
   m_Layer: 0
   m_Name: RangeDummy
   m_TagString: Untagged
@@ -86,7 +87,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2747690628134850419, guid: 16037dbd798344f57a526d53d48f5ead, type: 3}
+  m_Sprite: {fileID: -6652300934558449446, guid: 08226c61cf0a0c046b0e8c3dfb982c3e, type: 3}
   m_Color: {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -123,12 +124,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemy
   enemyData: {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
+  spriteRenderer: {fileID: 8275963648752711431}
   playerTag: Player
   knockbackForce: 5
   knockbackDuration: 0.2
   pointReward: 10
   codeDropTable: {fileID: 11400000, guid: 0916e019a2ae1154c9c85932b0a96a4b, type: 2}
   rangedData: {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
+  animator: {fileID: 6953875105434917480}
 --- !u!61 &4676632457033186552
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -167,7 +170,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 0.890625}
+    oldSize: {x: 2, y: 2}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -216,3 +219,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeController
   editor: {fileID: 0}
   owner: {fileID: 8665106955182660343}
+--- !u!95 &6953875105434917480
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171883001476934377}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a9e7be0ef2371d14a9d2dda224dd714d, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

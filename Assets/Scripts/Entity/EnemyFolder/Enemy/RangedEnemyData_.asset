@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: RangedEnemyData_
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyData
   enemyName: Dummy
-  maxHealth: 20
+  maxHealth: 999
   baseDamage: 5
   moveSpeed: 3
   knockbackForce: 5
   knockbackDuration: 0.2
+  attackRecoveryTime: 0
   enemyPrefab: {fileID: 2171883001476934377, guid: f0617289909795a499d43246c5355190, type: 3}
   PointDropNum: 0
   attackRange: 7

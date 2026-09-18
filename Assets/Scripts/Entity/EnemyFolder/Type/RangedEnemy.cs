@@ -1,12 +1,19 @@
 using UnityEngine;
+using System.Collections;
 
 public class RangedEnemy : Enemy
 {
     [Header("Ranged Data")]
     [SerializeField] private RangedEnemyData rangedData;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+
     private float attackTimer;
+
     private bool isRetreating;
+    private bool isAttacking;
+    private bool isAttackRecovering;
 
     protected override void Awake()
     {
@@ -16,6 +23,11 @@ public class RangedEnemy : Enemy
         {
             InitializeFromData(rangedData);
         }
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
     }
 
     protected override void OnEnable()
@@ -23,7 +35,10 @@ public class RangedEnemy : Enemy
         base.OnEnable();
 
         attackTimer = 0f;
+
         isRetreating = false;
+        isAttacking = false;
+        isAttackRecovering = false;
     }
 
     protected override void Update()
@@ -35,6 +50,10 @@ public class RangedEnemy : Enemy
             return;
 
         if (IsKnockedBack)
+            return;
+
+        // 공격 또는 공격 후 Recovery 중
+        if (isAttacking || isAttackRecovering)
             return;
 
         attackTimer -= Time.deltaTime;
@@ -50,6 +69,10 @@ public class RangedEnemy : Enemy
                 break;
         }
     }
+
+    // -------------------------
+    // Behavior
+    // -------------------------
 
     private void UpdateApproachAndShoot()
     {
@@ -88,7 +111,9 @@ public class RangedEnemy : Enemy
         if (distance <= rangedData.retreatRange)
         {
             isRetreating = true;
+
             MoveAwayFromPlayer();
+
             return;
         }
 
@@ -103,6 +128,10 @@ public class RangedEnemy : Enemy
         }
     }
 
+    // -------------------------
+    // Attack
+    // -------------------------
+
     private float PlayerDistance()
     {
         if (PlayerTransform == null)
@@ -114,110 +143,95 @@ public class RangedEnemy : Enemy
         );
     }
 
-    private void MoveAwayFromPlayer()
-    {
-        if (PlayerTransform == null)
-            return;
-
-        Vector2 direction =
-            (transform.position - PlayerTransform.position).normalized;
-
-        if (direction == Vector2.zero)
-            return;
-
-        // 현재 Enemy의 이동 방식과 맞춰서 처리
-        // MoveToPlayer()와 반대 방향
-        GetComponent<Rigidbody2D>().linearVelocity =
-            direction * GetMoveSpeed();
-    }
-
     private void TryAttack()
     {
         if (attackTimer > 0f)
             return;
 
-        Attack();
-
-        attackTimer = rangedData.attackCooldown;
+        StartAttack();
     }
 
-    private void Attack()
+    private void StartAttack()
     {
+        isAttacking = true;
+
+        StopMovement();
+        FacePlayer();
         Debug.Log(
-            $"[RangedEnemy] {name} 공격! / Type: {rangedData.attackType}"
+            $"[RangedEnemy] {name} 공격 준비"
         );
 
-        if (rangedData.attackType != RangedAttackType.Projectile)
-            return;
-
-        FireProjectile();
-    }
-    private void FireProjectile()
-    {
-        if (rangedData.projectilePrefab == null)
+        if (animator != null)
+        {
+            animator.SetTrigger("Attack");
+        }
+        else
         {
             Debug.LogWarning(
-                $"[RangedEnemy] {name}의 Projectile Prefab이 없습니다."
+                $"[RangedEnemy] {name} Animator가 없습니다."
             );
-            return;
-        }
 
+            FinishAttack();
+        }
+    }
+
+    // -------------------------
+    // Animation Event
+    // -------------------------
+
+    public void FireLaser()
+    {
         if (PlayerTransform == null)
             return;
 
-        Vector2 baseDirection =
-            (PlayerTransform.position - transform.position).normalized;
+        Debug.Log(
+            $"[RangedEnemy] {name} 레이저 발사!"
+        );
 
-        int count = rangedData.projectileCount;
-
-        if (count <= 0)
-            return;
-
-        for (int i = 0; i < count; i++)
-        {
-            float angle = 0f;
-
-            if (rangedData.projectileAngles != null &&
-                i < rangedData.projectileAngles.Length)
-            {
-                angle = rangedData.projectileAngles[i];
-            }
-
-            Vector2 direction =
-                Quaternion.Euler(0f, 0f, angle) * baseDirection;
-
-            GameObject projectileObj =
-                Instantiate(
-                    rangedData.projectilePrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
-
-            Projectile projectile =
-                projectileObj.GetComponent<Projectile>();
-
-            if (projectile == null)
-            {
-                Debug.LogWarning(
-                    "[RangedEnemy] Projectile 컴포넌트가 없습니다."
-                );
-
-                Destroy(projectileObj);
-                continue;
-            }
-
-            projectile.Initialize(
-                direction,
-                BaseDamage,
-                PlayerTransform
-            );
-        }
+        // TODO:
+        // 실제 레이저 판정
     }
 
-    private float GetMoveSpeed()
+    // Animation 마지막 프레임
+    public void FinishAttack()
     {
-        // 현재 Enemy에서 moveSpeed가 private이므로
-        // 나중에 protected 프로퍼티로 노출하는 게 좋음.
-        return 3f;
+        isAttacking = false;
+
+        StartAttackRecovery();
+    }
+
+    // -------------------------
+    // Attack Recovery
+    // -------------------------
+
+    private void StartAttackRecovery()
+    {
+        if (rangedData.attackRecoveryTime <= 0f)
+        {
+            attackTimer =
+                rangedData.attackCooldown;
+
+            return;
+        }
+
+        StartCoroutine(
+            AttackRecoveryRoutine()
+        );
+    }
+
+    private IEnumerator AttackRecoveryRoutine()
+    {
+        isAttackRecovering = true;
+
+        StopMovement();
+
+        yield return new WaitForSeconds(
+            rangedData.attackRecoveryTime
+        );
+
+        isAttackRecovering = false;
+
+        attackTimer =
+            rangedData.attackCooldown;
     }
 }
