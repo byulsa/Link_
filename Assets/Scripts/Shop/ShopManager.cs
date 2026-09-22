@@ -37,9 +37,9 @@ public class ShopManager : MonoBehaviour
     {
         currentSlots.Clear();
 
-        if (dropTable == null || dropTable.entries.Count == 0)
+        if (dropTable == null ||
+            (dropTable.simpleEntries.Count == 0 && dropTable.valueEntries.Count == 0))
         {
-            Debug.LogWarning("[ShopManager] ShopDropTable이 비어 있습니다.");
             OnShopRefreshed?.Invoke();
             return;
         }
@@ -48,58 +48,18 @@ public class ShopManager : MonoBehaviour
 
         for (int i = 0; i < slotCount; i++)
         {
-            ShopDropTable.ShopEntry entry = SelectEntry();
-
-            if (entry == null)
-                continue;
-
-            int value = 0;
-
-            if (entry.block.hasValue)
+            if (!dropTable.TrySelectRandomItem(
+                    out BlockDefinition block,
+                    out int value,
+                    out int price))
             {
-                value = UnityEngine.Random.Range(
-                    entry.block.minValue,
-                    entry.block.maxValue + 1
-                );
+                continue;
             }
 
-            currentSlots.Add(new ShopSlot(entry.block, entry.price, value));
+            currentSlots.Add(new ShopSlot(block, price, value));
         }
-
-        Debug.Log($"[ShopManager] 상점 갱신: {currentSlots.Count}개 슬롯");
 
         OnShopRefreshed?.Invoke();
-    }
-
-    private ShopDropTable.ShopEntry SelectEntry()
-    {
-        float totalWeight = 0f;
-
-        foreach (var entry in dropTable.entries)
-        {
-            if (entry == null || entry.block == null || entry.weight <= 0f)
-                continue;
-
-            totalWeight += entry.weight;
-        }
-
-        if (totalWeight <= 0f)
-            return null;
-
-        float random = UnityEngine.Random.Range(0f, totalWeight);
-
-        foreach (var entry in dropTable.entries)
-        {
-            if (entry == null || entry.block == null || entry.weight <= 0f)
-                continue;
-
-            random -= entry.weight;
-
-            if (random <= 0f)
-                return entry;
-        }
-
-        return null;
     }
 
     public bool TryPurchase(int slotIndex)
@@ -114,7 +74,6 @@ public class ShopManager : MonoBehaviour
 
         if (!PointManager.Instance.TrySpendPoint(slot.Price))
         {
-            Debug.Log($"[ShopManager] Point 부족: {slot.Block.displayText}");
             OnPurchaseFailed?.Invoke(slotIndex);
             return false;
         }
@@ -123,8 +82,6 @@ public class ShopManager : MonoBehaviour
 
         if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position))
         {
-            Debug.Log($"[ShopManager] 공간 부족: {slot.Block.displayText}");
-
             // 배치 실패 -> Point 환불
             PointManager.Instance.AddPoint(slot.Price);
             OnPurchaseFailed?.Invoke(slotIndex);
@@ -134,8 +91,6 @@ public class ShopManager : MonoBehaviour
         editor.CreateDropBlock(slot.Block, position, slot.Value);
 
         slot.MarkSold();
-
-        Debug.Log($"[ShopManager] 구매 완료: {slot.Block.displayText} (-{slot.Price}P)");
 
         OnPurchaseSucceeded?.Invoke(slotIndex);
 
