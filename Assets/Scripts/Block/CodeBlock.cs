@@ -58,7 +58,12 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
         this.value = value;
 
         if (text != null)
+        {
             text.text = GetDisplayText();
+
+            // [추가] Code의 구조/동작/역할(BlockCategory)에 따라 글자 색을 다르게 표시한다.
+            text.color = BlockCategoryColor.GetColor(definition.category);
+        }
 
         UpdateSize();
 

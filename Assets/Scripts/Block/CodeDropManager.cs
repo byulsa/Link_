@@ -48,6 +48,15 @@ public class CodeDropManager : MonoBehaviour
             );
         }
 
+        // [변경] WaveRewardManager가 존재하면 즉시 CodeGrid에 넣지 않고
+        // 현재 Wave의 임시 보상 목록에만 저장한다. (DATA COLLECTION에서 이후 처리)
+        if (WaveRewardManager.Instance != null)
+        {
+            WaveRewardManager.Instance.AddReward(definition, value);
+            return;
+        }
+
+        // [기존 동작 유지] WaveRewardManager가 씬에 없는 경우를 위한 하위 호환 처리.
         // Grid에 들어갈 공간 확인
         int blockWidth =
             GetBlockWidth(definition, value);

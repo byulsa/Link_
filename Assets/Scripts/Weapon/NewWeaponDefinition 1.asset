@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ba6c9723474b214ea65239c9b95c196, type: 3}
-  m_Name: NewWeaponDefinition
+  m_Name: NewWeaponDefinition 1
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: 
   damage: 1000
-  distance: 5
+  distance: 2.5
   rotationSpeed: 999
   size: 2
   icon: {fileID: 0}
