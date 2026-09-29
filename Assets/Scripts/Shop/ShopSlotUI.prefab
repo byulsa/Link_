@@ -551,6 +551,8 @@ MonoBehaviour:
   priceText: {fileID: 6225157329797475704}
   buyButton: {fileID: 3088615001215716801}
   soldOverlay: {fileID: 7882747905163239288}
+  affordableColor: {r: 0, g: 0, b: 0, a: 1}
+  unaffordableColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &7882747905163239288
 GameObject:
   m_ObjectHideFlags: 0

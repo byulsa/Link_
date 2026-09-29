@@ -72,18 +72,17 @@ public class ShopManager : MonoBehaviour
         if (slot.IsSold)
             return false;
 
-        if (!PointManager.Instance.TrySpendPoint(slot.Price))
+        int blockWidth = GetBlockWidth(slot.Block, slot.Value);
+
+        if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position) ||
+            !grid.CanPlace(position, blockWidth, null))
         {
             OnPurchaseFailed?.Invoke(slotIndex);
             return false;
         }
 
-        int blockWidth = GetBlockWidth(slot.Block, slot.Value);
-
-        if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position))
+        if (!PointManager.Instance.TrySpendPoint(slot.Price))
         {
-            // 배치 실패 -> Point 환불
-            PointManager.Instance.AddPoint(slot.Price);
             OnPurchaseFailed?.Invoke(slotIndex);
             return false;
         }

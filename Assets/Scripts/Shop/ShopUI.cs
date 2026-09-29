@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShopUI : MonoBehaviour
 {
@@ -35,6 +36,9 @@ public class ShopUI : MonoBehaviour
             slotUI.Setup(i, shopManager.CurrentSlots[i], shopManager);
             spawnedSlots.Add(slotUI);
         }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(
+            slotContainer as RectTransform);
     }
 
     private void ClearSlots()

@@ -16,4 +16,9 @@ public class ShopSlot
     {
         IsSold = true;
     }
+
+    public void SetSold(bool sold)
+    {
+        IsSold = sold;
+    }
 }
