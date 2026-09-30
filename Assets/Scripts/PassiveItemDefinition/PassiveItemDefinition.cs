@@ -9,11 +9,13 @@ public enum PassiveEffectType
 public class PassiveItemDefinition : ScriptableObject
 {
     public string itemName;
-    [TextArea] public string description;
+
+    [TextArea]
+    public string description;
     public Sprite icon;
 
     [Header("Effect")]
     public PassiveEffectType effectType;
     public BlockType targetBlockType = BlockType.PLUS; // ModifierBonus일 때 대상
-    public float bonusValue = 1f;                       // 예: PLUS 블록 +1
+    public float bonusValue = 1f; // 예: PLUS 블록 +1
 }

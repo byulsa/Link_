@@ -17,100 +17,70 @@ public class CodeController : MonoBehaviour
     {
         if (owner == null)
         {
-            owner =
-                GetComponent<Entity>();
+            owner = GetComponent<Entity>();
         }
 
         if (editor == null)
         {
-            editor =
-                GetComponent<CodeEditor>();
+            editor = GetComponent<CodeEditor>();
         }
 
-        Debug.Log(
-            $"[CodeController] " +
-            $"Owner = {owner}"
-        );
+        Debug.Log($"[CodeController] " + $"Owner = {owner}");
 
-        Debug.Log(
-            $"[CodeController] " +
-            $"Editor = {editor}"
-        );
+        Debug.Log($"[CodeController] " + $"Editor = {editor}");
     }
 
     // WEAP 트리거 체인만 실행 (무기 충돌 시 호출)
-    public bool ExecuteWeapon(
-        Entity target = null)
+    public bool ExecuteWeapon(Entity target = null)
     {
-        return ExecuteByTrigger(
-            BlockType.WEAP,
-            target
-        );
+        return ExecuteByTrigger(BlockType.WEAP, target);
     }
 
     // TOU 트리거 체인만 실행 (플레이어 몸 충돌 시 호출)
-    public bool ExecuteTouch(
-        Entity target = null)
+    public bool ExecuteTouch(Entity target = null)
     {
-        return ExecuteByTrigger(
-            BlockType.TOU,
-            target
-        );
+        return ExecuteByTrigger(BlockType.TOU, target);
     }
 
     // 주어진 트리거 타입의 체인만 골라서 실행
     // 다른 트리거 체인은 아예 건드리지 않음
-    private bool ExecuteByTrigger(
-        BlockType triggerType,
-        Entity target)
+    private bool ExecuteByTrigger(BlockType triggerType, Entity target)
     {
         if (editor == null)
         {
-            Debug.LogError(
-                "[CodeController] " +
-                "CodeEditor가 없습니다."
-            );
+            Debug.LogError("[CodeController] " + "CodeEditor가 없습니다.");
 
             return false;
         }
 
         if (owner == null)
         {
-            Debug.LogError(
-                "[CodeController] " +
-                "Owner가 없습니다."
-            );
+            Debug.LogError("[CodeController] " + "Owner가 없습니다.");
 
             return false;
         }
 
         if (!editor.IsReady)
         {
-            Debug.LogWarning(
-                "[CodeController] " +
-                "CodeEditor가 아직 준비되지 않았습니다."
-            );
+            Debug.LogWarning("[CodeController] " + "CodeEditor가 아직 준비되지 않았습니다.");
 
             return false;
         }
 
-        IReadOnlyList<CodeChain> chains =
-            editor.Chains;
+        IReadOnlyList<CodeChain> chains = editor.Chains;
 
         Debug.Log(
-            $"[CodeController] " +
-            $"{owner.name}의 Chain Count = " +
-            $"{chains.Count}, " +
-            $"Trigger = {triggerType}"
+            $"[CodeController] "
+                + $"{owner.name}의 Chain Count = "
+                + $"{chains.Count}, "
+                + $"Trigger = {triggerType}"
         );
 
         bool dealtDamage = false;
 
         foreach (CodeChain chain in chains)
         {
-            if (chain == null ||
-                chain.nodes == null ||
-                chain.nodes.Count == 0)
+            if (chain == null || chain.nodes == null || chain.nodes.Count == 0)
             {
                 continue;
             }
@@ -123,17 +93,10 @@ public class CodeController : MonoBehaviour
             }
 
             Debug.Log(
-                $"[CodeController] " +
-                $"{owner.name} 실행: " +
-                $"{chain.nodes[0].blockType}"
+                $"[CodeController] " + $"{owner.name} 실행: " + $"{chain.nodes[0].blockType}"
             );
 
-            bool result =
-                CodeExecutor.Instance.Execute(
-                    chain,
-                    owner,
-                    target
-                );
+            bool result = CodeExecutor.Instance.Execute(chain, owner, target);
 
             if (result)
             {
@@ -143,6 +106,7 @@ public class CodeController : MonoBehaviour
 
         return dealtDamage;
     }
+
     public void SetEditor(CodeEditor newEditor)
     {
         editor = newEditor;
@@ -170,9 +134,7 @@ public class CodeController : MonoBehaviour
 
         if (enemy != null)
         {
-            PointManager.Instance.AddPoint(
-                enemy.GetPointAmount()
-            );
+            PointManager.Instance.AddPoint(enemy.GetPointAmount());
         }
     }
 }

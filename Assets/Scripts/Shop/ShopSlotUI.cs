@@ -4,13 +4,23 @@ using UnityEngine.UI;
 
 public class ShopSlotUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text blockText;
-    [SerializeField] private TMP_Text priceText;
-    [SerializeField] private Button buyButton;
-    [SerializeField] private GameObject soldOverlay;
+    [SerializeField]
+    private TMP_Text blockText;
 
-    [SerializeField] private Color affordableColor = Color.black;
-    [SerializeField] private Color unaffordableColor = Color.red;
+    [SerializeField]
+    private TMP_Text priceText;
+
+    [SerializeField]
+    private Button buyButton;
+
+    [SerializeField]
+    private GameObject soldOverlay;
+
+    [SerializeField]
+    private Color affordableColor = Color.black;
+
+    [SerializeField]
+    private Color unaffordableColor = Color.red;
 
     private ShopSlot slot;
     private int slotIndex;
@@ -30,9 +40,7 @@ public class ShopSlotUI : MonoBehaviour
         slotIndex = index;
         shopManager = manager;
 
-        blockText.text = slot.Block.hasValue
-            ? $"{slot.Block.displayText}{slot.Value}"
-            : slot.Block.displayText;
+        blockText.text = slot.GetDisplayName();
 
         priceText.text = $"{slot.Price}P";
 
@@ -42,7 +50,6 @@ public class ShopSlotUI : MonoBehaviour
         {
             UpdatePriceColor(PointManager.Instance.CurrentPoint);
         }
-        blockText.text = slot.GetDisplayName();
 
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);
@@ -50,11 +57,10 @@ public class ShopSlotUI : MonoBehaviour
 
     private void UpdatePriceColor(int currentPoint)
     {
-        if (slot == null) return;
+        if (slot == null)
+            return;
 
-        priceText.color = currentPoint >= slot.Price
-            ? affordableColor
-            : unaffordableColor;
+        priceText.color = currentPoint >= slot.Price ? affordableColor : unaffordableColor;
     }
 
     private void OnClickBuy()
@@ -77,7 +83,8 @@ public class ShopSlotUI : MonoBehaviour
     [ContextMenu("Toggle Sold")]
     public void ToggleSold()
     {
-        if (slot == null) return;
+        if (slot == null)
+            return;
 
         slot.SetSold(!slot.IsSold);
         SetSold(slot.IsSold);

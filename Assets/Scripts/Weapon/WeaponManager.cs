@@ -5,16 +5,25 @@ public class WeaponManager : MonoBehaviour
 {
     public static WeaponManager Instance { get; private set; }
 
-    [SerializeField] private Transform ownerTransform; // 플레이어
-    [SerializeField] private Transform weaponParent;    // 무기들 담을 부모 (비우면 ownerTransform 사용)
-    [SerializeField] private CodeEditor codeEditor;     // 씬의 단일 CodeEditor
+    [SerializeField]
+    private Transform ownerTransform; // 플레이어
+
+    [SerializeField]
+    private Transform weaponParent; // 무기들 담을 부모 (비우면 ownerTransform 사용)
+
+    [SerializeField]
+    private CodeEditor codeEditor; // 씬의 단일 CodeEditor
 
     private readonly List<WeaponBase> activeWeapons = new();
     public IReadOnlyList<WeaponBase> ActiveWeapons => activeWeapons;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
     }
 

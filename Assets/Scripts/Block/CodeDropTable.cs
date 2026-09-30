@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(
-    menuName = "CodeEditor/Code Drop Table",
-    fileName = "CodeDropTable"
-)]
+[CreateAssetMenu(menuName = "CodeEditor/Code Drop Table", fileName = "CodeDropTable")]
 public class CodeDropTable : ScriptableObject
 {
     [System.Serializable]

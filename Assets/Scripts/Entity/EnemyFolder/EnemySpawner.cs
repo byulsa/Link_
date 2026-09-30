@@ -1,14 +1,18 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+
 public class EnemySpawner : MonoBehaviour
 {
     [Header("Enemy Data")]
-    [SerializeField] private WaveTimeLine waveTimeLine;
-    [SerializeField] private int poolLimit = 10;
+    [SerializeField]
+    private WaveTimeLine waveTimeLine;
+
+    [SerializeField]
+    private int poolLimit = 10;
 
     private readonly List<GameObject> poolList = new List<GameObject>();
     private float elapsedTime; // 게임 시작 후 전체 시간
-    private float spawnTimer;  // 다음 스폰까지 시간
+    private float spawnTimer; // 다음 스폰까지 시간
 
     private void Update()
     {
@@ -24,6 +28,7 @@ public class EnemySpawner : MonoBehaviour
             Spawn();
         }
     }
+
     private void Spawn()
     {
         if (waveTimeLine == null || waveTimeLine.waveData == null)
@@ -66,7 +71,11 @@ public class EnemySpawner : MonoBehaviour
 
         if (poolList.Count < poolLimit)
         {
-            GameObject newObj = Instantiate(enemyData.enemyPrefab, transform.position, transform.rotation);
+            GameObject newObj = Instantiate(
+                enemyData.enemyPrefab,
+                transform.position,
+                transform.rotation
+            );
 
             Enemy enemyComp = newObj.GetComponent<Enemy>();
             if (enemyComp != null)

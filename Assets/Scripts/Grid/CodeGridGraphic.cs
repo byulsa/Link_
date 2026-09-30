@@ -3,11 +3,17 @@ using UnityEngine.UI;
 
 public class CodeGridGraphic : Graphic
 {
-    [SerializeField] private int width = 10;
-    [SerializeField] private int height = 10;
-    [SerializeField] private float cellSize = 75f;
+    [SerializeField]
+    private int width = 10;
 
-    [SerializeField] private float lineWidth = 2f;
+    [SerializeField]
+    private int height = 10;
+
+    [SerializeField]
+    private float cellSize = 75f;
+
+    [SerializeField]
+    private float lineWidth = 2f;
 
     protected override void OnPopulateMesh(VertexHelper vh)
     {
@@ -44,18 +50,13 @@ public class CodeGridGraphic : Graphic
         }
     }
 
-    private void AddLine(
-        VertexHelper vh,
-        Vector2 start,
-        Vector2 end)
+    private void AddLine(VertexHelper vh, Vector2 start, Vector2 end)
     {
         Vector2 direction = (end - start).normalized;
 
-        Vector2 perpendicular =
-            new Vector2(-direction.y, direction.x);
+        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
 
-        Vector2 offset =
-            perpendicular * (lineWidth * 0.5f);
+        Vector2 offset = perpendicular * (lineWidth * 0.5f);
 
         int index = vh.currentVertCount;
 
@@ -75,16 +76,8 @@ public class CodeGridGraphic : Graphic
         vertex.position = end - offset;
         vh.AddVert(vertex);
 
-        vh.AddTriangle(
-            index,
-            index + 1,
-            index + 2
-        );
+        vh.AddTriangle(index, index + 1, index + 2);
 
-        vh.AddTriangle(
-            index + 2,
-            index + 3,
-            index
-        );
+        vh.AddTriangle(index + 2, index + 3, index);
     }
 }

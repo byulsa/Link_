@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(
-    menuName = "CodeEditor/Shop Drop Table",
-    fileName = "ShopDropTable"
-)]
+[CreateAssetMenu(menuName = "CodeEditor/Shop Drop Table", fileName = "ShopDropTable")]
 public class ShopDropTable : ScriptableObject
 {
     [System.Serializable]
@@ -30,10 +27,11 @@ public class ShopDropTable : ScriptableObject
         [Min(0f)]
         public float weight = 1f;
     }
+
     [System.Serializable]
     public class WeaponEntry
     {
-        public WeaponDefinition weapon;
+        public BlockDefinition block; // targetWeapon이 채워진 무기 전용 블록
         [Min(0)] public int price = 300;
         [Min(0f)] public float weight = 1f;
     }
@@ -42,8 +40,12 @@ public class ShopDropTable : ScriptableObject
     public class PassiveEntry
     {
         public PassiveItemDefinition passive;
-        [Min(0)] public int price = 250;
-        [Min(0f)] public float weight = 1f;
+
+        [Min(0)]
+        public int price = 250;
+
+        [Min(0f)]
+        public float weight = 1f;
     }
 
     [System.Serializable]
@@ -57,11 +59,11 @@ public class ShopDropTable : ScriptableObject
     public List<ValueEntry> valueEntries = new();
     public List<WeaponEntry> weaponEntries = new();
     public List<PassiveEntry> passiveEntries = new();
+
     public struct ShopDropResult
     {
         public ShopItemType type;
-        public BlockDefinition block;
-        public WeaponDefinition weapon;
+        public BlockDefinition block;       // Block / Weapon 공통
         public PassiveItemDefinition passive;
         public int value;
         public int price;
@@ -77,14 +79,16 @@ public class ShopDropTable : ScriptableObject
         float passiveTotal = GetPassiveTotalWeight();
         float grandTotal = simpleTotal + valueTotal + weaponTotal + passiveTotal;
 
-        if (grandTotal <= 0f) return false;
+        if (grandTotal <= 0f)
+            return false;
 
         float random = Random.Range(0f, grandTotal);
 
         if (random < simpleTotal)
         {
             SimpleEntry entry = SelectSimpleEntry(random);
-            if (entry == null) return false;
+            if (entry == null)
+                return false;
             result.type = ShopItemType.Block;
             result.block = entry.block;
             result.price = entry.price;
@@ -95,9 +99,11 @@ public class ShopDropTable : ScriptableObject
         if (random < valueTotal)
         {
             ValueEntry ve = SelectValueEntry(random);
-            if (ve == null) return false;
+            if (ve == null)
+                return false;
             ValueOption opt = SelectValueOption(ve);
-            if (opt == null) return false;
+            if (opt == null)
+                return false;
             result.type = ShopItemType.Block;
             result.block = ve.block;
             result.value = opt.value;
@@ -109,16 +115,18 @@ public class ShopDropTable : ScriptableObject
         if (random < weaponTotal)
         {
             WeaponEntry we = SelectWeaponEntry(random);
-            if (we == null) return false;
+            if (we == null)
+                return false;
             result.type = ShopItemType.Weapon;
-            result.weapon = we.weapon;
+            result.block = we.block;
             result.price = we.price;
             return true;
         }
         random -= weaponTotal;
 
         PassiveEntry pe = SelectPassiveEntry(random);
-        if (pe == null) return false;
+        if (pe == null)
+            return false;
         result.type = ShopItemType.Passive;
         result.passive = pe.passive;
         result.price = pe.price;
@@ -224,11 +232,13 @@ public class ShopDropTable : ScriptableObject
 
         return null;
     }
+
     private float GetWeaponTotalWeight()
     {
         float sum = 0f;
         foreach (var e in weaponEntries)
-            if (e != null && e.weapon != null && e.weight > 0f) sum += e.weight;
+            if (e != null && e.block != null && e.weight > 0f)
+                sum += e.weight;
         return sum;
     }
 
@@ -236,7 +246,8 @@ public class ShopDropTable : ScriptableObject
     {
         float sum = 0f;
         foreach (var e in passiveEntries)
-            if (e != null && e.passive != null && e.weight > 0f) sum += e.weight;
+            if (e != null && e.passive != null && e.weight > 0f)
+                sum += e.weight;
         return sum;
     }
 
@@ -244,9 +255,11 @@ public class ShopDropTable : ScriptableObject
     {
         foreach (var e in weaponEntries)
         {
-            if (e == null || e.weapon == null || e.weight <= 0f) continue;
+            if (e == null || e.block == null || e.weight <= 0f)
+                continue;
             random -= e.weight;
-            if (random <= 0f) return e;
+            if (random <= 0f)
+                return e;
         }
         return null;
     }
@@ -255,9 +268,11 @@ public class ShopDropTable : ScriptableObject
     {
         foreach (var e in passiveEntries)
         {
-            if (e == null || e.passive == null || e.weight <= 0f) continue;
+            if (e == null || e.passive == null || e.weight <= 0f)
+                continue;
             random -= e.weight;
-            if (random <= 0f) return e;
+            if (random <= 0f)
+                return e;
         }
         return null;
     }

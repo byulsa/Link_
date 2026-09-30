@@ -2,12 +2,18 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float speed = 25f;
-    [SerializeField] private float acceleration = 50f;
-    [SerializeField] private float deceleration = 75f;
+    [SerializeField]
+    private float speed = 25f;
+
+    [SerializeField]
+    private float acceleration = 50f;
+
+    [SerializeField]
+    private float deceleration = 75f;
 
     [Header("Camera Bounds")]
-    [SerializeField] private CameraController cameraController;
+    [SerializeField]
+    private CameraController cameraController;
 
     public float Speed => speed;
 
@@ -36,9 +42,7 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector2 targetVelocity = moveInput * Speed;
 
-        float rate = moveInput.sqrMagnitude > 0f
-            ? acceleration
-            : deceleration;
+        float rate = moveInput.sqrMagnitude > 0f ? acceleration : deceleration;
 
         rb.linearVelocity = Vector2.MoveTowards(
             rb.linearVelocity,

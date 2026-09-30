@@ -1,33 +1,42 @@
-using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections;
+using UnityEngine;
 
 enum EnmeyTrigger
 {
     Alive,
-    Dead
+    Dead,
 }
 
 public enum DeathType
 {
     Normal,
-    SelfDestruct
+    SelfDestruct,
 }
 
 public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 {
     [Header("Data Reference")]
-    [SerializeField] private EnemyData enemyData;
+    [SerializeField]
+    private EnemyData enemyData;
+
     [Header("Visual")]
-    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField]
+    private SpriteRenderer spriteRenderer;
 
     [Header("Movement")]
-    [SerializeField] private string playerTag = "Player";
+    [SerializeField]
+    private string playerTag = "Player";
 
     [Header("Knockback Settings")]
-    [SerializeField] private float knockbackForce = 5f;
-    [SerializeField] private float knockbackDuration = 0.2f;
-    [SerializeField] private int pointReward = 10;
+    [SerializeField]
+    private float knockbackForce = 5f;
+
+    [SerializeField]
+    private float knockbackDuration = 0.2f;
+
+    [SerializeField]
+    private int pointReward = 10;
 
     public static event Action<Enemy, DeathType> OnEnemyDeath;
 
@@ -51,7 +60,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     public float CurrentHealth => currentHealth;
     public float BaseDamage => baseDamage;
 
-    [SerializeField] private CodeDropTable codeDropTable;
+    [SerializeField]
+    private CodeDropTable codeDropTable;
     public CodeDropTable CodeDropTable => codeDropTable;
 
     protected virtual void Awake()
@@ -74,8 +84,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         if (playerTransform == null)
         {
-            GameObject playerObj =
-                GameObject.FindGameObjectWithTag(playerTag);
+            GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
 
             if (playerObj != null)
             {
@@ -110,26 +119,18 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         if (playerTransform != null)
         {
-            knockbackDir =
-                (transform.position - playerTransform.position)
-                .normalized;
+            knockbackDir = (transform.position - playerTransform.position).normalized;
         }
 
         TakeDamage(damage, knockbackDir);
     }
 
-    public virtual void TakeDamage(
-        float damage,
-        Vector2 hitDirection
-    )
+    public virtual void TakeDamage(float damage, Vector2 hitDirection)
     {
         currentHealth -= damage;
         currentHealth = Mathf.Max(0f, currentHealth);
 
-        Debug.Log(
-            $"[Enemy] 피해: {damage} " +
-            $"HP: {currentHealth}/{maxHealth}"
-        );
+        Debug.Log($"[Enemy] 피해: {damage} " + $"HP: {currentHealth}/{maxHealth}");
 
         if (hitDirection != Vector2.zero)
         {
@@ -138,13 +139,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         if (currentHealth <= 0f)
         {
-            Debug.Log(
-                "[Enemy] currentHealth <= 0, Die() 호출 준비"
-            );
+            Debug.Log("[Enemy] currentHealth <= 0, Die() 호출 준비");
 
             Die();
         }
     }
+
     protected void UpdateFacing(Vector2 movementDirection)
     {
         if (spriteRenderer == null)
@@ -161,13 +161,13 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             spriteRenderer.flipX = false;
         }
     }
+
     protected void FacePlayer()
     {
         if (playerTransform == null || spriteRenderer == null)
             return;
 
-        float directionX =
-            playerTransform.position.x - transform.position.x;
+        float directionX = playerTransform.position.x - transform.position.x;
 
         if (directionX > 0f)
         {
@@ -194,15 +194,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             StopCoroutine(coroutineKnockback);
         }
 
-        coroutineKnockback =
-            StartCoroutine(
-                KnockbackRoutine(direction)
-            );
+        coroutineKnockback = StartCoroutine(KnockbackRoutine(direction));
     }
 
-    private IEnumerator KnockbackRoutine(
-        Vector2 direction
-    )
+    private IEnumerator KnockbackRoutine(Vector2 direction)
     {
         isKnockedBack = true;
 
@@ -211,13 +206,11 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         while (t < knockbackDuration)
         {
-            float ratio =
-                1f - (t / knockbackDuration);
+            float ratio = 1f - (t / knockbackDuration);
 
             if (rb != null)
             {
-                rb.linearVelocity =
-                    dir * knockbackForce * ratio;
+                rb.linearVelocity = dir * knockbackForce * ratio;
             }
 
             t += Time.fixedDeltaTime;
@@ -250,14 +243,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         if (playerTransform == null || rb == null)
             return;
 
-        Vector2 direction =
-            (
-                playerTransform.position
-                - transform.position
-            ).normalized;
+        Vector2 direction = (playerTransform.position - transform.position).normalized;
         UpdateFacing(direction);
-        rb.linearVelocity =
-            direction * moveSpeed;
+        rb.linearVelocity = direction * moveSpeed;
     }
 
     protected void MoveAwayFromPlayer()
@@ -265,14 +253,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         if (playerTransform == null || rb == null)
             return;
 
-        Vector2 direction =
-            (
-                transform.position
-                - playerTransform.position
-            ).normalized;
+        Vector2 direction = (transform.position - playerTransform.position).normalized;
         UpdateFacing(direction);
-        rb.linearVelocity =
-            direction * moveSpeed;
+        rb.linearVelocity = direction * moveSpeed;
     }
 
     protected void StopMovement()
@@ -294,40 +277,29 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         StopMovement();
 
-        yield return new WaitForSeconds(
-            recoveryTime
-        );
+        yield return new WaitForSeconds(recoveryTime);
     }
 
     // -------------------------
     // Death
     // -------------------------
 
-    protected virtual void Die(
-        DeathType deathType = DeathType.Normal
-    )
+    protected virtual void Die(DeathType deathType = DeathType.Normal)
     {
         if (isDead)
             return;
 
         isDead = true;
 
-        Debug.Log(
-            $"[Enemy] {name} 사망 / DeathType: {deathType}"
-        );
+        Debug.Log($"[Enemy] {name} 사망 / DeathType: {deathType}");
 
         try
         {
-            OnEnemyDeath?.Invoke(
-                this,
-                deathType
-            );
+            OnEnemyDeath?.Invoke(this, deathType);
         }
         catch (Exception ex)
         {
-            Debug.LogError(
-                $"[Enemy] OnEnemyDeath 예외: {ex.Message}"
-            );
+            Debug.LogError($"[Enemy] OnEnemyDeath 예외: {ex.Message}");
 
             Debug.LogError(ex.StackTrace);
         }

@@ -3,23 +3,36 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float speed = 5f;
-    [SerializeField] private float maxDistance = 10f;
+    [SerializeField]
+    private float speed = 5f;
+
+    [SerializeField]
+    private float maxDistance = 10f;
 
     [Header("Hit")]
-    [SerializeField] private Vector2 hitboxSize = Vector2.one;
-
+    [SerializeField]
+    private Vector2 hitboxSize = Vector2.one;
 
     [Header("Tracking")]
-    [SerializeField] private bool trackPlayer = false;
-    [SerializeField] private float trackingLerp = 2f;
-    [SerializeField] private float trackingSpeed = 2f;
+    [SerializeField]
+    private bool trackPlayer = false;
+
+    [SerializeField]
+    private float trackingLerp = 2f;
+
+    [SerializeField]
+    private float trackingSpeed = 2f;
+
     [Header("Tracking Slow")]
-    [SerializeField] private float normalSpeed = 8f;
-    [SerializeField] private float speedChangeRate = 5f;
+    [SerializeField]
+    private float normalSpeed = 8f;
+
+    [SerializeField]
+    private float speedChangeRate = 5f;
 
     [Header("Explosion")]
-    [SerializeField] private bool explodeOnDestroy = false;
+    [SerializeField]
+    private bool explodeOnDestroy = false;
     private Vector2 direction;
     private Transform playerTransform;
 
@@ -28,11 +41,7 @@ public class Projectile : MonoBehaviour
     private float traveledDistance;
     private bool initialized;
 
-    public void Initialize(
-        Vector2 initialDirection,
-        float damage,
-        Transform player
-    )
+    public void Initialize(Vector2 initialDirection, float damage, Transform player)
     {
         direction = initialDirection.normalized;
 
@@ -64,43 +73,26 @@ public class Projectile : MonoBehaviour
         if (!trackPlayer || playerTransform == null)
             return;
 
-        Vector2 targetDirection =
-            (playerTransform.position - transform.position).normalized;
+        Vector2 targetDirection = (playerTransform.position - transform.position).normalized;
 
-        float angle =
-            Vector2.Angle(direction, targetDirection);
+        float angle = Vector2.Angle(direction, targetDirection);
 
-        direction = Vector2.Lerp(
-            direction,
-            targetDirection,
-            trackingLerp * Time.deltaTime
-        ).normalized;
+        direction = Vector2
+            .Lerp(direction, targetDirection, trackingLerp * Time.deltaTime)
+            .normalized;
 
-        float slowAmount = Mathf.InverseLerp(
-            0f,
-            90f,
-            angle
-        );
+        float slowAmount = Mathf.InverseLerp(0f, 90f, angle);
 
-        float targetSpeed = Mathf.Lerp(
-            normalSpeed,
-            trackingSpeed,
-            slowAmount
-        );
+        float targetSpeed = Mathf.Lerp(normalSpeed, trackingSpeed, slowAmount);
 
-        currentSpeed = Mathf.Lerp(
-            currentSpeed,
-            targetSpeed,
-            speedChangeRate * Time.deltaTime
-        );
+        currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, speedChangeRate * Time.deltaTime);
     }
 
     private void Move()
     {
         float moveDistance = currentSpeed * Time.deltaTime;
 
-        transform.position +=
-            (Vector3)(direction * moveDistance);
+        transform.position += (Vector3)(direction * moveDistance);
 
         traveledDistance += moveDistance;
 

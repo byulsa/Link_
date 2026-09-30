@@ -10,12 +10,18 @@ public class WaveRewardManager : MonoBehaviour
     public static WaveRewardManager Instance { get; private set; }
 
     [Header("References")]
-    [SerializeField] private CodeGrid grid;
-    [SerializeField] private CodeEditor editor;
+    [SerializeField]
+    private CodeGrid grid;
+
+    [SerializeField]
+    private CodeEditor editor;
 
     [Header("Settings")]
-    [SerializeField, Min(1)] private int maxRewardsPerWave = 8;
-    [SerializeField, Min(0)] private int pointPerUnselectedCode = 10;
+    [SerializeField, Min(1)]
+    private int maxRewardsPerWave = 8;
+
+    [SerializeField, Min(0)]
+    private int pointPerUnselectedCode = 10;
 
     public class RewardEntry
     {
@@ -78,12 +84,14 @@ public class WaveRewardManager : MonoBehaviour
             return;
         }
 
-        currentRewards.Add(new RewardEntry
-        {
-            Block = block,
-            Value = value,
-            IsSelected = false
-        });
+        currentRewards.Add(
+            new RewardEntry
+            {
+                Block = block,
+                Value = value,
+                IsSelected = false,
+            }
+        );
 
         OnRewardAdded?.Invoke();
     }
@@ -152,9 +160,7 @@ public class WaveRewardManager : MonoBehaviour
 
         if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position))
         {
-            Debug.Log(
-                $"[WaveRewardManager] 공간 부족으로 배치 실패: {entry.Block.displayText}"
-            );
+            Debug.Log($"[WaveRewardManager] 공간 부족으로 배치 실패: {entry.Block.displayText}");
 
             return false;
         }

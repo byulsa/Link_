@@ -8,17 +8,28 @@ using UnityEngine.UI;
 public class DataCollectionUI : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private WaveRewardManager rewardManager;
-    [SerializeField] private RewardSlotUI slotPrefab;
-    [SerializeField] private Transform slotContainer;
+    [SerializeField]
+    private WaveRewardManager rewardManager;
+
+    [SerializeField]
+    private RewardSlotUI slotPrefab;
+
+    [SerializeField]
+    private Transform slotContainer;
 
     [Header("UI")]
-    [SerializeField] private GameObject panelRoot;
-    [SerializeField] private TMP_Text selectionCountText;
-    [SerializeField] private Button confirmButton;
+    [SerializeField]
+    private GameObject panelRoot;
+
+    [SerializeField]
+    private TMP_Text selectionCountText;
+
+    [SerializeField]
+    private Button confirmButton;
 
     [Header("Shop 연결 (선택)")]
-    [SerializeField] private GameObject shopPanel;
+    [SerializeField]
+    private GameObject shopPanel;
 
     private readonly List<RewardSlotUI> spawnedSlots = new();
 

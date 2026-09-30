@@ -7,18 +7,26 @@ using UnityEngine.UI;
 // 너비가 정해지고, 카테고리별 색상도 CodeBlock과 동일하게 적용해서 "진짜 코드"처럼 보이게 한다.
 public class RewardSlotUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text blockText;
-    [SerializeField] private Button button;
+    [SerializeField]
+    private TMP_Text blockText;
+
+    [SerializeField]
+    private Button button;
 
     // 선택 표시는 CodeBlock의 에러 표시(Outline)와 같은 방식을 사용한다.
     // 배경 오버레이를 덮는 대신, 코드 블록 자체의 테두리를 강조하는 형태.
-    [SerializeField] private Outline selectedOutline;
+    [SerializeField]
+    private Outline selectedOutline;
 
     [Header("Sizing")]
-    [Tooltip("CodeGrid의 Cell Size와 동일하게 맞추면, 실제로 CodeGrid에 배치됐을 때와 같은 크기로 보인다.")]
-    [SerializeField] private float cellSize = 75f;
+    [Tooltip(
+        "CodeGrid의 Cell Size와 동일하게 맞추면, 실제로 CodeGrid에 배치됐을 때와 같은 크기로 보인다."
+    )]
+    [SerializeField]
+    private float cellSize = 75f;
 
-    [SerializeField] private RectTransform rectTransform;
+    [SerializeField]
+    private RectTransform rectTransform;
     private int slotIndex;
     private DataCollectionUI dataCollectionUI;
 

@@ -1,5 +1,5 @@
-using UnityEngine;
 using DG.Tweening;
+using UnityEngine;
 
 public class CodePanel : MonoBehaviour
 {
@@ -7,8 +7,11 @@ public class CodePanel : MonoBehaviour
     public float CloseSpeed = 0.5f;
     public bool isOpenClose = false;
 
-    [SerializeField] private Vector2 openPosition;
-    [SerializeField] private Vector2 closePosition;
+    [SerializeField]
+    private Vector2 openPosition;
+
+    [SerializeField]
+    private Vector2 closePosition;
 
     private RectTransform codePanelTransform;
 
@@ -17,6 +20,7 @@ public class CodePanel : MonoBehaviour
         codePanelTransform = GetComponent<RectTransform>();
         OpenClose(isOpenClose);
     }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))

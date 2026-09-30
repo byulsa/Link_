@@ -3,12 +3,15 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Camera targetCamera;
+    [SerializeField]
+    private Camera targetCamera;
 
     [Header("Player Bounds")]
-    [SerializeField] private Transform player;
+    [SerializeField]
+    private Transform player;
 
-    [SerializeField] private float playerPadding = 0.5f;
+    [SerializeField]
+    private float playerPadding = 0.5f;
 
     private void Awake()
     {

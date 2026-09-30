@@ -3,19 +3,17 @@ using UnityEngine;
 public enum RangedBehavior
 {
     ApproachAndShoot,
-    MaintainDistance
+    MaintainDistance,
 }
 
 public enum RangedAttackType
 {
     Projectile,
     Laser,
-    Flame
+    Flame,
 }
-[CreateAssetMenu(
-    fileName = "RangedEnemyData_",
-    menuName = "Scriptable Objects/Enemy/Ranged"
-)]
+
+[CreateAssetMenu(fileName = "RangedEnemyData_", menuName = "Scriptable Objects/Enemy/Ranged")]
 public class RangedEnemyData : EnemyData
 {
     [Header("Ranged")]

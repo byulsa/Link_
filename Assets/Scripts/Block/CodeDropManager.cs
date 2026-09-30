@@ -4,8 +4,11 @@ public class CodeDropManager : MonoBehaviour
 {
     public static CodeDropManager Instance { get; private set; }
 
-    [SerializeField] private CodeGrid grid;
-    [SerializeField] private CodeEditor editor;
+    [SerializeField]
+    private CodeGrid grid;
+
+    [SerializeField]
+    private CodeEditor editor;
 
     private void Awake()
     {
@@ -28,24 +31,19 @@ public class CodeDropManager : MonoBehaviour
             return;
 
         // 어떤 블록인지 선택
-        CodeDropTable.DropEntry entry =
-            SelectDrop(table);
+        CodeDropTable.DropEntry entry = SelectDrop(table);
 
         if (entry == null || entry.block == null)
             return;
 
-        BlockDefinition definition =
-            entry.block;
+        BlockDefinition definition = entry.block;
 
         // 실제 값 결정
         int value = 0;
 
         if (definition.hasValue)
         {
-            value = Random.Range(
-                definition.minValue,
-                definition.maxValue + 1
-            );
+            value = Random.Range(definition.minValue, definition.maxValue + 1);
         }
 
         // [변경] WaveRewardManager가 존재하면 즉시 CodeGrid에 넣지 않고
@@ -58,39 +56,26 @@ public class CodeDropManager : MonoBehaviour
 
         // [기존 동작 유지] WaveRewardManager가 씬에 없는 경우를 위한 하위 호환 처리.
         // Grid에 들어갈 공간 확인
-        int blockWidth =
-            GetBlockWidth(definition, value);
+        int blockWidth = GetBlockWidth(definition, value);
 
-        if (!grid.TryFindEmptyPosition(
-                blockWidth,
-                out Vector2Int position))
+        if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position))
         {
-            Debug.Log(
-                $"[CodeDrop] 공간 부족: {definition.displayText}"
-            );
+            Debug.Log($"[CodeDrop] 공간 부족: {definition.displayText}");
 
             return;
         }
 
         // 실제 블록 생성
-        editor.CreateDropBlock(
-            definition,
-            position,
-            value
-        );
-
+        editor.CreateDropBlock(definition, position, value);
     }
 
-    private CodeDropTable.DropEntry SelectDrop(
-        CodeDropTable table)
+    private CodeDropTable.DropEntry SelectDrop(CodeDropTable table)
     {
         float totalWeight = 0f;
 
         foreach (var entry in table.drops)
         {
-            if (entry == null ||
-                entry.block == null ||
-                entry.weight <= 0f)
+            if (entry == null || entry.block == null || entry.weight <= 0f)
             {
                 continue;
             }
@@ -101,14 +86,11 @@ public class CodeDropManager : MonoBehaviour
         if (totalWeight <= 0f)
             return null;
 
-        float random =
-            Random.Range(0f, totalWeight);
+        float random = Random.Range(0f, totalWeight);
 
         foreach (var entry in table.drops)
         {
-            if (entry == null ||
-                entry.block == null ||
-                entry.weight <= 0f)
+            if (entry == null || entry.block == null || entry.weight <= 0f)
             {
                 continue;
             }
@@ -122,15 +104,11 @@ public class CodeDropManager : MonoBehaviour
         return null;
     }
 
-    private int GetBlockWidth(
-        BlockDefinition definition,
-        int value)
+    private int GetBlockWidth(BlockDefinition definition, int value)
     {
         if (!definition.hasValue)
             return definition.displayText.Length;
 
-        return
-            definition.displayText.Length +
-            value.ToString().Length;
+        return definition.displayText.Length + value.ToString().Length;
     }
 }

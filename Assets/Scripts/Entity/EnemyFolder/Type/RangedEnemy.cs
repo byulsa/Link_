@@ -1,13 +1,15 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class RangedEnemy : Enemy
 {
     [Header("Ranged Data")]
-    [SerializeField] private RangedEnemyData rangedData;
+    [SerializeField]
+    private RangedEnemyData rangedData;
 
     [Header("Animation")]
-    [SerializeField] private Animator animator;
+    [SerializeField]
+    private Animator animator;
 
     private float attackTimer;
 
@@ -137,10 +139,7 @@ public class RangedEnemy : Enemy
         if (PlayerTransform == null)
             return Mathf.Infinity;
 
-        return Vector2.Distance(
-            transform.position,
-            PlayerTransform.position
-        );
+        return Vector2.Distance(transform.position, PlayerTransform.position);
     }
 
     private void TryAttack()
@@ -157,9 +156,7 @@ public class RangedEnemy : Enemy
 
         StopMovement();
         FacePlayer();
-        Debug.Log(
-            $"[RangedEnemy] {name} 공격 준비"
-        );
+        Debug.Log($"[RangedEnemy] {name} 공격 준비");
 
         if (animator != null)
         {
@@ -167,9 +164,7 @@ public class RangedEnemy : Enemy
         }
         else
         {
-            Debug.LogWarning(
-                $"[RangedEnemy] {name} Animator가 없습니다."
-            );
+            Debug.LogWarning($"[RangedEnemy] {name} Animator가 없습니다.");
 
             FinishAttack();
         }
@@ -184,9 +179,7 @@ public class RangedEnemy : Enemy
         if (PlayerTransform == null)
             return;
 
-        Debug.Log(
-            $"[RangedEnemy] {name} 레이저 발사!"
-        );
+        Debug.Log($"[RangedEnemy] {name} 레이저 발사!");
 
         // TODO:
         // 실제 레이저 판정
@@ -208,15 +201,12 @@ public class RangedEnemy : Enemy
     {
         if (rangedData.attackRecoveryTime <= 0f)
         {
-            attackTimer =
-                rangedData.attackCooldown;
+            attackTimer = rangedData.attackCooldown;
 
             return;
         }
 
-        StartCoroutine(
-            AttackRecoveryRoutine()
-        );
+        StartCoroutine(AttackRecoveryRoutine());
     }
 
     private IEnumerator AttackRecoveryRoutine()
@@ -225,13 +215,10 @@ public class RangedEnemy : Enemy
 
         StopMovement();
 
-        yield return new WaitForSeconds(
-            rangedData.attackRecoveryTime
-        );
+        yield return new WaitForSeconds(rangedData.attackRecoveryTime);
 
         isAttackRecovering = false;
 
-        attackTimer =
-            rangedData.attackCooldown;
+        attackTimer = rangedData.attackCooldown;
     }
 }

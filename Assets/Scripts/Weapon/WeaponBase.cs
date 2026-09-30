@@ -4,10 +4,12 @@ using UnityEngine;
 public class WeaponBase : MonoBehaviour
 {
     [Header("Weapon")]
-    [SerializeField] private WeaponDefinition definition;
+    [SerializeField]
+    private WeaponDefinition definition;
 
     [Header("Owner")]
-    [SerializeField] private Transform ownerTransform;
+    [SerializeField]
+    private Transform ownerTransform;
 
     private float damage;
     private float distance;
@@ -40,17 +42,22 @@ public class WeaponBase : MonoBehaviour
     private void HandleCodeRefreshed(IReadOnlyList<CodeChain> chains)
     {
         ResetStats();
-
-        if (chains == null) return;
+        if (chains == null)
+            return;
 
         foreach (CodeChain chain in chains)
         {
-            if (chain == null || chain.nodes == null || chain.nodes.Count < 3) continue;
+            if (chain == null || chain.nodes == null || chain.nodes.Count < 3)
+                continue;
+            if (chain.nodes[0].blockType != BlockType.WEAP)
+                continue;
 
-            if (chain.nodes[0].blockType != BlockType.WEAP) continue;
+            // ⭐ 범위 체크: targetWeapon이 지정돼 있으면 그 무기가 '나'일 때만 반영
+            WeaponDefinition scope = chain.nodes[0].sourceBlock?.Definition?.targetWeapon;
+            if (scope != null && scope != definition)
+                continue;
 
             BlockType action = chain.nodes[1].blockType;
-
             if (action == BlockType.SPD || action == BlockType.DST || action == BlockType.SZ)
             {
                 float baseValue = GetBaseValue(action);
@@ -59,6 +66,7 @@ public class WeaponBase : MonoBehaviour
             }
         }
     }
+
     public void Initialize(WeaponDefinition newDefinition, Transform owner, float startAngle = 0f)
     {
         definition = newDefinition;
@@ -96,14 +104,24 @@ public class WeaponBase : MonoBehaviour
         for (int i = startIndex; i < chain.nodes.Count; i++)
         {
             CodeNode node = chain.nodes[i];
-            if (node == null) continue;
+            if (node == null)
+                continue;
 
             switch (node.blockType)
             {
-                case BlockType.PLUS: value += node.value; break;
-                case BlockType.MINUS: value -= node.value; break;
-                case BlockType.MULT: value *= node.value; break;
-                case BlockType.DIV: if (node.value != 0f) value /= node.value; break;
+                case BlockType.PLUS:
+                    value += node.value;
+                    break;
+                case BlockType.MINUS:
+                    value -= node.value;
+                    break;
+                case BlockType.MULT:
+                    value *= node.value;
+                    break;
+                case BlockType.DIV:
+                    if (node.value != 0f)
+                        value /= node.value;
+                    break;
             }
         }
         return value;
@@ -111,7 +129,8 @@ public class WeaponBase : MonoBehaviour
 
     public void ResetStats()
     {
-        if (definition == null) return;
+        if (definition == null)
+            return;
 
         damage = definition.damage;
         distance = definition.distance;
@@ -120,6 +139,7 @@ public class WeaponBase : MonoBehaviour
 
         transform.localScale = Vector3.one * (1f + (size * 0.1f));
     }
+
     public void SetDefinition(WeaponDefinition newDefinition)
     {
         definition = newDefinition;
@@ -151,11 +171,13 @@ public class WeaponBase : MonoBehaviour
 
     private void Update()
     {
-        if (ownerTransform == null) return;
+        if (ownerTransform == null)
+            return;
 
         currentAngle += rotationSpeed * Time.deltaTime;
 
-        if (currentAngle >= 360f) currentAngle -= 360f;
+        if (currentAngle >= 360f)
+            currentAngle -= 360f;
 
         float radian = currentAngle * Mathf.Deg2Rad;
         Vector3 offset = new Vector3(Mathf.Cos(radian), Mathf.Sin(radian), 0f) * distance;

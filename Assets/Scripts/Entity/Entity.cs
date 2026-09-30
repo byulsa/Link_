@@ -13,7 +13,7 @@ public enum EntityTag
     Normal,
     Boss,
     Undead,
-    Ground
+    Ground,
 }
 
 public class Entity : MonoBehaviour
@@ -23,14 +23,11 @@ public class Entity : MonoBehaviour
     private EntityType entityType;
 
     [SerializeField]
-    private List<EntityTag> tags =
-        new List<EntityTag>();
+    private List<EntityTag> tags = new List<EntityTag>();
 
-    public EntityType Type =>
-        entityType;
+    public EntityType Type => entityType;
 
-    public IReadOnlyList<EntityTag> Tags =>
-        tags;
+    public IReadOnlyList<EntityTag> Tags => tags;
 
     public bool Is(EntityType type)
     {

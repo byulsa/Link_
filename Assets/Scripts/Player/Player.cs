@@ -54,9 +54,7 @@ public class Player : MonoBehaviour, IDamageable
         currentHealth -= damage;
         currentHealth = Mathf.Max(0f, currentHealth);
 
-        Debug.Log(
-            $"[Player] 피해: {damage} / HP: {currentHealth}/{maxHealth}"
-        );
+        Debug.Log($"[Player] 피해: {damage} / HP: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0f)
         {
@@ -71,8 +69,7 @@ public class Player : MonoBehaviour, IDamageable
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Entity target =
-            other.GetComponent<Entity>();
+        Entity target = other.GetComponent<Entity>();
 
         if (target == null)
             return;
@@ -80,33 +77,23 @@ public class Player : MonoBehaviour, IDamageable
         if (!target.Is(EntityType.Enemy))
             return;
 
-        Debug.Log(
-            $"[Player] Enemy 충돌 감지: {target.name}"
-        );
+        Debug.Log($"[Player] Enemy 충돌 감지: {target.name}");
 
         codeController.ExecuteTouch(target);
     }
 
-    private void HandleEnemyDeath(
-        Enemy enemy,
-        DeathType deathType)
+    private void HandleEnemyDeath(Enemy enemy, DeathType deathType)
     {
         if (enemy == null)
             return;
 
-        Debug.Log(
-            $"[Player] Enemy 사망 감지: {enemy.name} / {deathType}"
-        );
+        Debug.Log($"[Player] Enemy 사망 감지: {enemy.name} / {deathType}");
 
         if (deathType == DeathType.Normal)
         {
-            codeController.ExecuteDeath(
-                enemy.GetComponent<Entity>()
-            );
+            codeController.ExecuteDeath(enemy.GetComponent<Entity>());
 
-            CodeDropManager.Instance.TryDrop(
-                enemy.CodeDropTable
-            );
+            CodeDropManager.Instance.TryDrop(enemy.CodeDropTable);
         }
     }
 }

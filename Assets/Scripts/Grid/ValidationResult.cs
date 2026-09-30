@@ -11,11 +11,11 @@ public class ValidationResult
     public ValidationResult(
         bool isValid,
         List<CodeBlock> invalidBlocks = null,
-        string errorMessage = "")
+        string errorMessage = ""
+    )
     {
         IsValid = isValid;
-        InvalidBlocks =
-            invalidBlocks ?? new List<CodeBlock>();
+        InvalidBlocks = invalidBlocks ?? new List<CodeBlock>();
 
         ErrorMessage = errorMessage;
     }
@@ -25,22 +25,10 @@ public class ValidationResult
         return new ValidationResult(true);
     }
 
-    public static ValidationResult Error(
-        CodeBlock block1,
-        CodeBlock block2,
-        string message)
+    public static ValidationResult Error(CodeBlock block1, CodeBlock block2, string message)
     {
-        List<CodeBlock> blocks =
-            new List<CodeBlock>
-            {
-                block1,
-                block2
-            };
+        List<CodeBlock> blocks = new List<CodeBlock> { block1, block2 };
 
-        return new ValidationResult(
-            false,
-            blocks,
-            message
-        );
+        return new ValidationResult(false, blocks, message);
     }
 }

@@ -4,9 +4,14 @@ using UnityEngine.UI;
 
 public class ShopUI : MonoBehaviour
 {
-    [SerializeField] private ShopManager shopManager;
-    [SerializeField] private ShopSlotUI slotPrefab;
-    [SerializeField] private Transform slotContainer;
+    [SerializeField]
+    private ShopManager shopManager;
+
+    [SerializeField]
+    private ShopSlotUI slotPrefab;
+
+    [SerializeField]
+    private Transform slotContainer;
 
     private readonly List<ShopSlotUI> spawnedSlots = new();
 
@@ -37,8 +42,7 @@ public class ShopUI : MonoBehaviour
             spawnedSlots.Add(slotUI);
         }
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(
-            slotContainer as RectTransform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
     }
 
     private void ClearSlots()

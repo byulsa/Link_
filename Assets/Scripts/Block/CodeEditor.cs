@@ -8,19 +8,29 @@ public class CodeEditor : MonoBehaviour
     public static event Action<IReadOnlyList<CodeChain>> OnCodeRefreshed;
 
     [Header("Grid")]
-    [SerializeField] private CodeGrid grid;
+    [SerializeField]
+    private CodeGrid grid;
 
     [Header("Block")]
-    [SerializeField] private CodeBlock blockPrefab;
+    [SerializeField]
+    private CodeBlock blockPrefab;
 
     [Header("Validation")]
-    [SerializeField] private CodeValidator validator;
+    [SerializeField]
+    private CodeValidator validator;
 
     [Header("Test Blocks")]
-    [SerializeField] private BlockDefinition testWEAP;
-    [SerializeField] private BlockDefinition testDMG;
-    [SerializeField] private BlockDefinition testPLUS5;
-    [SerializeField] private BlockDefinition testMULT;
+    [SerializeField]
+    private BlockDefinition testWEAP;
+
+    [SerializeField]
+    private BlockDefinition testDMG;
+
+    [SerializeField]
+    private BlockDefinition testPLUS5;
+
+    [SerializeField]
+    private BlockDefinition testMULT;
 
     private readonly List<CodeChain> chains = new List<CodeChain>();
 
@@ -59,14 +69,16 @@ public class CodeEditor : MonoBehaviour
 
         foreach (CodeBlock startBlock in blocks)
         {
-            if (usedBlocks.Contains(startBlock)) continue;
+            if (usedBlocks.Contains(startBlock))
+                continue;
 
             CodeChain chain = new CodeChain();
             CodeBlock current = startBlock;
 
             while (current != null)
             {
-                if (usedBlocks.Contains(current)) break;
+                if (usedBlocks.Contains(current))
+                    break;
 
                 CodeNode node = CreateNode(current);
                 chain.nodes.Add(node);
@@ -82,13 +94,18 @@ public class CodeEditor : MonoBehaviour
         }
     }
 
-    private CodeBlock FindNextBlock(CodeBlock current, List<CodeBlock> blocks, HashSet<CodeBlock> usedBlocks)
+    private CodeBlock FindNextBlock(
+        CodeBlock current,
+        List<CodeBlock> blocks,
+        HashSet<CodeBlock> usedBlocks
+    )
     {
         CodeBlock nextBlock = null;
 
         foreach (CodeBlock block in blocks)
         {
-            if (block == current || usedBlocks.Contains(block) || !IsConnected(current, block)) continue;
+            if (block == current || usedBlocks.Contains(block) || !IsConnected(current, block))
+                continue;
 
             if (nextBlock == null || block.GridPosition.x < nextBlock.GridPosition.x)
             {
@@ -101,7 +118,8 @@ public class CodeEditor : MonoBehaviour
 
     private bool IsConnected(CodeBlock current, CodeBlock next)
     {
-        if (current == null || next == null || current.GridPosition.y != next.GridPosition.y) return false;
+        if (current == null || next == null || current.GridPosition.y != next.GridPosition.y)
+            return false;
 
         int currentEndX = current.GridPosition.x + GetBlockWidth(current);
         return currentEndX == next.GridPosition.x;
@@ -129,7 +147,7 @@ public class CodeEditor : MonoBehaviour
         {
             blockType = block.Definition.blockType,
             value = block.Value,
-            sourceBlock = block
+            sourceBlock = block,
         };
     }
 
@@ -141,7 +159,8 @@ public class CodeEditor : MonoBehaviour
 
             foreach (CodeNode node in chain.nodes)
             {
-                if (node.sourceBlock != null) blocks.Add(node.sourceBlock);
+                if (node.sourceBlock != null)
+                    blocks.Add(node.sourceBlock);
             }
 
             ValidationResult result = validator.Validate(blocks);
@@ -202,6 +221,7 @@ public class CodeEditor : MonoBehaviour
 
         return block;
     }
+
     public CodeBlock CreateDropBlock(BlockDefinition definition, Vector2Int position, int value)
     {
         Debug.Log(

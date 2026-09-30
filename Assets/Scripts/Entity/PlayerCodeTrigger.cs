@@ -2,8 +2,11 @@ using UnityEngine;
 
 public class PlayerCodeTrigger : MonoBehaviour
 {
-    [SerializeField] private CodeExecutor executor;
-    [SerializeField] private CodeEditor editor;
+    [SerializeField]
+    private CodeExecutor executor;
+
+    [SerializeField]
+    private CodeEditor editor;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -22,11 +25,7 @@ public class PlayerCodeTrigger : MonoBehaviour
 
         foreach (CodeChain chain in editor.Chains)
         {
-            executor.Execute(
-                chain,
-                source,
-                target
-            );
+            executor.Execute(chain, source, target);
         }
     }
 }

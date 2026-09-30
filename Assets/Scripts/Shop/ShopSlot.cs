@@ -2,28 +2,24 @@ public class ShopSlot
 {
     public ShopItemType Type { get; }
     public BlockDefinition Block { get; }
-    public WeaponDefinition Weapon { get; }
     public PassiveItemDefinition Passive { get; }
     public int Price { get; }
     public int Value { get; }
     public bool IsSold { get; private set; }
 
-    public ShopSlot(BlockDefinition block, int price, int value)
+    public ShopSlot(BlockDefinition block, int price, int value = 0)
     {
-        Type = ShopItemType.Block;
-        Block = block; Price = price; Value = value;
-    }
-
-    public ShopSlot(WeaponDefinition weapon, int price)
-    {
-        Type = ShopItemType.Weapon;
-        Weapon = weapon; Price = price;
+        Type = block.targetWeapon != null ? ShopItemType.Weapon : ShopItemType.Block;
+        Block = block;
+        Price = price;
+        Value = value;
     }
 
     public ShopSlot(PassiveItemDefinition passive, int price)
     {
         Type = ShopItemType.Passive;
-        Passive = passive; Price = price;
+        Passive = passive;
+        Price = price;
     }
 
     public void MarkSold() => IsSold = true;
@@ -31,8 +27,8 @@ public class ShopSlot
 
     public string GetDisplayName() => Type switch
     {
-        ShopItemType.Block => Block.hasValue ? $"{Block.displayText}{Value}" : Block.displayText,
-        ShopItemType.Weapon => Weapon.weaponName,
+        ShopItemType.Block or ShopItemType.Weapon =>
+            Block.hasValue ? $"{Block.displayText}{Value}" : Block.displayText,
         ShopItemType.Passive => Passive.itemName,
         _ => "???"
     };

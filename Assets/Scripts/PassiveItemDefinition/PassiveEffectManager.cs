@@ -9,13 +9,18 @@ public class PassiveEffectManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
     }
 
     public void Acquire(PassiveItemDefinition passive)
     {
-        if (passive == null) return;
+        if (passive == null)
+            return;
         acquired.Add(passive);
     }
 
@@ -25,8 +30,10 @@ public class PassiveEffectManager : MonoBehaviour
 
         foreach (var p in acquired)
         {
-            if (p == null || p.effectType != PassiveEffectType.ModifierBonus) continue;
-            if (p.targetBlockType != modifierType) continue;
+            if (p == null || p.effectType != PassiveEffectType.ModifierBonus)
+                continue;
+            if (p.targetBlockType != modifierType)
+                continue;
             bonus += p.bonusValue;
         }
 

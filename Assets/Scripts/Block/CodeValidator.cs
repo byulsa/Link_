@@ -10,34 +10,20 @@ public class CodeValidator : MonoBehaviour
     // Validate
     // =========================================================
 
-    public ValidationResult Validate(
-        List<CodeBlock> blocks)
+    public ValidationResult Validate(List<CodeBlock> blocks)
     {
-        if (blocks == null ||
-            blocks.Count == 0)
+        if (blocks == null || blocks.Count == 0)
         {
-            Debug.LogWarning(
-                "[CodeValidator] 블록이 없습니다."
-            );
+            Debug.LogWarning("[CodeValidator] 블록이 없습니다.");
 
-            return new ValidationResult(
-                false,
-                errorMessage: "코드가 없습니다."
-            );
+            return new ValidationResult(false, errorMessage: "코드가 없습니다.");
         }
 
-        Debug.Log(
-            $"[CodeValidator] Validate 호출 - " +
-            $"blocks.Count: {blocks.Count}"
-        );
+        Debug.Log($"[CodeValidator] Validate 호출 - " + $"blocks.Count: {blocks.Count}");
 
-        BlockCategory firstCategory =
-            blocks[0].Definition.category;
+        BlockCategory firstCategory = blocks[0].Definition.category;
 
-        Debug.Log(
-            $"[CodeValidator] 첫 블록 카테고리: " +
-            $"{firstCategory}"
-        );
+        Debug.Log($"[CodeValidator] 첫 블록 카테고리: " + $"{firstCategory}");
 
         // =====================================================
         // WEAP
@@ -45,13 +31,9 @@ public class CodeValidator : MonoBehaviour
 
         if (firstCategory == BlockCategory.Weapon)
         {
-            Debug.Log(
-                "[CodeValidator] WEAP 체인 감지"
-            );
+            Debug.Log("[CodeValidator] WEAP 체인 감지");
 
-            return ValidateWeaponChain(
-                blocks
-            );
+            return ValidateWeaponChain(blocks);
         }
 
         // =====================================================
@@ -60,30 +42,20 @@ public class CodeValidator : MonoBehaviour
 
         if (firstCategory == BlockCategory.Trigger)
         {
-            Debug.Log(
-                "[CodeValidator] TOU 체인 감지"
-            );
+            Debug.Log("[CodeValidator] TOU 체인 감지");
 
-            return ValidatePlayerChain(
-                blocks
-            );
+            return ValidatePlayerChain(blocks);
         }
 
         // =====================================================
         // 지원하지 않는 시작
         // =====================================================
 
-        Debug.LogWarning(
-            $"[CodeValidator] 지원하지 않는 첫 블록: " +
-            $"{firstCategory}"
-        );
+        Debug.LogWarning($"[CodeValidator] 지원하지 않는 첫 블록: " + $"{firstCategory}");
 
         return new ValidationResult(
             false,
-            new List<CodeBlock>
-            {
-                blocks[0]
-            },
+            new List<CodeBlock> { blocks[0] },
             "코드는 Trigger(TOU) 또는 Weapon(WEAP)으로 시작해야 합니다."
         );
     }
@@ -105,8 +77,7 @@ public class CodeValidator : MonoBehaviour
     /// WEAP → DST → PLUS
     /// WEAP → SZ → MULT
     /// </summary>
-    private ValidationResult ValidateWeaponChain(
-        List<CodeBlock> blocks)
+    private ValidationResult ValidateWeaponChain(List<CodeBlock> blocks)
     {
         // -----------------------------------------------------
         // 최소 블록 수
@@ -114,16 +85,12 @@ public class CodeValidator : MonoBehaviour
 
         if (blocks.Count < 3)
         {
-            Debug.LogWarning(
-                $"[CodeValidator] WEAP 체인 블록 부족: " +
-                $"{blocks.Count}개"
-            );
+            Debug.LogWarning($"[CodeValidator] WEAP 체인 블록 부족: " + $"{blocks.Count}개");
 
             return new ValidationResult(
                 false,
-                errorMessage:
-                    "무기 코드는 최소 3개 블록 " +
-                    "(WEAP → Action → Modifier)이 필요합니다."
+                errorMessage: "무기 코드는 최소 3개 블록 "
+                    + "(WEAP → Action → Modifier)이 필요합니다."
             );
         }
 
@@ -131,8 +98,7 @@ public class CodeValidator : MonoBehaviour
         // 첫 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[0].Definition.blockType !=
-            BlockType.WEAP)
+        if (blocks[0].Definition.blockType != BlockType.WEAP)
         {
             return ValidationResult.Error(
                 blocks[0],
@@ -145,15 +111,11 @@ public class CodeValidator : MonoBehaviour
         // 두 번째 블록
         // -----------------------------------------------------
 
-        BlockType actionType =
-            blocks[1].Definition.blockType;
+        BlockType actionType = blocks[1].Definition.blockType;
 
         if (!IsWeaponAction(actionType))
         {
-            Debug.LogWarning(
-                $"[CodeValidator] 잘못된 WEAP Action: " +
-                $"{actionType}"
-            );
+            Debug.LogWarning($"[CodeValidator] 잘못된 WEAP Action: " + $"{actionType}");
 
             return ValidationResult.Error(
                 blocks[0],
@@ -166,31 +128,19 @@ public class CodeValidator : MonoBehaviour
         // 세 번째 이후 = Modifier
         // -----------------------------------------------------
 
-        for (
-            int i = 2;
-            i < blocks.Count;
-            i++)
+        for (int i = 2; i < blocks.Count; i++)
         {
-            BlockType modifierType =
-                blocks[i].Definition.blockType;
+            BlockType modifierType = blocks[i].Definition.blockType;
 
-            Debug.Log(
-                $"[CodeValidator] WEAP Modifier 확인: " +
-                $"{modifierType}"
-            );
+            Debug.Log($"[CodeValidator] WEAP Modifier 확인: " + $"{modifierType}");
 
             if (!IsModifier(modifierType))
             {
-                Debug.LogWarning(
-                    $"[CodeValidator] 잘못된 WEAP Modifier: " +
-                    $"{modifierType}"
-                );
+                Debug.LogWarning($"[CodeValidator] 잘못된 WEAP Modifier: " + $"{modifierType}");
 
-                CodeBlock previousBlock =
-                    blocks[i - 1];
+                CodeBlock previousBlock = blocks[i - 1];
 
-                CodeBlock invalidBlock =
-                    blocks[i];
+                CodeBlock invalidBlock = blocks[i];
 
                 return ValidationResult.Error(
                     previousBlock,
@@ -200,9 +150,7 @@ public class CodeValidator : MonoBehaviour
             }
         }
 
-        Debug.Log(
-            "[CodeValidator] WEAP 체인 검증 성공"
-        );
+        Debug.Log("[CodeValidator] WEAP 체인 검증 성공");
 
         return ValidationResult.Success();
     }
@@ -221,8 +169,7 @@ public class CodeValidator : MonoBehaviour
     /// TOU → EN → DMG → PLUS
     /// TOU → EN → DMG → PLUS → MULT
     /// </summary>
-    private ValidationResult ValidatePlayerChain(
-        List<CodeBlock> blocks)
+    private ValidationResult ValidatePlayerChain(List<CodeBlock> blocks)
     {
         // -----------------------------------------------------
         // 최소 블록 수
@@ -230,16 +177,12 @@ public class CodeValidator : MonoBehaviour
 
         if (blocks.Count < 4)
         {
-            Debug.LogWarning(
-                $"[CodeValidator] TOU 체인 블록 부족: " +
-                $"{blocks.Count}개"
-            );
+            Debug.LogWarning($"[CodeValidator] TOU 체인 블록 부족: " + $"{blocks.Count}개");
 
             return new ValidationResult(
                 false,
-                errorMessage:
-                    "플레이어 코드는 최소 4개 블록 " +
-                    "(TOU → EN → DMG → Modifier)이 필요합니다."
+                errorMessage: "플레이어 코드는 최소 4개 블록 "
+                    + "(TOU → EN → DMG → Modifier)이 필요합니다."
             );
         }
 
@@ -247,8 +190,7 @@ public class CodeValidator : MonoBehaviour
         // 첫 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[0].Definition.blockType !=
-            BlockType.TOU)
+        if (blocks[0].Definition.blockType != BlockType.TOU)
         {
             return ValidationResult.Error(
                 blocks[0],
@@ -261,8 +203,7 @@ public class CodeValidator : MonoBehaviour
         // 두 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[1].Definition.blockType !=
-            BlockType.EN)
+        if (blocks[1].Definition.blockType != BlockType.EN)
         {
             return ValidationResult.Error(
                 blocks[0],
@@ -275,8 +216,7 @@ public class CodeValidator : MonoBehaviour
         // 세 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[2].Definition.blockType !=
-            BlockType.DMG)
+        if (blocks[2].Definition.blockType != BlockType.DMG)
         {
             return ValidationResult.Error(
                 blocks[1],
@@ -289,31 +229,19 @@ public class CodeValidator : MonoBehaviour
         // 네 번째 이후 = Modifier
         // -----------------------------------------------------
 
-        for (
-            int i = 3;
-            i < blocks.Count;
-            i++)
+        for (int i = 3; i < blocks.Count; i++)
         {
-            BlockType modifierType =
-                blocks[i].Definition.blockType;
+            BlockType modifierType = blocks[i].Definition.blockType;
 
-            Debug.Log(
-                $"[CodeValidator] TOU Modifier 확인: " +
-                $"{modifierType}"
-            );
+            Debug.Log($"[CodeValidator] TOU Modifier 확인: " + $"{modifierType}");
 
             if (!IsModifier(modifierType))
             {
-                Debug.LogWarning(
-                    $"[CodeValidator] 잘못된 TOU Modifier: " +
-                    $"{modifierType}"
-                );
+                Debug.LogWarning($"[CodeValidator] 잘못된 TOU Modifier: " + $"{modifierType}");
 
-                CodeBlock previousBlock =
-                    blocks[i - 1];
+                CodeBlock previousBlock = blocks[i - 1];
 
-                CodeBlock invalidBlock =
-                    blocks[i];
+                CodeBlock invalidBlock = blocks[i];
 
                 return ValidationResult.Error(
                     previousBlock,
@@ -323,9 +251,7 @@ public class CodeValidator : MonoBehaviour
             }
         }
 
-        Debug.Log(
-            "[CodeValidator] TOU 체인 검증 성공"
-        );
+        Debug.Log("[CodeValidator] TOU 체인 검증 성공");
 
         return ValidationResult.Success();
     }
@@ -334,8 +260,7 @@ public class CodeValidator : MonoBehaviour
     // Weapon Action
     // =========================================================
 
-    private bool IsWeaponAction(
-        BlockType blockType)
+    private bool IsWeaponAction(BlockType blockType)
     {
         switch (blockType)
         {
@@ -356,8 +281,7 @@ public class CodeValidator : MonoBehaviour
     // Modifier
     // =========================================================
 
-    private bool IsModifier(
-        BlockType blockType)
+    private bool IsModifier(BlockType blockType)
     {
         switch (blockType)
         {

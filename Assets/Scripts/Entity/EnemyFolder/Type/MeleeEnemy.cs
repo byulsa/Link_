@@ -3,7 +3,8 @@ using UnityEngine;
 public class MeleeEnemy : Enemy
 {
     [Header("Melee Data")]
-    [SerializeField] private MeleeEnemyData meleeData;
+    [SerializeField]
+    private MeleeEnemyData meleeData;
 
     private float attackTimer;
 
@@ -46,10 +47,7 @@ public class MeleeEnemy : Enemy
         if (PlayerTransform == null)
             return Mathf.Infinity;
 
-        return Vector2.Distance(
-            transform.position,
-            PlayerTransform.position
-        );
+        return Vector2.Distance(transform.position, PlayerTransform.position);
     }
 
     private void TryAttack()
@@ -69,8 +67,7 @@ public class MeleeEnemy : Enemy
         if (PlayerTransform == null)
             return;
 
-        IDamageable damageable =
-            PlayerTransform.GetComponent<IDamageable>();
+        IDamageable damageable = PlayerTransform.GetComponent<IDamageable>();
 
         if (damageable == null)
             return;

@@ -1,9 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(
-    fileName = "MeleeEnemyData_",
-    menuName = "Scriptable Objects/Enemy/Melee"
-)]
+[CreateAssetMenu(fileName = "MeleeEnemyData_", menuName = "Scriptable Objects/Enemy/Melee")]
 public class MeleeEnemyData : EnemyData
 {
     [Header("Melee")]

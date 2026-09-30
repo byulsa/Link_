@@ -17,68 +17,41 @@ public class CodeExecutor : MonoBehaviour
 
     // 코드가 직접 데미지를 처리했으면 true
     // 그렇지 않으면 false
-    public bool Execute(
-        CodeChain chain,
-        Entity source,
-        Entity target)
+    public bool Execute(CodeChain chain, Entity source, Entity target)
     {
-        if (chain == null ||
-            chain.nodes == null ||
-            chain.nodes.Count == 0 ||
-            source == null)
+        if (chain == null || chain.nodes == null || chain.nodes.Count == 0 || source == null)
         {
             return false;
         }
 
-        BlockType firstType =
-            chain.nodes[0].blockType;
+        BlockType firstType = chain.nodes[0].blockType;
 
         switch (firstType)
         {
             case BlockType.TOU:
-                return ExecuteTouch(
-                    chain,
-                    source,
-                    target
-                );
+                return ExecuteTouch(chain, source, target);
 
             case BlockType.WEAP:
-                return ExecuteWeapon(
-                    chain,
-                    source,
-                    target
-                );
+                return ExecuteWeapon(chain, source, target);
 
             case BlockType.DTH:
-                return ExecuteDeath(
-                    chain,
-                    source,
-                    target
-                );
+                return ExecuteDeath(chain, source, target);
 
             default:
-                Debug.LogWarning(
-                    $"[CodeExecutor] " +
-                    $"지원하지 않는 코드: {firstType}"
-                );
+                Debug.LogWarning($"[CodeExecutor] " + $"지원하지 않는 코드: {firstType}");
 
                 return false;
         }
     }
 
-    private bool ExecuteTouch(
-        CodeChain chain,
-        Entity source,
-        Entity target)
+    private bool ExecuteTouch(CodeChain chain, Entity source, Entity target)
     {
-        if (target == null ||
-            !target.Is(EntityType.Enemy))
+        if (target == null || !target.Is(EntityType.Enemy))
         {
             return false;
         }
 
-        Enemy enemy =
-            target.GetComponent<Enemy>();
+        Enemy enemy = target.GetComponent<Enemy>();
 
         if (enemy == null)
             return false;
@@ -86,19 +59,14 @@ public class CodeExecutor : MonoBehaviour
         if (chain.nodes.Count < 4)
             return false;
 
-        if (chain.nodes[1].blockType != BlockType.EN ||
-            chain.nodes[2].blockType != BlockType.DMG)
+        if (chain.nodes[1].blockType != BlockType.EN || chain.nodes[2].blockType != BlockType.DMG)
         {
             return false;
         }
 
         float value = enemy.BaseDamage;
 
-        value = CalculateValue(
-            value,
-            chain,
-            3
-        );
+        value = CalculateValue(value, chain, 3);
 
         value = Mathf.Max(0f, value);
 
@@ -107,27 +75,27 @@ public class CodeExecutor : MonoBehaviour
         return true;
     }
 
-    private bool ExecuteWeapon(
-        CodeChain chain,
-        Entity source,
-        Entity target)
+    private bool ExecuteWeapon(CodeChain chain, Entity source, Entity target)
     {
-        if (source == null ||
-            !source.Is(EntityType.Weapon) ||
-            target == null ||
-            !target.Is(EntityType.Enemy))
-        {
+        if (
+            source == null
+            || !source.Is(EntityType.Weapon)
+            || target == null
+            || !target.Is(EntityType.Enemy)
+        )
             return false;
-        }
 
-        WeaponBase weapon =
-            source.GetComponent<WeaponBase>();
-
+        WeaponBase weapon = source.GetComponent<WeaponBase>();
         if (weapon == null)
             return false;
 
-        Enemy enemy =
-            target.GetComponent<Enemy>();
+        WeaponDefinition scope = chain.FirstBlock?.Definition?.targetWeapon;
+        if (scope != null && scope != weapon.Definition)
+            return false;
+
+        Enemy enemy = target.GetComponent<Enemy>();
+        if (enemy == null)
+            return false;
 
         if (enemy == null)
             return false;
@@ -135,37 +103,24 @@ public class CodeExecutor : MonoBehaviour
         if (chain.nodes.Count < 2)
             return false;
 
-        BlockType action =
-            chain.nodes[1].blockType;
+        BlockType action = chain.nodes[1].blockType;
 
         if (!IsWeaponAction(action))
         {
             return false;
         }
 
-        float baseValue =
-            GetWeaponBaseValue(
-                weapon,
-                action
-            );
+        float baseValue = GetWeaponBaseValue(weapon, action);
 
-        float finalValue =
-            CalculateValue(
-                baseValue,
-                chain,
-                2
-            );
+        float finalValue = CalculateValue(baseValue, chain, 2);
 
-        finalValue =
-            Mathf.Max(0f, finalValue);
+        finalValue = Mathf.Max(0f, finalValue);
 
         switch (action)
         {
             case BlockType.DMG:
 
-                enemy.TakeDamage(
-                    finalValue
-                );
+                enemy.TakeDamage(finalValue);
 
                 // 이번 코드가 데미지를 처리했음
                 return true;
@@ -174,10 +129,7 @@ public class CodeExecutor : MonoBehaviour
             case BlockType.SPD:
             case BlockType.SZ:
 
-                weapon.SetStat(
-                    action,
-                    finalValue
-                );
+                weapon.SetStat(action, finalValue);
 
                 // 스탯만 변경했으므로
                 // 기본 공격은 따로 필요함
@@ -189,10 +141,7 @@ public class CodeExecutor : MonoBehaviour
     }
 
     // ⭐ DTH → POINT 처리 (중복 지급 방지)
-    private bool ExecuteDeath(
-        CodeChain chain,
-        Entity source,
-        Entity target)
+    private bool ExecuteDeath(CodeChain chain, Entity source, Entity target)
     {
         Debug.Log("[CodeExecutor] ===== ExecuteDeath 시작 =====");
 
@@ -262,14 +211,12 @@ public class CodeExecutor : MonoBehaviour
             finalPoint = CalculateValue(
                 basePoint,
                 chain,
-                2  // POINT 블록 다음부터 수정자 시작
+                2 // POINT 블록 다음부터 수정자 시작
             );
 
             finalPoint = Mathf.Max(0f, finalPoint);
 
-            Debug.Log(
-                $"[CodeExecutor] 수정자 계산 완료: {basePoint} → {finalPoint}"
-            );
+            Debug.Log($"[CodeExecutor] 수정자 계산 완료: {basePoint} → {finalPoint}");
         }
         catch (System.Exception ex)
         {
@@ -297,27 +244,16 @@ public class CodeExecutor : MonoBehaviour
         return true;
     }
 
-    private float CalculateValue(
-        float value,
-        CodeChain chain,
-        int startIndex)
+    private float CalculateValue(float value, CodeChain chain, int startIndex)
     {
-        for (
-            int i = startIndex;
-            i < chain.nodes.Count;
-            i++)
+        for (int i = startIndex; i < chain.nodes.Count; i++)
         {
-            CodeNode node =
-                chain.nodes[i];
+            CodeNode node = chain.nodes[i];
 
             if (node == null)
                 continue;
 
-            value = ApplyModifier(
-                value,
-                node.blockType,
-                node.value
-            );
+            value = ApplyModifier(value, node.blockType, node.value);
         }
 
         return value;
@@ -330,20 +266,22 @@ public class CodeExecutor : MonoBehaviour
 
         switch (type)
         {
-            case BlockType.PLUS: return value + modifier;
-            case BlockType.MINUS: return value - modifier;
-            case BlockType.MULT: return value * modifier;
-            case BlockType.DIV: return modifier == 0f ? value : value / modifier;
-            default: return value;
+            case BlockType.PLUS:
+                return value + modifier;
+            case BlockType.MINUS:
+                return value - modifier;
+            case BlockType.MULT:
+                return value * modifier;
+            case BlockType.DIV:
+                return modifier == 0f ? value : value / modifier;
+            default:
+                return value;
         }
     }
 
-    private float GetWeaponBaseValue(
-        WeaponBase weapon,
-        BlockType action)
+    private float GetWeaponBaseValue(WeaponBase weapon, BlockType action)
     {
-        WeaponDefinition def =
-            weapon.Definition;
+        WeaponDefinition def = weapon.Definition;
 
         if (def == null)
             return 0f;
@@ -367,8 +305,7 @@ public class CodeExecutor : MonoBehaviour
         }
     }
 
-    private bool IsWeaponAction(
-        BlockType type)
+    private bool IsWeaponAction(BlockType type)
     {
         switch (type)
         {

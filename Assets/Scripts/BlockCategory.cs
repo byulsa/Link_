@@ -4,5 +4,5 @@ public enum BlockCategory
     Action,
     Target,
     Modifier,
-    Weapon
+    Weapon,
 }

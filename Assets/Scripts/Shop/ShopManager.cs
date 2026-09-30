@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
 public enum ShopItemType
 {
     Block,
     Weapon,
-    Passive
+    Passive,
 }
+
 public class ShopManager : MonoBehaviour
 {
     public static ShopManager Instance { get; private set; }
@@ -14,8 +16,6 @@ public class ShopManager : MonoBehaviour
     [SerializeField] private ShopDropTable dropTable;
     [SerializeField] private CodeGrid grid;
     [SerializeField] private CodeEditor editor;
-    [SerializeField] private WeaponBase playerWeapon; // 장착 중인 무기 참조
-    [SerializeField] private BlockDefinition weaponBlockDefinition;
 
     [Header("Shop Settings")]
     [SerializeField, Min(1)] private int minSlotCount = 3;
@@ -30,7 +30,11 @@ public class ShopManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
     }
 
@@ -38,7 +42,11 @@ public class ShopManager : MonoBehaviour
     {
         currentSlots.Clear();
 
-        if (dropTable == null) { OnShopRefreshed?.Invoke(); return; }
+        if (dropTable == null)
+        {
+            OnShopRefreshed?.Invoke();
+            return;
+        }
 
         int slotCount = UnityEngine.Random.Range(minSlotCount, maxSlotCount + 1);
 
@@ -50,9 +58,9 @@ public class ShopManager : MonoBehaviour
             ShopSlot slot = result.type switch
             {
                 ShopItemType.Block => new ShopSlot(result.block, result.price, result.value),
-                ShopItemType.Weapon => new ShopSlot(result.weapon, result.price),
+                ShopItemType.Weapon => new ShopSlot(result.block, result.price), // Weapon도 block 기반
                 ShopItemType.Passive => new ShopSlot(result.passive, result.price),
-                _ => null
+                _ => null,
             };
 
             if (slot != null)
@@ -72,7 +80,7 @@ public class ShopManager : MonoBehaviour
         return slot.Type switch
         {
             ShopItemType.Block => TryPurchaseBlock(slot, slotIndex),
-            ShopItemType.Weapon => TryPurchaseWeapon(slot, slotIndex),
+            ShopItemType.Weapon => TryPurchaseBlock(slot, slotIndex), // 무기도 결국 블록 배치 + 부수 효과
             ShopItemType.Passive => TryPurchasePassive(slot, slotIndex),
             _ => false
         };
@@ -96,34 +104,10 @@ public class ShopManager : MonoBehaviour
         }
 
         editor.CreateDropBlock(slot.Block, position, slot.Value);
-        slot.MarkSold();
-        OnPurchaseSucceeded?.Invoke(slotIndex);
-        return true;
-    }
 
-    private bool TryPurchaseWeapon(ShopSlot slot, int slotIndex)
-    {
-        int blockWidth = weaponBlockDefinition.displayText.Length;
-
-        if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position) ||
-            !grid.CanPlace(position, blockWidth, null))
-        {
-            OnPurchaseFailed?.Invoke(slotIndex);
-            return false;
-        }
-
-        if (!PointManager.Instance.TrySpendPoint(slot.Price))
-        {
-            OnPurchaseFailed?.Invoke(slotIndex);
-            return false;
-        }
-
-        // 1) 코드 그리드에 WEAP 블록 배치 → 코드 공간을 차지
-        CodeBlock block = editor.CreateDropBlock(weaponBlockDefinition, position, 0);
-        block.SetLinkedWeapon(slot.Weapon);
-
-        // 2) 실제 무기 오브젝트 스폰 (플레이어 주변에서 회전)
-        WeaponManager.Instance.AddWeapon(slot.Weapon);
+        // 무기 전용 블록이면 실제 무기 오브젝트도 추가 장착 (여러 개 동시 보유 가능)
+        if (slot.Block.targetWeapon != null)
+            WeaponManager.Instance.AddWeapon(slot.Block.targetWeapon);
 
         slot.MarkSold();
         OnPurchaseSucceeded?.Invoke(slotIndex);
@@ -147,7 +131,8 @@ public class ShopManager : MonoBehaviour
 
     private int GetBlockWidth(BlockDefinition definition, int value)
     {
-        if (!definition.hasValue) return definition.displayText.Length;
+        if (!definition.hasValue)
+            return definition.displayText.Length;
         return definition.displayText.Length + value.ToString().Length;
     }
 }

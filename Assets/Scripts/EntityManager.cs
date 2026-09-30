@@ -5,16 +5,13 @@ public class EntityManager : MonoBehaviour
 {
     public static EntityManager Instance { get; private set; }
 
-    private readonly List<Entity> entities =
-        new List<Entity>();
+    private readonly List<Entity> entities = new List<Entity>();
 
-    public IReadOnlyList<Entity> Entities =>
-        entities;
+    public IReadOnlyList<Entity> Entities => entities;
 
     private void Awake()
     {
-        if (Instance != null &&
-            Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
@@ -42,11 +39,9 @@ public class EntityManager : MonoBehaviour
         entities.Remove(entity);
     }
 
-    public List<Entity> FindByType(
-        EntityType type)
+    public List<Entity> FindByType(EntityType type)
     {
-        List<Entity> result =
-            new List<Entity>();
+        List<Entity> result = new List<Entity>();
 
         foreach (Entity entity in entities)
         {
@@ -62,11 +57,9 @@ public class EntityManager : MonoBehaviour
         return result;
     }
 
-    public List<Entity> FindByTag(
-        EntityTag tag)
+    public List<Entity> FindByTag(EntityTag tag)
     {
-        List<Entity> result =
-            new List<Entity>();
+        List<Entity> result = new List<Entity>();
 
         foreach (Entity entity in entities)
         {
@@ -82,12 +75,9 @@ public class EntityManager : MonoBehaviour
         return result;
     }
 
-    public List<Entity> Find(
-        EntityType type,
-        EntityTag tag)
+    public List<Entity> Find(EntityType type, EntityTag tag)
     {
-        List<Entity> result =
-            new List<Entity>();
+        List<Entity> result = new List<Entity>();
 
         foreach (Entity entity in entities)
         {

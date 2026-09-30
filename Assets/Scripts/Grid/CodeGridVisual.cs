@@ -2,8 +2,11 @@ using UnityEngine;
 
 public class CodeGridVisual : MonoBehaviour
 {
-    [SerializeField] private CodeGrid grid;
-    [SerializeField] private Color lineColor = Color.gray;
+    [SerializeField]
+    private CodeGrid grid;
+
+    [SerializeField]
+    private Color lineColor = Color.gray;
 
     // private void OnDrawGizmos()
     // {

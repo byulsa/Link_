@@ -7,41 +7,27 @@ public class Weapon : MonoBehaviour
 
     private void Awake()
     {
-        codeController =
-            GetComponent<CodeController>();
+        codeController = GetComponent<CodeController>();
 
-        weaponBase =
-            GetComponent<WeaponBase>();
+        weaponBase = GetComponent<WeaponBase>();
 
-        Debug.Log(
-            $"[Weapon] " +
-            $"CodeController = {codeController}"
-        );
+        Debug.Log($"[Weapon] " + $"CodeController = {codeController}");
     }
 
-    private void OnTriggerEnter2D(
-        Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log(
-            $"[Weapon] 충돌 발생: {other.name}"
-        );
+        Debug.Log($"[Weapon] 충돌 발생: {other.name}");
 
-        Entity target =
-            other.GetComponent<Entity>();
+        Entity target = other.GetComponent<Entity>();
 
         if (target == null)
             return;
 
-        Debug.Log(
-            $"[Weapon] Target = {target.name}, " +
-            $"Type = {target.Type}"
-        );
+        Debug.Log($"[Weapon] Target = {target.name}, " + $"Type = {target.Type}");
 
         if (!target.Is(EntityType.Enemy))
         {
-            Debug.Log(
-                "[Weapon] Enemy가 아니므로 무시"
-            );
+            Debug.Log("[Weapon] Enemy가 아니므로 무시");
 
             return;
         }
@@ -51,8 +37,7 @@ public class Weapon : MonoBehaviour
 
         if (codeController != null)
         {
-            dealtDamage =
-                codeController.ExecuteWeapon(target);
+            dealtDamage = codeController.ExecuteWeapon(target);
         }
 
         // DMG 코드가 없다면 기본 데미지
