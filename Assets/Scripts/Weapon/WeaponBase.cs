@@ -59,6 +59,13 @@ public class WeaponBase : MonoBehaviour
             }
         }
     }
+    public void Initialize(WeaponDefinition newDefinition, Transform owner, float startAngle = 0f)
+    {
+        definition = newDefinition;
+        ownerTransform = owner;
+        currentAngle = startAngle;
+        ResetStats();
+    }
 
     private float GetBaseValue(BlockType action)
     {
@@ -112,6 +119,11 @@ public class WeaponBase : MonoBehaviour
         size = definition.size;
 
         transform.localScale = Vector3.one * (1f + (size * 0.1f));
+    }
+    public void SetDefinition(WeaponDefinition newDefinition)
+    {
+        definition = newDefinition;
+        ResetStats();
     }
 
     public void SetStat(BlockType action, float value)

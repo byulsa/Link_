@@ -143,6 +143,10 @@ public class CodeController : MonoBehaviour
 
         return dealtDamage;
     }
+    public void SetEditor(CodeEditor newEditor)
+    {
+        editor = newEditor;
+    }
 
     public void ExecuteDeath(Entity target)
     {

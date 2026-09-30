@@ -54,3 +54,11 @@ MonoBehaviour:
     - value: 5
       price: 10
       weight: 1
+  weaponEntries:
+  - weapon: {fileID: 11400000, guid: 620444e7582a4fb4880ee708e0da7e46, type: 2}
+    price: 100
+    weight: 0
+  - weapon: {fileID: 11400000, guid: b74b4e7a8494c094c809e3bc62ba8f0b, type: 2}
+    price: 100
+    weight: 0
+  passiveEntries: []

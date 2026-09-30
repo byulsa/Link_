@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ba6c9723474b214ea65239c9b95c196, type: 3}
   m_Name: NewWeaponDefinition
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
-  weaponName: 
+  weaponName: Test
   damage: 1000
   distance: 5
   rotationSpeed: 999

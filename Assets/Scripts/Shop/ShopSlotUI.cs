@@ -42,6 +42,7 @@ public class ShopSlotUI : MonoBehaviour
         {
             UpdatePriceColor(PointManager.Instance.CurrentPoint);
         }
+        blockText.text = slot.GetDisplayName();
 
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);

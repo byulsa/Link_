@@ -255,11 +255,6 @@ public class CodeExecutor : MonoBehaviour
             return true;
         }
 
-        // ⭐ DTH → POINT 코드 있음 → 수정자 적용
-        // Debug.Log(
-        //     $"[CodeExecutor] DTH → POINT 체인 발견"
-        // );
-
         float finalPoint = 0f;
 
         try
@@ -328,29 +323,18 @@ public class CodeExecutor : MonoBehaviour
         return value;
     }
 
-    private float ApplyModifier(
-        float value,
-        BlockType type,
-        float modifier)
+    private float ApplyModifier(float value, BlockType type, float modifier)
     {
+        if (PassiveEffectManager.Instance != null)
+            modifier += PassiveEffectManager.Instance.GetModifierBonus(type);
+
         switch (type)
         {
-            case BlockType.PLUS:
-                return value + modifier;
-
-            case BlockType.MINUS:
-                return value - modifier;
-
-            case BlockType.MULT:
-                return value * modifier;
-
-            case BlockType.DIV:
-                return modifier == 0f
-                    ? value
-                    : value / modifier;
-
-            default:
-                return value;
+            case BlockType.PLUS: return value + modifier;
+            case BlockType.MINUS: return value - modifier;
+            case BlockType.MULT: return value * modifier;
+            case BlockType.DIV: return modifier == 0f ? value : value / modifier;
+            default: return value;
         }
     }
 

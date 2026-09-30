@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    private WeaponDefinition linkedWeapon;
+    public WeaponDefinition LinkedWeapon => linkedWeapon;
     [SerializeField] private TMP_Text text;
     [SerializeField] private Outline outline;
 
@@ -78,6 +80,10 @@ public class CodeBlock : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, 
             return definition.displayText;
 
         return $"{definition.displayText}{value}";
+    }
+    public void SetLinkedWeapon(WeaponDefinition weapon)
+    {
+        linkedWeapon = weapon;
     }
 
     private void UpdateSize()
