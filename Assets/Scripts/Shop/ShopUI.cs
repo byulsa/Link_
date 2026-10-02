@@ -1,25 +1,28 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ShopUI : MonoBehaviour
 {
-    [SerializeField]
-    private ShopManager shopManager;
+    [SerializeField] private ShopManager shopManager;
 
-    [SerializeField]
-    private ShopSlotUI slotPrefab;
+    [Header("고정 슬롯 (씬에 미리 배치된 ShopSlotUI)")]
+    [SerializeField] private List<ShopSlotUI> topSlotUIs;    // 상단 5개 (코드 블록 + 패시브)
+    [SerializeField] private List<ShopSlotUI> weaponSlotUIs; // 하단 2개 (무기 고정)
 
-    [SerializeField]
-    private Transform slotContainer;
-
-    private readonly List<ShopSlotUI> spawnedSlots = new();
+    [Header("대사 (DATA EXCHANGE 캐릭터)")]
+    [SerializeField] private TMP_Text dialogueText;
+    [SerializeField] private string defaultLine = "실험이 종료되었어요. 'P'는 많이 얻으셨나요?";
+    [SerializeField] private string[] purchaseLines;
 
     private void OnEnable()
     {
         shopManager.OnShopRefreshed += RenderSlots;
         shopManager.OnPurchaseSucceeded += OnPurchaseSucceeded;
         shopManager.OnPurchaseFailed += OnPurchaseFailed;
+
+        if (dialogueText != null)
+            dialogueText.text = defaultLine;
 
         shopManager.RefreshShop();
     }
@@ -33,37 +36,72 @@ public class ShopUI : MonoBehaviour
 
     private void RenderSlots()
     {
-        ClearSlots();
+        IReadOnlyList<ShopSlot> slots = shopManager.CurrentSlots;
 
-        for (int i = 0; i < shopManager.CurrentSlots.Count; i++)
+        for (int i = 0; i < topSlotUIs.Count; i++)
         {
-            ShopSlotUI slotUI = Instantiate(slotPrefab, slotContainer);
-            slotUI.Setup(i, shopManager.CurrentSlots[i], shopManager);
-            spawnedSlots.Add(slotUI);
+            ApplySlot(topSlotUIs[i], i, slots);
         }
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate(slotContainer as RectTransform);
+        int weaponStart = topSlotUIs.Count;
+
+        for (int i = 0; i < weaponSlotUIs.Count; i++)
+        {
+            ApplySlot(weaponSlotUIs[i], weaponStart + i, slots);
+        }
     }
 
-    private void ClearSlots()
+    private void ApplySlot(ShopSlotUI slotUI, int slotIndex, IReadOnlyList<ShopSlot> slots)
     {
-        foreach (var slot in spawnedSlots)
-        {
-            if (slot != null)
-                Destroy(slot.gameObject);
-        }
+        if (slotUI == null) return;
 
-        spawnedSlots.Clear();
+        if (slotIndex < slots.Count)
+        {
+            slotUI.gameObject.SetActive(true);
+            slotUI.Setup(slotIndex, slots[slotIndex], shopManager);
+        }
+        else
+        {
+            // 드랍테이블에 항목이 부족해 못 채운 칸은 비워둠
+            slotUI.gameObject.SetActive(false);
+        }
+    }
+
+    private ShopSlotUI GetSlotUI(int slotIndex)
+    {
+        if (slotIndex < topSlotUIs.Count)
+            return topSlotUIs[slotIndex];
+
+        int weaponIndex = slotIndex - topSlotUIs.Count;
+
+        if (weaponIndex >= 0 && weaponIndex < weaponSlotUIs.Count)
+            return weaponSlotUIs[weaponIndex];
+
+        return null;
     }
 
     private void OnPurchaseSucceeded(int slotIndex)
     {
-        if (slotIndex >= 0 && slotIndex < spawnedSlots.Count)
-            spawnedSlots[slotIndex].SetSold(true);
+        ShopSlotUI slotUI = GetSlotUI(slotIndex);
+
+        if (slotUI != null)
+            slotUI.SetSold(true);
+
+        ShowRandomLine();
+
+        // TODO: 구매 애니메이션 트리거는 나중에 여기 연결
     }
 
     private void OnPurchaseFailed(int slotIndex)
     {
         Debug.Log($"[ShopUI] 구매 실패: slot {slotIndex}");
+    }
+
+    private void ShowRandomLine()
+    {
+        if (dialogueText == null || purchaseLines == null || purchaseLines.Length == 0)
+            return;
+
+        dialogueText.text = purchaseLines[Random.Range(0, purchaseLines.Length)];
     }
 }

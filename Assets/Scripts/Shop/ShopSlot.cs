@@ -1,3 +1,4 @@
+using UnityEngine;
 public class ShopSlot
 {
     public ShopItemType Type { get; }
@@ -32,4 +33,17 @@ public class ShopSlot
         ShopItemType.Passive => Passive.itemName,
         _ => "???"
     };
+    public Sprite GetIcon()
+    {
+        return Type switch
+        {
+            ShopItemType.Block or ShopItemType.Weapon =>
+                Block.icon,
+
+            ShopItemType.Passive =>
+                Passive.icon,
+
+            _ => null
+        };
+    }
 }

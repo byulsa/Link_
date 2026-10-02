@@ -5,6 +5,7 @@ public class BlockDefinition : ScriptableObject
 {
     public BlockType blockType;
     public BlockCategory category;
+    public Sprite icon;
     public string displayText;
 
     [Header("Value")]

@@ -17,9 +17,11 @@ public class ShopManager : MonoBehaviour
     [SerializeField] private CodeGrid grid;
     [SerializeField] private CodeEditor editor;
 
-    [Header("Shop Settings")]
-    [SerializeField, Min(1)] private int minSlotCount = 3;
-    [SerializeField, Min(1)] private int maxSlotCount = 5;
+    [Header("Shop Layout (DATA EXCHANGE)")]
+    [SerializeField] private int topSlotCount = 5;     // 상단: 코드 블록 + 패시브
+    [SerializeField] private int weaponSlotCount = 2;  // 하단: 무기 고정
+    [SerializeField, Range(0, 2)] private int minPassiveCount = 0;
+    [SerializeField, Range(0, 2)] private int maxPassiveCount = 2;
 
     private readonly List<ShopSlot> currentSlots = new();
     public IReadOnlyList<ShopSlot> CurrentSlots => currentSlots;
@@ -48,26 +50,45 @@ public class ShopManager : MonoBehaviour
             return;
         }
 
-        int slotCount = UnityEngine.Random.Range(minSlotCount, maxSlotCount + 1);
+        // ── 상단: 패시브 0~2개 + 나머지는 블록 ──
+        int passiveCount = UnityEngine.Random.Range(minPassiveCount, maxPassiveCount + 1);
+        passiveCount = Mathf.Min(passiveCount, topSlotCount);
+        int blockCount = topSlotCount - passiveCount;
 
-        for (int i = 0; i < slotCount; i++)
+        List<ShopSlot> topSlots = new List<ShopSlot>();
+
+        for (int i = 0; i < passiveCount; i++)
         {
-            if (!dropTable.TrySelectRandomItem(out ShopDropTable.ShopDropResult result))
-                continue;
+            if (dropTable.TrySelectPassiveOnly(out ShopDropTable.ShopDropResult result))
+                topSlots.Add(new ShopSlot(result.passive, result.price));
+        }
 
-            ShopSlot slot = result.type switch
-            {
-                ShopItemType.Block => new ShopSlot(result.block, result.price, result.value),
-                ShopItemType.Weapon => new ShopSlot(result.block, result.price), // Weapon도 block 기반
-                ShopItemType.Passive => new ShopSlot(result.passive, result.price),
-                _ => null,
-            };
+        for (int i = 0; i < blockCount; i++)
+        {
+            if (dropTable.TrySelectBlockOnly(out ShopDropTable.ShopDropResult result))
+                topSlots.Add(new ShopSlot(result.block, result.price, result.value));
+        }
 
-            if (slot != null)
-                currentSlots.Add(slot);
+        Shuffle(topSlots); // 패시브 슬롯이 항상 뒤쪽에 몰리지 않도록 순서 섞기
+        currentSlots.AddRange(topSlots);
+
+        // ── 하단: 무기 고정 ──
+        for (int i = 0; i < weaponSlotCount; i++)
+        {
+            if (dropTable.TrySelectWeaponOnly(out ShopDropTable.ShopDropResult result))
+                currentSlots.Add(new ShopSlot(result.block, result.price));
         }
 
         OnShopRefreshed?.Invoke();
+    }
+
+    private void Shuffle(List<ShopSlot> list)
+    {
+        for (int i = list.Count - 1; i > 0; i--)
+        {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
     }
 
     public bool TryPurchase(int slotIndex)
@@ -105,7 +126,7 @@ public class ShopManager : MonoBehaviour
 
         editor.CreateDropBlock(slot.Block, position, slot.Value);
 
-        // 무기 전용 블록이면 실제 무기 오브젝트도 추가 장착 (여러 개 동시 보유 가능)
+        // 무기 전용 블록(targetWeapon 지정)이면 실제 무기 오브젝트도 추가 장착
         if (slot.Block.targetWeapon != null)
             WeaponManager.Instance.AddWeapon(slot.Block.targetWeapon);
 
@@ -133,6 +154,7 @@ public class ShopManager : MonoBehaviour
     {
         if (!definition.hasValue)
             return definition.displayText.Length;
+
         return definition.displayText.Length + value.ToString().Length;
     }
 }

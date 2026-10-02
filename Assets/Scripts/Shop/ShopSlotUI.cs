@@ -4,34 +4,36 @@ using UnityEngine.UI;
 
 public class ShopSlotUI : MonoBehaviour
 {
-    [SerializeField]
-    private TMP_Text blockText;
+    [Header("Common")]
+    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text priceText;
+    [SerializeField] private Button buyButton;
+    [SerializeField] private GameObject soldOverlay;
 
-    [SerializeField]
-    private TMP_Text priceText;
+    [Header("Preview")]
+    [SerializeField] private GameObject itemPreview;
+    [SerializeField] private Image iconImage;
+    [SerializeField] private GameObject codePreview;
+    [SerializeField] private CodeBlock codeBlock;
 
-    [SerializeField]
-    private Button buyButton;
-
-    [SerializeField]
-    private GameObject soldOverlay;
-
-    [SerializeField]
-    private Color affordableColor = Color.black;
-
-    [SerializeField]
-    private Color unaffordableColor = Color.red;
+    [Header("Price Color")]
+    [SerializeField] private Color affordableColor = Color.black;
+    [SerializeField] private Color unaffordableColor = Color.red;
 
     private ShopSlot slot;
     private int slotIndex;
     private ShopManager shopManager;
 
-    void Update()
+    private void OnEnable()
     {
-        if (slot == null || PointManager.Instance == null)
-            return;
+        if (PointManager.Instance != null)
+            PointManager.Instance.OnPointChanged += UpdatePriceColor;
+    }
 
-        UpdatePriceColor(PointManager.Instance.CurrentPoint);
+    private void OnDisable()
+    {
+        if (PointManager.Instance != null)
+            PointManager.Instance.OnPointChanged -= UpdatePriceColor;
     }
 
     public void Setup(int index, ShopSlot slot, ShopManager manager)
@@ -40,19 +42,57 @@ public class ShopSlotUI : MonoBehaviour
         slotIndex = index;
         shopManager = manager;
 
-        blockText.text = slot.GetDisplayName();
+        nameText.text = slot.GetDisplayName();
 
-        priceText.text = $"{slot.Price}P";
+        switch (slot.Type)
+        {
+            case ShopItemType.Block:
+                SetupCode();
+                break;
+            case ShopItemType.Weapon:
+            case ShopItemType.Passive:
+                SetupImageItem();
+                break;
+        }
 
+        priceText.text = $"{slot.Price} P";
         SetSold(slot.IsSold);
 
         if (PointManager.Instance != null)
-        {
             UpdatePriceColor(PointManager.Instance.CurrentPoint);
-        }
 
         buyButton.onClick.RemoveAllListeners();
         buyButton.onClick.AddListener(OnClickBuy);
+    }
+
+    private void SetupCode()
+    {
+        if (itemPreview != null)
+            itemPreview.SetActive(false);
+
+        if (codePreview != null)
+            codePreview.SetActive(true);
+
+        if (codeBlock == null)
+        {
+            Debug.LogError("[ShopSlotUI] CodeBlock이 설정되지 않았습니다.");
+            return;
+        }
+
+        codeBlock.gameObject.SetActive(true);
+        codeBlock.InitializePreview(slot.Block, slot.Value, 75f);
+    }
+
+    private void SetupImageItem()
+    {
+        if (itemPreview != null)
+            itemPreview.SetActive(true);
+
+        if (codePreview != null)
+            codePreview.SetActive(false);
+
+        if (iconImage != null)
+            iconImage.sprite = slot.GetIcon();
     }
 
     private void UpdatePriceColor(int currentPoint)
@@ -66,9 +106,7 @@ public class ShopSlotUI : MonoBehaviour
     private void OnClickBuy()
     {
         if (shopManager.TryPurchase(slotIndex))
-        {
             SetSold(true);
-        }
     }
 
     public void SetSold(bool sold)
@@ -78,21 +116,5 @@ public class ShopSlotUI : MonoBehaviour
 
         if (soldOverlay != null)
             soldOverlay.SetActive(sold);
-    }
-
-    [ContextMenu("Toggle Sold")]
-    public void ToggleSold()
-    {
-        if (slot == null)
-            return;
-
-        slot.SetSold(!slot.IsSold);
-        SetSold(slot.IsSold);
-    }
-
-    private void OnDestroy()
-    {
-        if (PointManager.Instance != null)
-            PointManager.Instance.OnPointChanged -= UpdatePriceColor;
     }
 }

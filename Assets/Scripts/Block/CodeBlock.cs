@@ -10,6 +10,7 @@ public class CodeBlock
         IDragHandler,
         IEndDragHandler
 {
+    private bool isPreview;
     private WeaponDefinition linkedWeapon;
     public WeaponDefinition LinkedWeapon => linkedWeapon;
 
@@ -77,6 +78,39 @@ public class CodeBlock
 
         ClearError();
     }
+    public void InitializePreview(BlockDefinition definition, int value = 0, float cellSize = 75f)
+    {
+        if (rectTransform == null)
+            rectTransform = GetComponent<RectTransform>();
+
+        if (rectTransform == null)
+        {
+            Debug.LogError("[CodeBlock] Preview에는 RectTransform이 필요합니다.", this);
+            return;
+        }
+
+        isPreview = true;
+
+        this.definition = definition;
+        this.value = value;
+        this.grid = null;
+
+        if (text != null)
+        {
+            text.text = GetDisplayText();
+            text.color = BlockCategoryColor.GetColor(definition.category);
+        }
+
+        float width = GridWidth * cellSize;
+        float height = cellSize;
+
+        rectTransform.sizeDelta =
+            new Vector2(width, height);
+
+        UpdateTextSize();
+
+        ClearError();
+    }
 
     private string GetDisplayText()
     {
@@ -114,6 +148,9 @@ public class CodeBlock
             return;
 
         RectTransform textRect = text.GetComponent<RectTransform>();
+
+        if (textRect == null || rectTransform == null)
+            return;
 
         textRect.sizeDelta = rectTransform.sizeDelta;
     }

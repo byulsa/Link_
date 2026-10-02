@@ -133,6 +133,85 @@ public class ShopDropTable : ScriptableObject
         return true;
     }
 
+    public bool TrySelectBlockOnly(out ShopDropResult result)
+    {
+        result = default;
+
+        float simpleTotal = GetSimpleTotalWeight();
+        float valueTotal = GetValueTotalWeight();
+        float grandTotal = simpleTotal + valueTotal;
+
+        if (grandTotal <= 0f)
+            return false;
+
+        float random = Random.Range(0f, grandTotal);
+
+        if (random < simpleTotal)
+        {
+            SimpleEntry entry = SelectSimpleEntry(random);
+            if (entry == null)
+                return false;
+
+            result.type = ShopItemType.Block;
+            result.block = entry.block;
+            result.price = entry.price;
+            return true;
+        }
+        random -= simpleTotal;
+
+        ValueEntry ve = SelectValueEntry(random);
+        if (ve == null)
+            return false;
+
+        ValueOption opt = SelectValueOption(ve);
+        if (opt == null)
+            return false;
+
+        result.type = ShopItemType.Block;
+        result.block = ve.block;
+        result.value = opt.value;
+        result.price = opt.price;
+        return true;
+    }
+
+    // ⭐ DATA EXCHANGE 상단 5칸 전용: 패시브 아이템만
+    public bool TrySelectPassiveOnly(out ShopDropResult result)
+    {
+        result = default;
+
+        float passiveTotal = GetPassiveTotalWeight();
+        if (passiveTotal <= 0f)
+            return false;
+
+        PassiveEntry pe = SelectPassiveEntry(Random.Range(0f, passiveTotal));
+        if (pe == null)
+            return false;
+
+        result.type = ShopItemType.Passive;
+        result.passive = pe.passive;
+        result.price = pe.price;
+        return true;
+    }
+
+    // ⭐ DATA EXCHANGE 하단 2칸 전용: 무기만
+    public bool TrySelectWeaponOnly(out ShopDropResult result)
+    {
+        result = default;
+
+        float weaponTotal = GetWeaponTotalWeight();
+        if (weaponTotal <= 0f)
+            return false;
+
+        WeaponEntry we = SelectWeaponEntry(Random.Range(0f, weaponTotal));
+        if (we == null)
+            return false;
+
+        result.type = ShopItemType.Weapon;
+        result.block = we.block;
+        result.price = we.price;
+        return true;
+    }
+
     private float GetSimpleTotalWeight()
     {
         float sum = 0f;

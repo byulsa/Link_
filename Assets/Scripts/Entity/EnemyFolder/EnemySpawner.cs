@@ -10,17 +10,36 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField]
     private int poolLimit = 10;
 
+    [SerializeField]
+    private DataCollectionUI dataCollectionUI;
+
     private readonly List<GameObject> poolList = new List<GameObject>();
     private float elapsedTime; // 게임 시작 후 전체 시간
     private float spawnTimer; // 다음 스폰까지 시간
+    private bool waveEnded;
+
+    private void Awake()
+    {
+        if (dataCollectionUI == null)
+            dataCollectionUI = FindAnyObjectByType<DataCollectionUI>(FindObjectsInactive.Include);
+    }
 
     private void Update()
     {
+        if (waveTimeLine == null || waveEnded)
+            return;
+
         elapsedTime += Time.deltaTime;
         spawnTimer += Time.deltaTime;
 
         if (elapsedTime >= waveTimeLine.maxTime)
+        {
+            waveEnded = true;
+            if (dataCollectionUI != null)
+                dataCollectionUI.Open();
+
             return;
+        }
 
         if (spawnTimer >= 2f)
         {
@@ -31,7 +50,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void Spawn()
     {
-        if (waveTimeLine == null || waveTimeLine.waveData == null)
+        if (waveTimeLine.waveData == null)
             return;
 
         foreach (var waveData in waveTimeLine.waveData)
