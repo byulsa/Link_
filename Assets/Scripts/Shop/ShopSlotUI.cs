@@ -114,6 +114,12 @@ public class ShopSlotUI : MonoBehaviour
         if (buyButton != null)
             buyButton.interactable = !sold;
 
+        nameText.text = sold ? $"NULL" : slot.GetDisplayName();
+        priceText.text = sold ? $"<s>{slot.Price} P</s>" : $"{slot.Price} P";
+        iconImage.gameObject.SetActive(!sold);
+        codeBlock.gameObject.SetActive(!sold);
+
+
         if (soldOverlay != null)
             soldOverlay.SetActive(sold);
     }

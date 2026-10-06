@@ -20,7 +20,7 @@ MonoBehaviour:
   knockbackDuration: 0.2
   attackRecoveryTime: 0
   enemyPrefab: {fileID: 2171883001476934377, guid: f0617289909795a499d43246c5355190, type: 3}
-  PointDropNum: 0
+  PointDropNum: 5
   attackRange: 7
   retreatRange: 3
   retreatEndRange: 5

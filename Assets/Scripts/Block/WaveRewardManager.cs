@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Wave 동안 획득한 Code를 임시로 보관하고,
-// DATA COLLECTION 화면에서의 선택 결과를 처리하는 게임 로직 담당 클래스.
-// UI(DataCollectionUI, RewardSlotUI)는 이 클래스의 데이터/메서드만 참조한다.
 public class WaveRewardManager : MonoBehaviour
 {
     public static WaveRewardManager Instance { get; private set; }

@@ -125,6 +125,13 @@ public class DataCollectionUI : MonoBehaviour
         Close();
 
         if (shopPanel != null)
+        {
             shopPanel.SetActive(true);
+
+            if (ShopManager.Instance != null)
+                ShopManager.Instance.RefreshShop();
+            else
+                Debug.LogError("[DataCollectionUI] ShopManager 인스턴스를 찾을 수 없어 상점을 갱신하지 못했습니다.");
+        }
     }
 }

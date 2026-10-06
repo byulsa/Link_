@@ -9,13 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee4ca94534276674580dfb34356e525e, type: 3}
-  m_Name: WaveTimeLine
-  m_EditorClassIdentifier: Assembly-CSharp::WaveTimeLine
-  maxTime: 10
-  waveData:
+  m_Script: {fileID: 0}
+  m_Name: Wave_
+  m_EditorClassIdentifier: Assembly-CSharp::WaveData
+  maxTime: 25
+  timeLines:
   - startTime: 0
-    endTime: 10
+    endTime: 20
     enemyData:
     - {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
+    spawnInterval: 2
+  - startTime: 20
+    endTime: 25
+    enemyData:
+    - {fileID: 11400000, guid: b3bb586419f3ca341a1575c9bb1090ba, type: 2}
+    spawnInterval: 1

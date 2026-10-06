@@ -180,11 +180,6 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             spriteRenderer.flipX = false;
         }
     }
-
-    // -------------------------
-    // Knockback
-    // -------------------------
-
     private Coroutine coroutineKnockback;
 
     private void ApplyKnockback(Vector2 direction)

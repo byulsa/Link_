@@ -15,8 +15,10 @@ MonoBehaviour:
   dropChance: 50
   drops:
   - block: {fileID: 11400000, guid: c037f90e539bc6d4db15532393f43c56, type: 2}
-    weight: 20
+    weight: 5
   - block: {fileID: 11400000, guid: 9fe864a6ce79b314a8222b6d48dab199, type: 2}
     weight: 5
   - block: {fileID: 11400000, guid: 4bacbcc3a7491fa468edfb08196e8b95, type: 2}
+    weight: 5
+  - block: {fileID: 11400000, guid: a127d18b1841273428045947e8997cc6, type: 2}
     weight: 5

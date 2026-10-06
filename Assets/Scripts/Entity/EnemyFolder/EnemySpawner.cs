@@ -3,109 +3,160 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [Header("Enemy Data")]
-    [SerializeField]
-    private WaveTimeLine waveTimeLine;
+    [Header("Spawner")]
+    [SerializeField] private WaveData currentWave;
+    [SerializeField] private int poolLimit = 10;
 
-    [SerializeField]
-    private int poolLimit = 10;
-
-    [SerializeField]
-    private DataCollectionUI dataCollectionUI;
-
-    private readonly List<GameObject> poolList = new List<GameObject>();
-    private float elapsedTime; // 게임 시작 후 전체 시간
-    private float spawnTimer; // 다음 스폰까지 시간
+    private readonly List<PooledEnemy> poolList = new List<PooledEnemy>();
+    private float elapsedTime;
+    private float spawnTimer;
+    private float spawnInterval = 2f;
     private bool waveEnded;
 
-    private void Awake()
+    private class PooledEnemy
     {
-        if (dataCollectionUI == null)
-            dataCollectionUI = FindAnyObjectByType<DataCollectionUI>(FindObjectsInactive.Include);
+        public GameObject Prefab { get; }
+        public GameObject Instance { get; }
+
+        public PooledEnemy(GameObject prefab, GameObject instance)
+        {
+            Prefab = prefab;
+            Instance = instance;
+        }
+    }
+
+    public void StartWave(WaveData wave)
+    {
+        currentWave = wave;
+        elapsedTime = 0f;
+        spawnTimer = 0f;
+        waveEnded = false;
+
+        SetNextSpawnInterval();
     }
 
     private void Update()
     {
-        if (waveTimeLine == null || waveEnded)
+        if (currentWave == null || waveEnded)
             return;
 
         elapsedTime += Time.deltaTime;
         spawnTimer += Time.deltaTime;
 
-        if (elapsedTime >= waveTimeLine.maxTime)
+        if (elapsedTime >= currentWave.maxTime)
         {
-            waveEnded = true;
-            if (dataCollectionUI != null)
-                dataCollectionUI.Open();
-
+            EndWave();
             return;
         }
 
-        if (spawnTimer >= 2f)
+        if (spawnTimer >= spawnInterval)
         {
             spawnTimer = 0f;
             Spawn();
+            SetNextSpawnInterval();
         }
+    }
+
+    private WaveTimeLineData GetCurrentTimeline()
+    {
+        if (currentWave.timeLines == null)
+            return null;
+
+        foreach (WaveTimeLineData data in currentWave.timeLines)
+        {
+            if (elapsedTime >= data.startTime && elapsedTime < data.endTime)
+                return data;
+        }
+
+        return null;
+    }
+
+    private void SetNextSpawnInterval()
+    {
+        WaveTimeLineData timeline = GetCurrentTimeline();
+
+        if (timeline == null)
+        {
+            spawnInterval = 2f;
+            return;
+        }
+
+        spawnInterval = Random.Range(
+            timeline.spawnInterval * 0.5f,
+            timeline.spawnInterval * 2f
+        );
+
+        spawnInterval = Mathf.Clamp(spawnInterval, 0.5f, 10f);
     }
 
     private void Spawn()
     {
-        if (waveTimeLine.waveData == null)
+        WaveTimeLineData timeline = GetCurrentTimeline();
+
+        if (timeline == null)
             return;
 
-        foreach (var waveData in waveTimeLine.waveData)
-        {
-            if (elapsedTime >= waveData.startTime && elapsedTime < waveData.endTime)
-            {
-                if (waveData.enemyData == null || waveData.enemyData.Count == 0)
-                    return;
+        if (timeline.enemyData == null || timeline.enemyData.Count == 0)
+            return;
 
-                EnemyData enemyData = waveData.enemyData[Random.Range(0, waveData.enemyData.Count)];
+        EnemyData enemyData = timeline.enemyData[
+            Random.Range(0, timeline.enemyData.Count)
+        ];
 
-                GameObject enemyObj = GetObjectFromPool(enemyData);
+        if (enemyData == null || enemyData.enemyPrefab == null)
+            return;
 
-                if (enemyObj != null)
-                {
-                    enemyObj.transform.position = transform.position;
+        GameObject enemyObj = GetObjectFromPool(enemyData);
 
-                    enemyObj.transform.rotation = transform.rotation;
+        if (enemyObj == null)
+            return;
 
-                    enemyObj.SetActive(true);
-                }
-
-                return;
-            }
-        }
+        enemyObj.transform.position = transform.position;
+        enemyObj.transform.rotation = transform.rotation;
+        enemyObj.SetActive(true);
     }
 
     private GameObject GetObjectFromPool(EnemyData enemyData)
     {
         for (int i = 0; i < poolList.Count; i++)
         {
-            if (!poolList[i].activeSelf)
+            PooledEnemy pooledEnemy = poolList[i];
+
+            if (pooledEnemy.Prefab == enemyData.enemyPrefab && !pooledEnemy.Instance.activeSelf)
             {
-                return poolList[i];
+                Enemy pooledEnemyComp = pooledEnemy.Instance.GetComponent<Enemy>();
+
+                if (pooledEnemyComp != null)
+                    pooledEnemyComp.InitializeFromData(enemyData);
+
+                return pooledEnemy.Instance;
             }
         }
 
-        if (poolList.Count < poolLimit)
-        {
-            GameObject newObj = Instantiate(
-                enemyData.enemyPrefab,
-                transform.position,
-                transform.rotation
-            );
+        if (poolList.Count >= poolLimit)
+            return null;
 
-            Enemy enemyComp = newObj.GetComponent<Enemy>();
-            if (enemyComp != null)
-            {
-                enemyComp.InitializeFromData(enemyData);
-            }
+        GameObject newObj = Instantiate(
+            enemyData.enemyPrefab,
+            transform.position,
+            transform.rotation
+        );
 
-            poolList.Add(newObj);
-            return newObj;
-        }
+        Enemy enemyComp = newObj.GetComponent<Enemy>();
 
-        return null;
+        if (enemyComp != null)
+            enemyComp.InitializeFromData(enemyData);
+
+        poolList.Add(new PooledEnemy(enemyData.enemyPrefab, newObj));
+        return newObj;
+    }
+
+    private void EndWave()
+    {
+        waveEnded = true;
+        currentWave = null;
+
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnWaveEnded();
     }
 }
