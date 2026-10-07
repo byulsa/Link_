@@ -16,4 +16,7 @@ public enum BlockType
     SZ,
     WEAP,
     POINT,
+    PARENTHESIS_BUNDLE,
+    PARENTHESIS_OPEN,
+    PARENTHESIS_CLOSE,
 }

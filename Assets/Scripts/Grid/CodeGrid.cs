@@ -130,6 +130,38 @@ public class CodeGrid : MonoBehaviour
         editor.RefreshCode();
     }
 
+    public bool TryExpandParenthesisBundle(CodeBlock bundle, Vector2Int position)
+    {
+        if (
+            editor == null
+            || bundle == null
+            || bundle.Definition == null
+            || bundle.CodeType != BlockType.PARENTHESIS_BUNDLE
+        )
+        {
+            Debug.LogError("[CodeGrid] 유효한 괄호 번들이 아니거나 CodeEditor가 없습니다.", this);
+            return false;
+        }
+
+        if (!CanPlace(position, 2, bundle))
+        {
+            return false;
+        }
+
+        UnregisterBlock(bundle);
+        bundle.gameObject.SetActive(false);
+        CodeBlock firstBlock = editor.CreateDropBlock(bundle.Definition, position, 0);
+        if (firstBlock == null)
+        {
+            bundle.gameObject.SetActive(true);
+            RegisterBlock(bundle);
+            return false;
+        }
+
+        Destroy(bundle.gameObject);
+        return true;
+    }
+
     public bool TryFindEmptyPosition(int blockWidth, out Vector2Int position)
     {
         for (int y = 0; y < height; y++)

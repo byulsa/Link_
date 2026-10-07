@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Collections;
 using TMPro;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShopUI : MonoBehaviour
 {
@@ -12,11 +14,14 @@ public class ShopUI : MonoBehaviour
     [SerializeField] private List<ShopSlotUI> weaponSlotUIs; // 하단 2개 (무기 고정)
 
     [Header("대사 (DATA EXCHANGE 캐릭터)")]
+    [SerializeField] private Image characterImage;
+    [SerializeField] Sprite[] characterSprite;//0 = 구매할때, 1 = 구매 실패
     [SerializeField] private TMP_Text dialogueText;
     [SerializeField] private string defaultLine = "실험이 종료되었어요. 'P'는 많이 얻으셨나요?";
     [SerializeField] private string[] purchaseLines;
     [SerializeField] private string[] FailedSoldLines;
     [SerializeField, Min(0f)] private float characterDelay = 0.01f;
+    [SerializeField] private RectTransform dialogueShakeTarget;
 
     private Tween dialogueTween;
     private Tween dialogueShakeTween;
@@ -43,8 +48,8 @@ public class ShopUI : MonoBehaviour
         dialogueShakeTween?.Kill();
         dialogueShakeTween = null;
 
-        if (dialogueText != null && hasDialogueOriginPosition)
-            dialogueText.rectTransform.anchoredPosition = dialogueOriginPosition;
+        if (dialogueShakeTarget != null && hasDialogueOriginPosition)
+            dialogueShakeTarget.anchoredPosition = dialogueOriginPosition;
 
         hasDialogueOriginPosition = false;
 
@@ -84,6 +89,7 @@ public class ShopUI : MonoBehaviour
             // 드랍테이블에 항목이 부족해 못 채운 칸은 비워둠
             slotUI.gameObject.SetActive(false);
         }
+        ShowLine(defaultLine);
     }
 
     private ShopSlotUI GetSlotUI(int slotIndex)
@@ -107,7 +113,7 @@ public class ShopUI : MonoBehaviour
             slotUI.SetSold(true);
 
         ShowRandomLine();
-
+        StartCoroutine(characterEmotion(0)); // 구매 성공 시 캐릭터 감정 변화
         // TODO: 구매 애니메이션 트리거는 나중에 여기 연결
     }
 
@@ -115,6 +121,7 @@ public class ShopUI : MonoBehaviour
     {
         Debug.Log($"[ShopUI] 구매 실패: slot {slotIndex}");
         ShowFailedRandomLine();
+        StartCoroutine(characterEmotion(1)); // 구매 실패 시 캐릭터 감정 변화
     }
 
     private void ShowRandomLine()
@@ -135,27 +142,20 @@ public class ShopUI : MonoBehaviour
     }
     public void FailedSoldShake()
     {
-        if (dialogueText == null)
+        if (dialogueShakeTarget == null)
             return;
-
-        RectTransform textRect = dialogueText.rectTransform;
 
         if (dialogueShakeTween != null && dialogueShakeTween.IsActive())
         {
             dialogueShakeTween.Kill();
-            textRect.anchoredPosition = dialogueOriginPosition;
-        }
-        else
-        {
-            dialogueOriginPosition = textRect.anchoredPosition;
-            hasDialogueOriginPosition = true;
+            dialogueShakeTarget.anchoredPosition = Vector2.zero;
         }
 
-        dialogueShakeTween = textRect
-            .DOShakeAnchorPos(0.5f, new Vector2(20f, 0f), 10, 90f)
+        dialogueShakeTween = dialogueShakeTarget
+            .DOShakeAnchorPos(0.2f, new Vector2(20f, 0f), 40, 90f)
             .OnComplete(() =>
             {
-                textRect.anchoredPosition = dialogueOriginPosition;
+                dialogueShakeTarget.anchoredPosition = Vector2.zero;
                 dialogueShakeTween = null;
             });
     }
@@ -187,5 +187,11 @@ public class ShopUI : MonoBehaviour
             )
             .SetEase(Ease.Linear)
             .SetTarget(dialogueText);
+    }
+    private IEnumerator characterEmotion(int characterCount)//0 = 구매할때, 1 = 구매 실패
+    {
+        characterImage.sprite = characterSprite[characterCount];
+        yield return new WaitForSeconds(0.5f);
+        //:후에 돌아오는 로직
     }
 }

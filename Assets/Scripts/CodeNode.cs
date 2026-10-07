@@ -5,6 +5,7 @@ public class CodeNode
 {
     public BlockType blockType;
     public float value;
+    public List<BlockType> groupTargets = new List<BlockType>();
 
     [System.NonSerialized]
     public CodeBlock sourceBlock;
@@ -14,6 +15,7 @@ public class CodeNode
 public class CodeChain
 {
     public List<CodeNode> nodes = new List<CodeNode>();
+    public List<CodeBlock> sourceBlocks = new List<CodeBlock>();
 
     public CodeBlock FirstBlock
     {

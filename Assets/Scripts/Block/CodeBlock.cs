@@ -25,11 +25,15 @@ public class CodeBlock
 
     private RectTransform rectTransform;
     private Canvas canvas;
+    private bool isDragging;
+    private Vector3 dragWorldOffset;
+    private Vector2Int dragOriginalPosition;
+    private BlockType? runtimeBlockType;
 
-    // 드래그 시작 시 마우스가 잡은 셀의 위치
     private int dragCellOffset;
 
     public BlockDefinition Definition => definition;
+    public BlockType CodeType => runtimeBlockType ?? definition.blockType;
 
     public Vector2Int GridPosition { get; private set; }
     private int value;
@@ -51,7 +55,6 @@ public class CodeBlock
         rectTransform = GetComponent<RectTransform>();
 
         canvas = GetComponentInParent<Canvas>();
-
         if (outline == null)
         {
             outline = GetComponent<Outline>();
@@ -60,11 +63,17 @@ public class CodeBlock
         ClearError();
     }
 
-    public void Initialize(BlockDefinition definition, CodeGrid grid, int value = 0)
+    public void Initialize(
+        BlockDefinition definition,
+        CodeGrid grid,
+        int value = 0,
+        BlockType? runtimeBlockType = null
+    )
     {
         this.definition = definition;
         this.grid = grid;
         this.value = value;
+        this.runtimeBlockType = runtimeBlockType;
 
         if (text != null)
         {
@@ -94,6 +103,7 @@ public class CodeBlock
         this.definition = definition;
         this.value = value;
         this.grid = null;
+        runtimeBlockType = null;
 
         if (text != null)
         {
@@ -116,6 +126,16 @@ public class CodeBlock
     {
         if (definition == null)
             return string.Empty;
+
+        if (CodeType == BlockType.PARENTHESIS_BUNDLE)
+        {
+            return "()";
+        }
+
+        if (CodeType == BlockType.PARENTHESIS_OPEN)
+            return "(";
+        if (CodeType == BlockType.PARENTHESIS_CLOSE)
+            return ")";
 
         if (!definition.hasValue)
             return definition.displayText;
@@ -185,64 +205,71 @@ public class CodeBlock
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (isPreview || grid == null || canvas == null || definition == null)
+        {
+            isDragging = false;
+            return;
+        }
+
+        isDragging = true;
+        dragOriginalPosition = GridPosition;
         Debug.Log($"드래그 시작: {definition.displayText}");
 
         transform.SetAsLastSibling();
 
         // 현재 마우스 위치를 그리드 좌표로 변환
-        Vector2Int mouseGridPosition = grid.WorldToGrid(GetWorldPosition(eventData));
+        Vector3 pointerWorldPosition = GetWorldPosition(eventData);
+        Vector2Int mouseGridPosition = grid.WorldToGrid(pointerWorldPosition);
+        dragWorldOffset = transform.position - pointerWorldPosition;
 
         // 마우스가 블록의 몇 번째 셀을 잡았는지 계산
         dragCellOffset = mouseGridPosition.x - GridPosition.x;
 
         // 범위를 안전하게 제한
         dragCellOffset = Mathf.Clamp(dragCellOffset, 0, GridWidth - 1);
+
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (canvas == null || grid == null)
+        if (!isDragging || canvas == null || grid == null)
             return;
 
         Vector3 worldPosition = GetWorldPosition(eventData);
+        rectTransform.position = worldPosition + dragWorldOffset;
 
-        // 마우스가 위치한 그리드 셀
-        Vector2Int mouseGridPosition = grid.WorldToGrid(worldPosition);
-
-        // 마우스가 잡았던 셀이
-        // 현재 마우스 셀에 오도록 시작 위치 계산
-        Vector2Int targetPosition = new Vector2Int(
-            mouseGridPosition.x - dragCellOffset,
-            mouseGridPosition.y
-        );
-
-        // 화면에서 실제 블록도 해당 위치로 Snap
-        if (grid.CanPlace(targetPosition, GridWidth, this))
-        {
-            rectTransform.position = grid.GridToWorldCenter(targetPosition, GridWidth);
-        }
-        else
-        {
-            // 배치할 수 없는 위치라면
-            // 일단 마우스를 따라가도록 하지 않고
-            // 마지막 정상 위치 유지
-        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        if (!isDragging)
+            return;
+
+        isDragging = false;
         Debug.Log($"드래그 종료: {definition.displayText}");
 
-        Vector2Int mouseGridPosition = grid.WorldToGrid(GetWorldPosition(eventData));
+        Vector2Int pointerGridPosition = grid.WorldToGrid(GetWorldPosition(eventData));
+
+        if (IsParenthesisBundle())
+        {
+            Vector2Int bundlePosition = new Vector2Int(
+                pointerGridPosition.x - dragCellOffset,
+                pointerGridPosition.y
+            );
+            if (!grid.TryExpandParenthesisBundle(this, bundlePosition))
+                SetGridPosition(GridPosition);
+
+            return;
+        }
 
         Vector2Int targetPosition = new Vector2Int(
-            mouseGridPosition.x - dragCellOffset,
-            mouseGridPosition.y
+            pointerGridPosition.x - dragCellOffset,
+            pointerGridPosition.y
         );
 
         if (!grid.CanPlace(targetPosition, GridWidth, this))
         {
-            SetGridPosition(GridPosition);
+            SetGridPosition(dragOriginalPosition);
             return;
         }
 
@@ -253,6 +280,11 @@ public class CodeBlock
         grid.RegisterBlock(this);
 
         grid.NotifyCodeChanged();
+    }
+
+    private bool IsParenthesisBundle()
+    {
+        return definition != null && CodeType == BlockType.PARENTHESIS_BUNDLE;
     }
 
     private Vector3 GetWorldPosition(PointerEventData eventData)

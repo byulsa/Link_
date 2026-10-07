@@ -77,6 +77,9 @@ public class CodeExecutor : MonoBehaviour
 
     private bool ExecuteWeapon(CodeChain chain, Entity source, Entity target)
     {
+        if (!IsValidWeaponChain(chain))
+            return false;
+
         if (
             source == null
             || !source.Is(EntityType.Weapon)
@@ -102,6 +105,9 @@ public class CodeExecutor : MonoBehaviour
 
         if (chain.nodes.Count < 2)
             return false;
+
+        if (chain.nodes[1].blockType == BlockType.PARENTHESIS_BUNDLE)
+            return ExecuteGroupedWeapon(chain, weapon, enemy);
 
         BlockType action = chain.nodes[1].blockType;
 
@@ -138,6 +144,48 @@ public class CodeExecutor : MonoBehaviour
             default:
                 return false;
         }
+    }
+
+    private bool IsValidWeaponChain(CodeChain chain)
+    {
+        return chain != null && CodeValidator.IsValidWeaponChain(chain.nodes);
+    }
+
+    private bool ExecuteGroupedWeapon(CodeChain chain, WeaponBase weapon, Enemy enemy)
+    {
+        CodeNode group = chain.nodes[1];
+        if (group.groupTargets == null || group.groupTargets.Count == 0)
+            return false;
+
+        bool dealtDamage = false;
+        foreach (BlockType action in group.groupTargets)
+        {
+            if (!IsWeaponAction(action))
+                return false;
+
+            float baseValue = GetWeaponBaseValue(weapon, action);
+            float finalValue = CalculateValue(baseValue, chain, 2);
+            finalValue = Mathf.Max(0f, finalValue);
+
+            switch (action)
+            {
+                case BlockType.DMG:
+                    enemy.TakeDamage(finalValue);
+                    dealtDamage = true;
+                    break;
+
+                case BlockType.DST:
+                case BlockType.SPD:
+                case BlockType.SZ:
+                    weapon.SetStat(action, finalValue);
+                    break;
+
+                default:
+                    return false;
+            }
+        }
+
+        return dealtDamage;
     }
 
     // ⭐ DTH → POINT 처리 (중복 지급 방지)
@@ -246,7 +294,12 @@ public class CodeExecutor : MonoBehaviour
 
     private float CalculateValue(float value, CodeChain chain, int startIndex)
     {
-        for (int i = startIndex; i < chain.nodes.Count; i++)
+        return CalculateValue(value, chain, startIndex, chain.nodes.Count);
+    }
+
+    private float CalculateValue(float value, CodeChain chain, int startIndex, int endIndex)
+    {
+        for (int i = startIndex; i < endIndex; i++)
         {
             CodeNode node = chain.nodes[i];
 
@@ -257,6 +310,20 @@ public class CodeExecutor : MonoBehaviour
         }
 
         return value;
+    }
+
+    private bool IsModifier(BlockType type)
+    {
+        switch (type)
+        {
+            case BlockType.PLUS:
+            case BlockType.MINUS:
+            case BlockType.MULT:
+            case BlockType.DIV:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private float ApplyModifier(float value, BlockType type, float modifier)

@@ -19,6 +19,12 @@ MonoBehaviour:
   - block: {fileID: 11400000, guid: 32c38e1b18cb59447874e82cb2cb585c, type: 2}
     price: 10
     weight: 1
+  - block: {fileID: 11400000, guid: f27b6524d1cb4111a0af61382c7c9b45, type: 2}
+    price: 20
+    weight: 1
+  - block: {fileID: 11400000, guid: 39b9cdd5e7c54a19b372294d9c98b8af, type: 2}
+    price: 10
+    weight: 1
   valueEntries:
   - block: {fileID: 11400000, guid: c037f90e539bc6d4db15532393f43c56, type: 2}
     valueOptions:

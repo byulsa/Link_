@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class CodeValidator : MonoBehaviour
@@ -79,80 +80,62 @@ public class CodeValidator : MonoBehaviour
     /// </summary>
     private ValidationResult ValidateWeaponChain(List<CodeBlock> blocks)
     {
-        // -----------------------------------------------------
-        // 최소 블록 수
-        // -----------------------------------------------------
-
-        if (blocks.Count < 3)
-        {
-            Debug.LogWarning($"[CodeValidator] WEAP 체인 블록 부족: " + $"{blocks.Count}개");
-
-            return new ValidationResult(
-                false,
-                errorMessage: "무기 코드는 최소 3개 블록 "
-                    + "(WEAP → Action → Modifier)이 필요합니다."
-            );
-        }
-
-        // -----------------------------------------------------
-        // 첫 번째 블록
-        // -----------------------------------------------------
-
-        if (blocks[0].Definition.blockType != BlockType.WEAP)
-        {
-            return ValidationResult.Error(
-                blocks[0],
-                blocks[1],
-                "무기 체인은 WEAP으로 시작해야 합니다."
-            );
-        }
-
-        // -----------------------------------------------------
-        // 두 번째 블록
-        // -----------------------------------------------------
-
-        BlockType actionType = blocks[1].Definition.blockType;
-
-        if (!IsWeaponAction(actionType))
-        {
-            Debug.LogWarning($"[CodeValidator] 잘못된 WEAP Action: " + $"{actionType}");
-
-            return ValidationResult.Error(
-                blocks[0],
-                blocks[1],
-                "WEAP 다음에는 무기 스탯 블록이 와야 합니다."
-            );
-        }
-
-        // -----------------------------------------------------
-        // 세 번째 이후 = Modifier
-        // -----------------------------------------------------
-
-        for (int i = 2; i < blocks.Count; i++)
-        {
-            BlockType modifierType = blocks[i].Definition.blockType;
-
-            Debug.Log($"[CodeValidator] WEAP Modifier 확인: " + $"{modifierType}");
-
-            if (!IsModifier(modifierType))
+        List<CodeNode> nodes = blocks
+            .Select(block => new CodeNode
             {
-                Debug.LogWarning($"[CodeValidator] 잘못된 WEAP Modifier: " + $"{modifierType}");
+                blockType = block.CodeType,
+            })
+            .ToList();
 
-                CodeBlock previousBlock = blocks[i - 1];
+        if (IsValidWeaponChain(nodes))
+            return ValidationResult.Success();
 
-                CodeBlock invalidBlock = blocks[i];
+        return new ValidationResult(
+            false,
+            new List<CodeBlock>(blocks),
+            "무기 문법은 WEAP → 대상 → Modifier 또는 WEAP → (대상 대상...) → Modifier 순서여야 합니다."
+        );
+    }
 
-                return ValidationResult.Error(
-                    previousBlock,
-                    invalidBlock,
-                    "WEAP Action 다음에는 Modifier만 올 수 있습니다."
-                );
+    public static bool IsValidWeaponChain(IReadOnlyList<CodeNode> nodes)
+    {
+        if (nodes == null || nodes.Count < 2 || nodes[0] == null || nodes[1] == null)
+            return false;
+
+        if (nodes[0].blockType != BlockType.WEAP)
+            return false;
+
+        if (nodes[1].blockType == BlockType.PARENTHESIS_BUNDLE)
+        {
+            if (
+                nodes[1].groupTargets == null
+                || nodes[1].groupTargets.Count == 0
+                || nodes[1].groupTargets.Any(target => !IsWeaponAction(target))
+                || nodes[1].groupTargets.Distinct().Count() != nodes[1].groupTargets.Count
+            )
+            {
+                return false;
             }
+
+            for (int i = 2; i < nodes.Count; i++)
+            {
+                if (nodes[i] == null || !IsModifier(nodes[i].blockType))
+                    return false;
+            }
+
+            return true;
         }
 
-        Debug.Log("[CodeValidator] WEAP 체인 검증 성공");
+        if (!IsWeaponAction(nodes[1].blockType))
+            return false;
 
-        return ValidationResult.Success();
+        for (int i = 2; i < nodes.Count; i++)
+        {
+            if (nodes[i] == null || !IsModifier(nodes[i].blockType))
+                return false;
+        }
+
+        return true;
     }
 
     // =========================================================
@@ -190,7 +173,7 @@ public class CodeValidator : MonoBehaviour
         // 첫 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[0].Definition.blockType != BlockType.TOU)
+        if (blocks[0].CodeType != BlockType.TOU)
         {
             return ValidationResult.Error(
                 blocks[0],
@@ -203,7 +186,7 @@ public class CodeValidator : MonoBehaviour
         // 두 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[1].Definition.blockType != BlockType.EN)
+        if (blocks[1].CodeType != BlockType.EN)
         {
             return ValidationResult.Error(
                 blocks[0],
@@ -216,7 +199,7 @@ public class CodeValidator : MonoBehaviour
         // 세 번째 블록
         // -----------------------------------------------------
 
-        if (blocks[2].Definition.blockType != BlockType.DMG)
+        if (blocks[2].CodeType != BlockType.DMG)
         {
             return ValidationResult.Error(
                 blocks[1],
@@ -231,7 +214,7 @@ public class CodeValidator : MonoBehaviour
 
         for (int i = 3; i < blocks.Count; i++)
         {
-            BlockType modifierType = blocks[i].Definition.blockType;
+            BlockType modifierType = blocks[i].CodeType;
 
             Debug.Log($"[CodeValidator] TOU Modifier 확인: " + $"{modifierType}");
 
@@ -260,7 +243,7 @@ public class CodeValidator : MonoBehaviour
     // Weapon Action
     // =========================================================
 
-    private bool IsWeaponAction(BlockType blockType)
+    private static bool IsWeaponAction(BlockType blockType)
     {
         switch (blockType)
         {
@@ -281,7 +264,7 @@ public class CodeValidator : MonoBehaviour
     // Modifier
     // =========================================================
 
-    private bool IsModifier(BlockType blockType)
+    private static bool IsModifier(BlockType blockType)
     {
         switch (blockType)
         {

@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
   blockType: 3
   category: 1
+  icon: {fileID: 0}
   displayText: DMG
-  value: 0
+  hasValue: 0
+  minValue: 1
+  maxValue: 1
+  targetWeapon: {fileID: 0}

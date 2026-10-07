@@ -10,9 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15eb871bb55be1f49a29c00635b0f74b, type: 3}
-  m_Name: SZ
+  m_Name: PARENTHESES
   m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
-  blockType: 13
-  category: 1
-  displayText: SZ
-  value: 1
+  blockType: 16
+  category: 3
+  icon: {fileID: 0}
+  displayText: ()
+  hasValue: 0
+  minValue: 1
+  maxValue: 1
+  targetWeapon: {fileID: 0}

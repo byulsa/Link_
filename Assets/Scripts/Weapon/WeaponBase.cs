@@ -47,9 +47,7 @@ public class WeaponBase : MonoBehaviour
 
         foreach (CodeChain chain in chains)
         {
-            if (chain == null || chain.nodes == null || chain.nodes.Count < 3)
-                continue;
-            if (chain.nodes[0].blockType != BlockType.WEAP)
+            if (chain == null || !CodeValidator.IsValidWeaponChain(chain.nodes))
                 continue;
 
             // ⭐ 범위 체크: targetWeapon이 지정돼 있으면 그 무기가 '나'일 때만 반영
@@ -57,12 +55,27 @@ public class WeaponBase : MonoBehaviour
             if (scope != null && scope != definition)
                 continue;
 
-            BlockType action = chain.nodes[1].blockType;
-            if (action == BlockType.SPD || action == BlockType.DST || action == BlockType.SZ)
+            if (chain.nodes[1].blockType == BlockType.PARENTHESIS_BUNDLE)
             {
-                float baseValue = GetBaseValue(action);
-                float finalValue = CalculateValue(baseValue, chain, 2);
-                SetStat(action, Mathf.Max(0f, finalValue));
+                foreach (BlockType groupedAction in chain.nodes[1].groupTargets)
+                {
+                    if (groupedAction != BlockType.DMG)
+                    {
+                        float groupedValue = GetBaseValue(groupedAction);
+                        float finalGroupedValue = CalculateValue(groupedValue, chain, 2);
+                        SetStat(groupedAction, Mathf.Max(0f, finalGroupedValue));
+                    }
+                }
+            }
+            else
+            {
+                BlockType action = chain.nodes[1].blockType;
+                if (action == BlockType.SPD || action == BlockType.DST || action == BlockType.SZ)
+                {
+                    float baseValue = GetBaseValue(action);
+                    float finalValue = CalculateValue(baseValue, chain, 2);
+                    SetStat(action, Mathf.Max(0f, finalValue));
+                }
             }
         }
     }

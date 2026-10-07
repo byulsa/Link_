@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: DST
   m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
   blockType: 11
-  category: 4
+  category: 1
   icon: {fileID: 0}
-  displayText: 
+  displayText: DST
   hasValue: 0
   minValue: 1
   maxValue: 1

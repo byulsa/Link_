@@ -10,18 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ee4ca94534276674580dfb34356e525e, type: 3}
-  m_Name: Wave_
+  m_Name: Wave_ 3
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
-  maxTime: 25
+  maxTime: 15
   timeLines:
   - startTime: 0
-    endTime: 20
+    endTime: 10
     enemyData:
-    - {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
-    spawnInterval: 2
-  - startTime: 20
-    endTime: 25
+    spawnInterval: 1
+  - startTime: 5
+    endTime: 10
     enemyData:
     - {fileID: 11400000, guid: b3bb586419f3ca341a1575c9bb1090ba, type: 2}
     spawnInterval: 1
