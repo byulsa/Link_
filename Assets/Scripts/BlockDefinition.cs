@@ -7,6 +7,9 @@ public class BlockDefinition : ScriptableObject
     public BlockCategory category;
     public Sprite icon;
     public string displayText;
+    public string fullName;
+    [TextArea(2, 5)]
+    public string description;
 
     [Header("Value")]
     public bool hasValue;

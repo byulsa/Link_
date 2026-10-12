@@ -7,8 +7,10 @@ public class WaveManager : MonoBehaviour
     [SerializeField] private ChapterData chapterData;
     [SerializeField] private EnemySpawner enemySpawner;
     [SerializeField] private DataCollectionUI dataCollectionUI;
+    [SerializeField] private CodePanel codePanel;
 
     private int currentWaveIndex;
+    public static bool IsBattleActive { get; private set; }
 
     private void Awake()
     {
@@ -19,6 +21,16 @@ public class WaveManager : MonoBehaviour
         }
 
         Instance = this;
+        IsBattleActive = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        Instance = null;
+        IsBattleActive = false;
     }
 
     private void Start()
@@ -29,7 +41,10 @@ public class WaveManager : MonoBehaviour
     public void StartWave(int index)
     {
         if (chapterData == null || chapterData.waves == null)
+        {
+            IsBattleActive = false;
             return;
+        }
 
         if (index < 0 || index >= chapterData.waves.Count)
         {
@@ -38,6 +53,7 @@ public class WaveManager : MonoBehaviour
         }
 
         currentWaveIndex = index;
+        IsBattleActive = true;
 
         WaveData wave = chapterData.waves[index];
 
@@ -46,6 +62,10 @@ public class WaveManager : MonoBehaviour
 
     public void OnWaveEnded()
     {
+        IsBattleActive = false;
+        if (codePanel != null)
+            codePanel.SetOpen(false);
+
         if (dataCollectionUI != null)
             dataCollectionUI.Open();
     }
@@ -57,6 +77,10 @@ public class WaveManager : MonoBehaviour
 
     private void CompleteChapter()
     {
+        IsBattleActive = false;
+        if (codePanel != null)
+            codePanel.SetOpen(false);
+
         Debug.Log("[WaveManager] 챕터 종료");
     }
 }

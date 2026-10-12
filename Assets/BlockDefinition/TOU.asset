@@ -15,4 +15,5 @@ MonoBehaviour:
   blockType: 0
   category: 0
   displayText: TOU
+  fullName: Touch
   value: 0

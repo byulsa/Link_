@@ -15,4 +15,5 @@ MonoBehaviour:
   blockType: 5
   category: 2
   displayText: EN
+  fullName: Enemy
   value: 0

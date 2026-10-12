@@ -96,7 +96,7 @@ public class CodeController : MonoBehaviour
                 $"[CodeController] " + $"{owner.name} 실행: " + $"{chain.nodes[0].blockType}"
             );
 
-            bool result = CodeExecutor.Instance.Execute(chain, owner, target);
+            bool result = CodeExecutor.Execute(chain, owner, target);
 
             if (result)
             {
@@ -124,7 +124,7 @@ public class CodeController : MonoBehaviour
             if (chain.nodes[0].blockType != BlockType.DTH)
                 continue;
 
-            CodeExecutor.Instance.Execute(chain, owner, target);
+            CodeExecutor.Execute(chain, owner, target);
 
             return;
         }

@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class WaveRewardManager : MonoBehaviour
 {
-    public static WaveRewardManager Instance { get; private set; }
-
     [Header("References")]
     [SerializeField]
     private CodeGrid grid;
@@ -54,17 +52,6 @@ public class WaveRewardManager : MonoBehaviour
     public event Action OnRewardAdded;
     public event Action OnSelectionChanged;
     public event Action OnRewardsConfirmed;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
 
     // CodeDropManager 등 Code를 실제로 획득하는 지점에서 호출한다.
     public void AddReward(BlockDefinition block, int value)

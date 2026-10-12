@@ -16,6 +16,9 @@ MonoBehaviour:
   category: 3
   icon: {fileID: 0}
   displayText: ()
+  fullName: Parentheses
+  description: "\uAD04\uD638 \uC548\uC5D0 \uC5EC\uB7EC \uB300\uC0C1\uC774\uB098 \uC18D\uC131\uC744
+    \uBB36\uC5B4 \uB3D9\uC77C\uD55C \uC5F0\uC0B0\uC744 \uC801\uC6A9\uD569\uB2C8\uB2E4."
   hasValue: 0
   minValue: 1
   maxValue: 1

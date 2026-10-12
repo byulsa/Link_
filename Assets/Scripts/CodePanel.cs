@@ -13,24 +13,54 @@ public class CodePanel : MonoBehaviour
     [SerializeField]
     private Vector2 closePosition;
 
-    private RectTransform codePanelTransform;
+    [SerializeField]
+    private GameObject shopPanel;
 
-    void Start()
+    private RectTransform codePanelTransform;
+    private bool isOpen;
+
+    private void Awake()
     {
         codePanelTransform = GetComponent<RectTransform>();
-        OpenClose(isOpenClose);
+        codePanelTransform.anchoredPosition = closePosition;
+        isOpen = false;
+        isOpenClose = true;
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (!Input.GetKeyDown(KeyCode.Escape))
+            return;
+
+        if (shopPanel != null && shopPanel.activeSelf)
         {
-            OpenClose(isOpenClose);
+            shopPanel.SetActive(false);
+            SetOpen(true);
+            return;
+        }
+
+        if (isOpen)
+        {
+            SetOpen(false);
+
+            if (WaveManager.Instance == null)
+            {
+                Debug.LogError("[CodePanel] 코드 패널을 닫았지만 WaveManager 인스턴스를 찾지 못했습니다.", this);
+                return;
+            }
+
+            WaveManager.Instance.NextWave();
         }
     }
 
     public void OpenClose(bool isOpen)
     {
+        SetOpen(isOpen);
+    }
+
+    public void SetOpen(bool isOpen)
+    {
+        this.isOpen = isOpen;
         isOpenClose = !isOpen;
         codePanelTransform.DOKill();
 

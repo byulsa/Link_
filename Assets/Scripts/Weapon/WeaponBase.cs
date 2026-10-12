@@ -47,35 +47,23 @@ public class WeaponBase : MonoBehaviour
 
         foreach (CodeChain chain in chains)
         {
-            if (chain == null || !CodeValidator.IsValidWeaponChain(chain.nodes))
+            if (!CodeChainEvaluator.TryGetWeaponActions(chain, out CodeNode actions))
                 continue;
 
-            // ⭐ 범위 체크: targetWeapon이 지정돼 있으면 그 무기가 '나'일 때만 반영
-            WeaponDefinition scope = chain.nodes[0].sourceBlock?.Definition?.targetWeapon;
+            WeaponDefinition scope = chain.FirstBlock?.Definition?.targetWeapon;
             if (scope != null && scope != definition)
                 continue;
 
-            if (chain.nodes[1].blockType == BlockType.PARENTHESIS_BUNDLE)
+            int actionCount = CodeChainEvaluator.GetWeaponActionCount(actions);
+            for (int i = 0; i < actionCount; i++)
             {
-                foreach (BlockType groupedAction in chain.nodes[1].groupTargets)
-                {
-                    if (groupedAction != BlockType.DMG)
-                    {
-                        float groupedValue = GetBaseValue(groupedAction);
-                        float finalGroupedValue = CalculateValue(groupedValue, chain, 2);
-                        SetStat(groupedAction, Mathf.Max(0f, finalGroupedValue));
-                    }
-                }
-            }
-            else
-            {
-                BlockType action = chain.nodes[1].blockType;
-                if (action == BlockType.SPD || action == BlockType.DST || action == BlockType.SZ)
-                {
-                    float baseValue = GetBaseValue(action);
-                    float finalValue = CalculateValue(baseValue, chain, 2);
-                    SetStat(action, Mathf.Max(0f, finalValue));
-                }
+                BlockType action = CodeChainEvaluator.GetWeaponAction(actions, i);
+                if (action == BlockType.DMG)
+                    continue;
+
+                float baseValue = CodeChainEvaluator.GetWeaponBaseValue(definition, action);
+                float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2);
+                SetStat(action, Mathf.Max(0f, finalValue));
             }
         }
     }
@@ -86,58 +74,6 @@ public class WeaponBase : MonoBehaviour
         ownerTransform = owner;
         currentAngle = startAngle;
         ResetStats();
-    }
-
-    private float GetBaseValue(BlockType action)
-    {
-        if (definition == null)
-            return 0f;
-
-        switch (action)
-        {
-            case BlockType.DMG:
-                return definition.damage;
-
-            case BlockType.SPD:
-                return definition.rotationSpeed;
-
-            case BlockType.DST:
-                return definition.distance;
-
-            case BlockType.SZ:
-                return definition.size;
-
-            default:
-                return 0f;
-        }
-    }
-
-    private float CalculateValue(float value, CodeChain chain, int startIndex)
-    {
-        for (int i = startIndex; i < chain.nodes.Count; i++)
-        {
-            CodeNode node = chain.nodes[i];
-            if (node == null)
-                continue;
-
-            switch (node.blockType)
-            {
-                case BlockType.PLUS:
-                    value += node.value;
-                    break;
-                case BlockType.MINUS:
-                    value -= node.value;
-                    break;
-                case BlockType.MULT:
-                    value *= node.value;
-                    break;
-                case BlockType.DIV:
-                    if (node.value != 0f)
-                        value /= node.value;
-                    break;
-            }
-        }
-        return value;
     }
 
     public void ResetStats()

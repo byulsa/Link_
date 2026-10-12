@@ -1,25 +1,18 @@
 using UnityEngine;
 
-public class CodeExecutor : MonoBehaviour
+public static class CodeExecutor
 {
-    public static CodeExecutor Instance { get; private set; }
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
-
     // 코드가 직접 데미지를 처리했으면 true
     // 그렇지 않으면 false
-    public bool Execute(CodeChain chain, Entity source, Entity target)
+    public static bool Execute(CodeChain chain, Entity source, Entity target)
     {
-        if (chain == null || chain.nodes == null || chain.nodes.Count == 0 || source == null)
+        if (
+            chain == null
+            || chain.nodes == null
+            || chain.nodes.Count == 0
+            || chain.nodes[0] == null
+            || source == null
+        )
         {
             return false;
         }
@@ -35,7 +28,7 @@ public class CodeExecutor : MonoBehaviour
                 return ExecuteWeapon(chain, source, target);
 
             case BlockType.DTH:
-                return ExecuteDeath(chain, source, target);
+                return ExecuteDeath(chain, target);
 
             default:
                 Debug.LogWarning($"[CodeExecutor] " + $"지원하지 않는 코드: {firstType}");
@@ -44,7 +37,7 @@ public class CodeExecutor : MonoBehaviour
         }
     }
 
-    private bool ExecuteTouch(CodeChain chain, Entity source, Entity target)
+    private static bool ExecuteTouch(CodeChain chain, Entity source, Entity target)
     {
         if (target == null || !target.Is(EntityType.Enemy))
         {
@@ -66,7 +59,7 @@ public class CodeExecutor : MonoBehaviour
 
         float value = enemy.BaseDamage;
 
-        value = CalculateValue(value, chain, 3);
+        value = CodeChainEvaluator.CalculateValue(value, chain, 3);
 
         value = Mathf.Max(0f, value);
 
@@ -75,9 +68,9 @@ public class CodeExecutor : MonoBehaviour
         return true;
     }
 
-    private bool ExecuteWeapon(CodeChain chain, Entity source, Entity target)
+    private static bool ExecuteWeapon(CodeChain chain, Entity source, Entity target)
     {
-        if (!IsValidWeaponChain(chain))
+        if (!CodeChainEvaluator.TryGetWeaponActions(chain, out CodeNode actions))
             return false;
 
         if (
@@ -100,88 +93,25 @@ public class CodeExecutor : MonoBehaviour
         if (enemy == null)
             return false;
 
-        if (enemy == null)
-            return false;
-
-        if (chain.nodes.Count < 2)
-            return false;
-
-        if (chain.nodes[1].blockType == BlockType.PARENTHESIS_BUNDLE)
-            return ExecuteGroupedWeapon(chain, weapon, enemy);
-
-        BlockType action = chain.nodes[1].blockType;
-
-        if (!IsWeaponAction(action))
-        {
-            return false;
-        }
-
-        float baseValue = GetWeaponBaseValue(weapon, action);
-
-        float finalValue = CalculateValue(baseValue, chain, 2);
-
-        finalValue = Mathf.Max(0f, finalValue);
-
-        switch (action)
-        {
-            case BlockType.DMG:
-
-                enemy.TakeDamage(finalValue);
-
-                // 이번 코드가 데미지를 처리했음
-                return true;
-
-            case BlockType.DST:
-            case BlockType.SPD:
-            case BlockType.SZ:
-
-                weapon.SetStat(action, finalValue);
-
-                // 스탯만 변경했으므로
-                // 기본 공격은 따로 필요함
-                return false;
-
-            default:
-                return false;
-        }
-    }
-
-    private bool IsValidWeaponChain(CodeChain chain)
-    {
-        return chain != null && CodeValidator.IsValidWeaponChain(chain.nodes);
-    }
-
-    private bool ExecuteGroupedWeapon(CodeChain chain, WeaponBase weapon, Enemy enemy)
-    {
-        CodeNode group = chain.nodes[1];
-        if (group.groupTargets == null || group.groupTargets.Count == 0)
-            return false;
-
         bool dealtDamage = false;
-        foreach (BlockType action in group.groupTargets)
+        int actionCount = CodeChainEvaluator.GetWeaponActionCount(actions);
+        for (int i = 0; i < actionCount; i++)
         {
-            if (!IsWeaponAction(action))
-                return false;
+            BlockType action = CodeChainEvaluator.GetWeaponAction(actions, i);
+            float baseValue = CodeChainEvaluator.GetWeaponBaseValue(weapon.Definition, action);
+            float finalValue = Mathf.Max(
+                0f,
+                CodeChainEvaluator.CalculateValue(baseValue, chain, 2)
+            );
 
-            float baseValue = GetWeaponBaseValue(weapon, action);
-            float finalValue = CalculateValue(baseValue, chain, 2);
-            finalValue = Mathf.Max(0f, finalValue);
-
-            switch (action)
+            if (action == BlockType.DMG)
             {
-                case BlockType.DMG:
-                    enemy.TakeDamage(finalValue);
-                    dealtDamage = true;
-                    break;
-
-                case BlockType.DST:
-                case BlockType.SPD:
-                case BlockType.SZ:
-                    weapon.SetStat(action, finalValue);
-                    break;
-
-                default:
-                    return false;
+                enemy.TakeDamage(finalValue);
+                dealtDamage = true;
+            }
+            else
+            {
+                weapon.SetStat(action, finalValue);
             }
         }
 
@@ -189,201 +119,33 @@ public class CodeExecutor : MonoBehaviour
     }
 
     // ⭐ DTH → POINT 처리 (중복 지급 방지)
-    private bool ExecuteDeath(CodeChain chain, Entity source, Entity target)
+    private static bool ExecuteDeath(CodeChain chain, Entity target)
     {
-        Debug.Log("[CodeExecutor] ===== ExecuteDeath 시작 =====");
-
         if (target == null || !target.Is(EntityType.Enemy))
-        {
-            Debug.Log("[CodeExecutor] Target이 Enemy가 아님");
             return false;
-        }
-
-        Debug.Log("[CodeExecutor] Target이 Enemy임");
 
         Enemy enemy = target.GetComponent<Enemy>();
-
         if (enemy == null)
         {
-            Debug.LogError("[CodeExecutor] Enemy 컴포넌트 없음!");
+            Debug.LogError("[CodeExecutor] Enemy 컴포넌트가 없습니다.", target);
             return false;
         }
 
-        Debug.Log("[CodeExecutor] Enemy 컴포넌트 획득");
-
-        // ⭐ 기본값 획득
-        float basePoint = 0f;
-
-        try
+        PointManager pointManager = PointManager.Instance;
+        if (pointManager == null)
         {
-            basePoint = enemy.GetPointAmount();
-            Debug.Log($"[CodeExecutor] 기본 Point 획득: {basePoint}");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("[CodeExecutor] GetPointAmount() 중 예외!!!");
-            Debug.LogError($"[CodeExecutor] 예외: {ex.Message}");
-            Debug.LogError($"[CodeExecutor] 스택:\n{ex.StackTrace}");
+            Debug.LogError("[CodeExecutor] PointManager 인스턴스를 찾을 수 없습니다.");
             return false;
         }
 
-        // DTH → POINT 체인인지 확인
-        if (chain.nodes.Count < 2 || chain.nodes[1].blockType != BlockType.POINT)
+        float finalPoint = enemy.GetPointAmount();
+        if (chain.nodes.Count > 1 && chain.nodes[1] != null
+            && chain.nodes[1].blockType == BlockType.POINT)
         {
-            // 코드 없음 → 기본값만 지급
-            // Debug.Log(
-            //     $"[CodeExecutor] POINT 블록 없음, 기본값만 지급"
-            // );
-
-            try
-            {
-                PointManager.Instance.AddPoint((int)basePoint);
-                Debug.Log($"[CodeExecutor] AddPoint({(int)basePoint}) 완료");
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError("[CodeExecutor] AddPoint() 중 예외!!!");
-                Debug.LogError($"[CodeExecutor] 예외: {ex.Message}");
-                Debug.LogError($"[CodeExecutor] 스택:\n{ex.StackTrace}");
-                return false;
-            }
-
-            //Debug.Log("[CodeExecutor] ===== ExecuteDeath 종료 (기본값) =====");
-            return true;
+            finalPoint = CodeChainEvaluator.CalculateValue(finalPoint, chain, 2);
         }
 
-        float finalPoint = 0f;
-
-        try
-        {
-            finalPoint = CalculateValue(
-                basePoint,
-                chain,
-                2 // POINT 블록 다음부터 수정자 시작
-            );
-
-            finalPoint = Mathf.Max(0f, finalPoint);
-
-            Debug.Log($"[CodeExecutor] 수정자 계산 완료: {basePoint} → {finalPoint}");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("[CodeExecutor] CalculateValue() 중 예외!!!");
-            Debug.LogError($"[CodeExecutor] 예외: {ex.Message}");
-            Debug.LogError($"[CodeExecutor] 스택:\n{ex.StackTrace}");
-            return false;
-        }
-
-        // 한 번만 지급 (중복 방지)
-        try
-        {
-            PointManager.Instance.AddPoint((int)finalPoint);
-            Debug.Log($"[CodeExecutor] AddPoint({(int)finalPoint}) 완료");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError("[CodeExecutor] AddPoint() 중 예외!!!");
-            Debug.LogError($"[CodeExecutor] 예외: {ex.Message}");
-            Debug.LogError($"[CodeExecutor] 스택:\n{ex.StackTrace}");
-            return false;
-        }
-
-        Debug.Log("[CodeExecutor] ===== ExecuteDeath 종료 (수정자 적용) =====");
+        pointManager.AddPoint(Mathf.Max(0, (int)finalPoint));
         return true;
-    }
-
-    private float CalculateValue(float value, CodeChain chain, int startIndex)
-    {
-        return CalculateValue(value, chain, startIndex, chain.nodes.Count);
-    }
-
-    private float CalculateValue(float value, CodeChain chain, int startIndex, int endIndex)
-    {
-        for (int i = startIndex; i < endIndex; i++)
-        {
-            CodeNode node = chain.nodes[i];
-
-            if (node == null)
-                continue;
-
-            value = ApplyModifier(value, node.blockType, node.value);
-        }
-
-        return value;
-    }
-
-    private bool IsModifier(BlockType type)
-    {
-        switch (type)
-        {
-            case BlockType.PLUS:
-            case BlockType.MINUS:
-            case BlockType.MULT:
-            case BlockType.DIV:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private float ApplyModifier(float value, BlockType type, float modifier)
-    {
-        if (PassiveEffectManager.Instance != null)
-            modifier += PassiveEffectManager.Instance.GetModifierBonus(type);
-
-        switch (type)
-        {
-            case BlockType.PLUS:
-                return value + modifier;
-            case BlockType.MINUS:
-                return value - modifier;
-            case BlockType.MULT:
-                return value * modifier;
-            case BlockType.DIV:
-                return modifier == 0f ? value : value / modifier;
-            default:
-                return value;
-        }
-    }
-
-    private float GetWeaponBaseValue(WeaponBase weapon, BlockType action)
-    {
-        WeaponDefinition def = weapon.Definition;
-
-        if (def == null)
-            return 0f;
-
-        switch (action)
-        {
-            case BlockType.DMG:
-                return def.damage;
-
-            case BlockType.SPD:
-                return def.rotationSpeed;
-
-            case BlockType.DST:
-                return def.distance;
-
-            case BlockType.SZ:
-                return def.size;
-
-            default:
-                return 0f;
-        }
-    }
-
-    private bool IsWeaponAction(BlockType type)
-    {
-        switch (type)
-        {
-            case BlockType.DMG:
-            case BlockType.SPD:
-            case BlockType.DST:
-            case BlockType.SZ:
-                return true;
-
-            default:
-                return false;
-        }
     }
 }

@@ -9,6 +9,9 @@ public class Player : MonoBehaviour, IDamageable
     [SerializeField]
     private CodeController codeController;
 
+    [SerializeField]
+    private CodeDropManager codeDropManager;
+
     [Header("Health")]
     [SerializeField]
     private float maxHealth = 100f;
@@ -93,7 +96,10 @@ public class Player : MonoBehaviour, IDamageable
         {
             codeController.ExecuteDeath(enemy.GetComponent<Entity>());
 
-            CodeDropManager.Instance.TryDrop(enemy.CodeDropTable);
+            if (codeDropManager == null)
+                Debug.LogError("[Player] CodeDropManager가 설정되지 않아 코드 드롭을 처리하지 못했습니다.", this);
+            else
+                codeDropManager.TryDrop(enemy.CodeDropTable);
         }
     }
 }

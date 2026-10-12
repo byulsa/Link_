@@ -204,6 +204,12 @@ public class CodeEditor : MonoBehaviour
 
     public CodeBlock CreateDropBlock(BlockDefinition definition, Vector2Int position, int value)
     {
+        if (WaveManager.IsBattleActive)
+        {
+            Debug.LogWarning("[CodeEditor] 전투 중에는 코드를 수정할 수 없습니다.", this);
+            return null;
+        }
+
         if (definition == null)
         {
             Debug.LogError("[CodeEditor] 블록 정의가 없어 드롭 블록을 만들지 못했습니다.", this);

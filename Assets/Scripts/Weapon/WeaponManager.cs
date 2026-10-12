@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class WeaponManager : MonoBehaviour
 {
-    public static WeaponManager Instance { get; private set; }
-
     [SerializeField]
     private Transform ownerTransform; // 플레이어
 
@@ -16,16 +14,6 @@ public class WeaponManager : MonoBehaviour
 
     private readonly List<WeaponBase> activeWeapons = new();
     public IReadOnlyList<WeaponBase> ActiveWeapons => activeWeapons;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
 
     public WeaponBase AddWeapon(WeaponDefinition definition)
     {

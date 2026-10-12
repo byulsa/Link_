@@ -31,6 +31,9 @@ public class DataCollectionUI : MonoBehaviour
     [SerializeField]
     private GameObject shopPanel;
 
+    [SerializeField]
+    private ShopManager shopManager;
+
     private readonly List<RewardSlotUI> spawnedSlots = new();
 
     private void Awake()
@@ -128,10 +131,10 @@ public class DataCollectionUI : MonoBehaviour
         {
             shopPanel.SetActive(true);
 
-            if (ShopManager.Instance != null)
-                ShopManager.Instance.RefreshShop();
+            if (shopManager != null)
+                shopManager.RefreshShop();
             else
-                Debug.LogError("[DataCollectionUI] ShopManager 인스턴스를 찾을 수 없어 상점을 갱신하지 못했습니다.");
+                Debug.LogError("[DataCollectionUI] ShopManager가 설정되지 않아 상점을 갱신하지 못했습니다.", this);
         }
     }
 }

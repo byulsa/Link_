@@ -15,6 +15,7 @@ MonoBehaviour:
   blockType: 14
   category: 4
   displayText: CIR
+  fullName: Circle Weapon
   hasValue: 0
   minValue: 1
   maxValue: 1

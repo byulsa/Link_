@@ -6,6 +6,9 @@ using UnityEngine.UI;
 public class CodeBlock
     : MonoBehaviour,
         IPointerDownHandler,
+        IPointerEnterHandler,
+        IPointerExitHandler,
+        IPointerMoveHandler,
         IBeginDragHandler,
         IDragHandler,
         IEndDragHandler
@@ -203,9 +206,31 @@ public class CodeBlock
         Debug.Log($"블록 선택: {definition.displayText}");
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (definition != null)
+            CodeBlockTooltip.Show(this, eventData.position);
+    }
+
+    public void OnPointerMove(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Move(eventData.position);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Hide();
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (isPreview || grid == null || canvas == null || definition == null)
+        if (
+            isPreview
+            || grid == null
+            || canvas == null
+            || definition == null
+            || WaveManager.IsBattleActive
+        )
         {
             isDragging = false;
             return;
@@ -235,6 +260,13 @@ public class CodeBlock
         if (!isDragging || canvas == null || grid == null)
             return;
 
+        if (WaveManager.IsBattleActive)
+        {
+            isDragging = false;
+            SetGridPosition(dragOriginalPosition);
+            return;
+        }
+
         Vector3 worldPosition = GetWorldPosition(eventData);
         rectTransform.position = worldPosition + dragWorldOffset;
 
@@ -246,6 +278,12 @@ public class CodeBlock
             return;
 
         isDragging = false;
+        if (WaveManager.IsBattleActive)
+        {
+            SetGridPosition(dragOriginalPosition);
+            return;
+        }
+
         Debug.Log($"드래그 종료: {definition.displayText}");
 
         Vector2Int pointerGridPosition = grid.WorldToGrid(GetWorldPosition(eventData));

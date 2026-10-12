@@ -16,6 +16,11 @@ MonoBehaviour:
   category: 1
   icon: {fileID: 0}
   displayText: SPD
+  fullName: Speed
+  description: "\uD50C\uB808\uC774\uC5B4 \uC8FC\uBCC0\uC744 \uB3C4\uB294 \uBB34\uAE30\uC758
+    \uD68C\uC804 \uC18D\uB3C4\uB97C \uC870\uC808\uD569\uB2C8\uB2E4. \uC18D\uB3C4\uAC00
+    \uBE68\uB77C\uC9C0\uBA74 \uBB34\uAE30\uAC00 \uC8FC\uBCC0\uC744 \uB354 \uBE60\uB974\uAC8C
+    \uD68C\uC804\uD569\uB2C8\uB2E4."
   hasValue: 0
   minValue: 1
   maxValue: 1

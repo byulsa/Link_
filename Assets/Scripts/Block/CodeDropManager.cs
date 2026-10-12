@@ -2,24 +2,14 @@ using UnityEngine;
 
 public class CodeDropManager : MonoBehaviour
 {
-    public static CodeDropManager Instance { get; private set; }
-
     [SerializeField]
     private CodeGrid grid;
 
     [SerializeField]
     private CodeEditor editor;
 
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
+    [SerializeField]
+    private WaveRewardManager rewardManager;
 
     public void TryDrop(CodeDropTable table)
     {
@@ -46,15 +36,15 @@ public class CodeDropManager : MonoBehaviour
             value = Random.Range(definition.minValue, definition.maxValue + 1);
         }
 
-        // [변경] WaveRewardManager가 존재하면 즉시 CodeGrid에 넣지 않고
+        // WaveRewardManager가 연결되어 있으면 즉시 CodeGrid에 넣지 않고
         // 현재 Wave의 임시 보상 목록에만 저장한다. (DATA COLLECTION에서 이후 처리)
-        if (WaveRewardManager.Instance != null)
+        if (rewardManager != null)
         {
-            WaveRewardManager.Instance.AddReward(definition, value);
+            rewardManager.AddReward(definition, value);
             return;
         }
 
-        // [기존 동작 유지] WaveRewardManager가 씬에 없는 경우를 위한 하위 호환 처리.
+        // WaveRewardManager가 연결되지 않은 씬에서는 즉시 그리드에 배치한다.
         // Grid에 들어갈 공간 확인
         int blockWidth = GetBlockWidth(definition, value);
 

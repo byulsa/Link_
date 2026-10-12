@@ -11,11 +11,10 @@ public enum ShopItemType
 
 public class ShopManager : MonoBehaviour
 {
-    public static ShopManager Instance { get; private set; }
-
     [SerializeField] private ShopDropTable dropTable;
     [SerializeField] private CodeGrid grid;
     [SerializeField] private CodeEditor editor;
+    [SerializeField] private WeaponManager weaponManager;
 
     [Header("Shop Layout (DATA EXCHANGE)")]
     [SerializeField] private int topSlotCount = 5;     // 상단: 코드 블록 + 패시브
@@ -29,16 +28,6 @@ public class ShopManager : MonoBehaviour
     public event Action OnShopRefreshed;
     public event Action<int> OnPurchaseSucceeded;
     public event Action<int> OnPurchaseFailed;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
 
     public void RefreshShop()
     {
@@ -109,6 +98,13 @@ public class ShopManager : MonoBehaviour
 
     private bool TryPurchaseBlock(ShopSlot slot, int slotIndex)
     {
+        if (slot.Block.targetWeapon != null && weaponManager == null)
+        {
+            Debug.LogError("[ShopManager] 무기를 추가할 WeaponManager가 설정되지 않았습니다.", this);
+            OnPurchaseFailed?.Invoke(slotIndex);
+            return false;
+        }
+
         int blockWidth = GetBlockWidth(slot.Block, slot.Value);
 
         if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position) ||
@@ -128,7 +124,7 @@ public class ShopManager : MonoBehaviour
 
         // 무기 전용 블록(targetWeapon 지정)이면 실제 무기 오브젝트도 추가 장착
         if (slot.Block.targetWeapon != null)
-            WeaponManager.Instance.AddWeapon(slot.Block.targetWeapon);
+            weaponManager.AddWeapon(slot.Block.targetWeapon);
 
         slot.MarkSold();
         OnPurchaseSucceeded?.Invoke(slotIndex);
