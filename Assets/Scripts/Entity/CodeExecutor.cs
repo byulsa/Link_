@@ -145,6 +145,9 @@ public static class CodeExecutor
             finalPoint = CodeChainEvaluator.CalculateValue(finalPoint, chain, 2);
         }
 
+        if (PassiveEffectManager.Instance != null)
+            finalPoint *= 1f + PassiveEffectManager.Instance.GetPointRewardBonus();
+
         pointManager.AddPoint(Mathf.Max(0, (int)finalPoint));
         return true;
     }

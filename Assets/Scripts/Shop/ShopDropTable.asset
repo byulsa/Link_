@@ -67,4 +67,13 @@ MonoBehaviour:
   - block: {fileID: 11400000, guid: fc32d9ed94339024ba40c23178f5f4f3, type: 2}
     price: 100
     weight: 3
-  passiveEntries: []
+  passiveEntries:
+  - passive: {fileID: 11400000, guid: ca220696c54edb0469d7126a431d7af6, type: 2}
+    price: 100
+    weight: 1
+  - passive: {fileID: 11400000, guid: 6c1f64c9392a417ea074e241463e3e26, type: 2}
+    price: 100
+    weight: 1
+  - passive: {fileID: 11400000, guid: c4c82026976b4c42ae193a9bb52e72dd, type: 2}
+    price: 100
+    weight: 1

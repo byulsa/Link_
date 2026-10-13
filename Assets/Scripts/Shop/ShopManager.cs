@@ -45,11 +45,25 @@ public class ShopManager : MonoBehaviour
         int blockCount = topSlotCount - passiveCount;
 
         List<ShopSlot> topSlots = new List<ShopSlot>();
+        HashSet<PassiveItemDefinition> excludedPassives = new();
+        if (PassiveEffectManager.Instance != null)
+        {
+            foreach (PassiveItemDefinition passive in PassiveEffectManager.Instance.AcquiredPassives)
+                excludedPassives.Add(passive);
+        }
 
         for (int i = 0; i < passiveCount; i++)
         {
-            if (dropTable.TrySelectPassiveOnly(out ShopDropTable.ShopDropResult result))
+            if (
+                dropTable.TrySelectPassiveOnly(
+                    excludedPassives,
+                    out ShopDropTable.ShopDropResult result
+                )
+            )
+            {
                 topSlots.Add(new ShopSlot(result.passive, result.price));
+                excludedPassives.Add(result.passive);
+            }
         }
 
         for (int i = 0; i < blockCount; i++)
@@ -133,13 +147,27 @@ public class ShopManager : MonoBehaviour
 
     private bool TryPurchasePassive(ShopSlot slot, int slotIndex)
     {
+        PassiveEffectManager passiveEffectManager = PassiveEffectManager.Instance;
+        if (passiveEffectManager == null)
+        {
+            Debug.LogError("[ShopManager] 패시브 구매를 처리할 PassiveEffectManager가 없습니다.", this);
+            OnPurchaseFailed?.Invoke(slotIndex);
+            return false;
+        }
+
+        if (passiveEffectManager.HasAcquired(slot.Passive))
+        {
+            OnPurchaseFailed?.Invoke(slotIndex);
+            return false;
+        }
+
         if (!PointManager.Instance.TrySpendPoint(slot.Price))
         {
             OnPurchaseFailed?.Invoke(slotIndex);
             return false;
         }
 
-        PassiveEffectManager.Instance.Acquire(slot.Passive);
+        passiveEffectManager.Acquire(slot.Passive);
 
         slot.MarkSold();
         OnPurchaseSucceeded?.Invoke(slotIndex);

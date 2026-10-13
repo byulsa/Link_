@@ -31,7 +31,7 @@ public static class CodeChainEvaluator
         if (definition == null)
             return 0f;
 
-        return action switch
+        float baseValue = action switch
         {
             BlockType.DMG => definition.damage,
             BlockType.SPD => definition.rotationSpeed,
@@ -39,6 +39,11 @@ public static class CodeChainEvaluator
             BlockType.SZ => definition.size,
             _ => 0f,
         };
+
+        if (action == BlockType.DMG && PassiveEffectManager.Instance != null)
+            baseValue += PassiveEffectManager.Instance.GetWeaponDamageBonus(definition);
+
+        return baseValue;
     }
 
     public static float CalculateValue(float value, CodeChain chain, int startIndex)

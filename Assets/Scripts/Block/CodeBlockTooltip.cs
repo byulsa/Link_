@@ -63,6 +63,37 @@ public class CodeBlockTooltip : MonoBehaviour
         if (block == null || block.Definition == null)
             return;
 
+        Show(
+            block.Definition.fullName,
+            block.Definition.displayText,
+            block.Definition.category.ToString(),
+            block.Definition.description,
+            pointerPosition
+        );
+    }
+
+    public static void Show(PassiveItemDefinition passive, Vector2 pointerPosition)
+    {
+        if (passive == null)
+            return;
+
+        Show(
+            passive.itemName,
+            passive.itemName,
+            "Passive",
+            passive.GetFormattedDescription(),
+            pointerPosition
+        );
+    }
+
+    private static void Show(
+        string fullName,
+        string fallbackName,
+        string category,
+        string description,
+        Vector2 pointerPosition
+    )
+    {
         if (instance == null)
             instance = FindFirstObjectByType<CodeBlockTooltip>(FindObjectsInactive.Include);
 
@@ -87,11 +118,11 @@ public class CodeBlockTooltip : MonoBehaviour
             return;
         }
 
-        instance.codeNameText.text = string.IsNullOrWhiteSpace(block.Definition.fullName)
-            ? block.Definition.displayText
-            : block.Definition.fullName;
-        instance.categoryText.text = block.Definition.category.ToString();
-        instance.descriptionText.text = block.Definition.description;
+        instance.codeNameText.text = string.IsNullOrWhiteSpace(fullName)
+            ? fallbackName
+            : fullName;
+        instance.categoryText.text = category;
+        instance.descriptionText.text = description;
         instance.pointerPosition = pointerPosition;
         instance.showRequested = true;
         instance.gameObject.SetActive(true);

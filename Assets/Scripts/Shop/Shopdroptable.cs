@@ -175,15 +175,21 @@ public class ShopDropTable : ScriptableObject
     }
 
     // ⭐ DATA EXCHANGE 상단 5칸 전용: 패시브 아이템만
-    public bool TrySelectPassiveOnly(out ShopDropResult result)
+    public bool TrySelectPassiveOnly(
+        ISet<PassiveItemDefinition> excludedPassives,
+        out ShopDropResult result
+    )
     {
         result = default;
 
-        float passiveTotal = GetPassiveTotalWeight();
+        float passiveTotal = GetPassiveTotalWeight(excludedPassives);
         if (passiveTotal <= 0f)
             return false;
 
-        PassiveEntry pe = SelectPassiveEntry(Random.Range(0f, passiveTotal));
+        PassiveEntry pe = SelectPassiveEntry(
+            Random.Range(0f, passiveTotal),
+            excludedPassives
+        );
         if (pe == null)
             return false;
 
@@ -321,11 +327,16 @@ public class ShopDropTable : ScriptableObject
         return sum;
     }
 
-    private float GetPassiveTotalWeight()
+    private float GetPassiveTotalWeight(ISet<PassiveItemDefinition> excludedPassives = null)
     {
         float sum = 0f;
         foreach (var e in passiveEntries)
-            if (e != null && e.passive != null && e.weight > 0f)
+            if (
+                e != null
+                && e.passive != null
+                && e.weight > 0f
+                && (excludedPassives == null || !excludedPassives.Contains(e.passive))
+            )
                 sum += e.weight;
         return sum;
     }
@@ -343,11 +354,19 @@ public class ShopDropTable : ScriptableObject
         return null;
     }
 
-    private PassiveEntry SelectPassiveEntry(float random)
+    private PassiveEntry SelectPassiveEntry(
+        float random,
+        ISet<PassiveItemDefinition> excludedPassives = null
+    )
     {
         foreach (var e in passiveEntries)
         {
-            if (e == null || e.passive == null || e.weight <= 0f)
+            if (
+                e == null
+                || e.passive == null
+                || e.weight <= 0f
+                || (excludedPassives != null && excludedPassives.Contains(e.passive))
+            )
                 continue;
             random -= e.weight;
             if (random <= 0f)

@@ -19,7 +19,11 @@ public class WeaponBase : MonoBehaviour
     private float currentAngle;
 
     public WeaponDefinition Definition => definition;
-    public float Damage => damage;
+    public float Damage =>
+        damage
+        + (PassiveEffectManager.Instance != null
+            ? PassiveEffectManager.Instance.GetWeaponDamageBonus(definition)
+            : 0f);
     public float Distance => distance;
     public float RotationSpeed => rotationSpeed;
     public float Size => size;
@@ -144,6 +148,6 @@ public class WeaponBase : MonoBehaviour
         if (enemy == null)
             return;
 
-        enemy.TakeDamage(damage);
+        enemy.TakeDamage(Damage);
     }
 }

@@ -1,8 +1,9 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ShopSlotUI : MonoBehaviour
+public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandler, IPointerExitHandler
 {
     [Header("Common")]
     [SerializeField] private TMP_Text nameText;
@@ -107,6 +108,22 @@ public class ShopSlotUI : MonoBehaviour
     {
         if (shopManager.TryPurchase(slotIndex))
             SetSold(true);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (slot != null && slot.Type == ShopItemType.Passive && !slot.IsSold)
+            CodeBlockTooltip.Show(slot.Passive, eventData.position);
+    }
+
+    public void OnPointerMove(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Move(eventData.position);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Hide();
     }
 
     public void SetSold(bool sold)
