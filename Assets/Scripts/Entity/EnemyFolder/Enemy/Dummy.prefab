@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4676632457033186552}
   - component: {fileID: 7590530730773506295}
   - component: {fileID: 5584690846479424072}
+  - component: {fileID: 728437159095421496}
   m_Layer: 0
   m_Name: Dummy
   m_TagString: Untagged
@@ -86,9 +87,9 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
-  m_Color: {r: 0.5471698, g: 0.5471698, b: 0.5471698, a: 1}
-  m_FlipX: 0
+  m_Sprite: {fileID: 7277061815810766773, guid: 99f6f08e0ea288b439a907314004742b, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 1
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -123,12 +124,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemy
   enemyData: {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
+  spriteRenderer: {fileID: 8275963648752711431}
+  deathAnimator: {fileID: 0}
+  deathTriggerName: Die
+  deathAnimationDuration: 0.5
   playerTag: Player
   knockbackForce: 5
   knockbackDuration: 0.2
   pointReward: 10
   codeDropTable: {fileID: 11400000, guid: 0916e019a2ae1154c9c85932b0a96a4b, type: 2}
   meleeData: {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
+  animator: {fileID: 728437159095421496}
 --- !u!61 &4676632457033186552
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -163,17 +169,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.21133333}
+  m_Offset: {x: 0.001724124, y: 0.021750689}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.28866667}
-    oldSize: {x: 1, y: 1}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 2, y: 2}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.7578337, y: 1.3704069}
   m_EdgeRadius: 0
 --- !u!50 &7590530730773506295
 Rigidbody2D:
@@ -216,3 +222,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CodeController
   editor: {fileID: 0}
   owner: {fileID: 8665106955182660343}
+--- !u!95 &728437159095421496
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171883001476934377}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 7d30ca5641839c14b92773ae763a3be8, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

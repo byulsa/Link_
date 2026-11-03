@@ -12,11 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f27fdcd10a1d7764991e29e7e782a569, type: 3}
   m_Name: CIRDamage
   m_EditorClassIdentifier: Assembly-CSharp::PassiveItemDefinition
-  itemName: "CIR\uC758 \uAC15\uD654"
+  itemName: "CIR \uAC15\uD654 \uBD80\uD488"
   description: "CIR \uBB34\uAE30\uC758 \uAE30\uBCF8 \uACF5\uACA9\uB825\uC744 [value]\uB9CC\uD07C
     \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: -5142757139273018084, guid: 5e8edbdbe842143458f0140b240f9baa, type: 3}
   effectType: 1
   targetBlockType: 7
-  bonusValue: 2
+  bonusValue: 5
   targetWeapon: {fileID: 11400000, guid: 620444e7582a4fb4880ee708e0da7e46, type: 2}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 100
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers:
+    - minValue: 2
+      maxValue: 2
+      rarity: 0
+      price: 20
+    - minValue: 3
+      maxValue: 4
+      rarity: 1
+      price: 50
+    - minValue: 5
+      maxValue: 2147483647
+      rarity: 2
+      price: 150

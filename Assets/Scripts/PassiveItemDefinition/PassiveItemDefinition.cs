@@ -1,26 +1,20 @@
 using UnityEngine;
 
-public enum PassiveEffectType
-{
-    ModifierBonus,
-    WeaponDamageBonus,
-    PointRewardBonus
-}
+public enum PassiveEffectType { ModifierBonus, WeaponDamageBonus, PointRewardBonus }
 
 [CreateAssetMenu(menuName = "Shop/Passive Item Definition", fileName = "NewPassiveItem")]
 public class PassiveItemDefinition : ScriptableObject
 {
     public string itemName;
-
-    [TextArea]
-    public string description;
+    [TextArea] public string description;
     public Sprite icon;
-
     [Header("Effect")]
     public PassiveEffectType effectType;
-    public BlockType targetBlockType = BlockType.PLUS; // ModifierBonus일 때 대상
-    public float bonusValue = 1f; // 예: PLUS 블록 +1
+    public BlockType targetBlockType = BlockType.PLUS;
+    public float bonusValue = 1f;
     public WeaponDefinition targetWeapon;
+    [Header("Shop")]
+    public ShopItemSettings shop = new ShopItemSettings();
 
     public string GetFormattedDescription()
     {
@@ -29,7 +23,6 @@ public class PassiveItemDefinition : ScriptableObject
             PassiveEffectType.PointRewardBonus => $"{bonusValue * 100f:0.##}%",
             _ => $"{bonusValue:0.##}"
         };
-
-        return description.Replace("[value]", $"<color=#FFD166>{value}</color>");
+        return (description ?? "").Replace("[value]", $"<color=#FFD166>{value}</color>");
     }
 }

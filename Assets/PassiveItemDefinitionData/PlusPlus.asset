@@ -12,10 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f27fdcd10a1d7764991e29e7e782a569, type: 3}
   m_Name: PlusPlus
   m_EditorClassIdentifier: Assembly-CSharp::PassiveItemDefinition
-  itemName: "\uB204\uAD70\uAC00\uC5D0 \uCF54\uB4DC"
-  description: "Plus\uC5D0 \uB354\uD558\uAE30 \uC218\uCE58\uB97C [value] \uB9CC\uD07C \uC99D\uAC00
-    \uC2DC\uD0B5\uB2C8\uB2E4."
-  icon: {fileID: 0}
+  itemName: "P \uC870\uAC01"
+  description: "Plus\uC5D0 \uB354\uD558\uAE30 \uC218\uCE58\uB97C [value] \uB9CC\uD07C
+    \uC99D\uAC00 \uC2DC\uD0B5\uB2C8\uB2E4."
+  icon: {fileID: 8010259709166904849, guid: dcecf39974be835498197c8b101b3705, type: 3}
   effectType: 0
   targetBlockType: 7
   bonusValue: 1
+  targetWeapon: {fileID: 0}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 100
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers:
+    - minValue: 2
+      maxValue: 2
+      rarity: 0
+      price: 20
+    - minValue: 3
+      maxValue: 4
+      rarity: 1
+      price: 50
+    - minValue: 5
+      maxValue: 2147483647
+      rarity: 2
+      price: 150

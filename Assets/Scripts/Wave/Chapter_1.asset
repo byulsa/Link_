@@ -14,6 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChapterData
   chapterName: 1
   waves:
-  - {fileID: 11400000, guid: d402395f904ad6444afd22738ea125f9, type: 2}
-  - {fileID: 11400000, guid: 744bfd1fdd7d87c499d0a68a5a3e0680, type: 2}
-  - {fileID: 11400000, guid: 1a40968e3d6e7aa45a850e64f4243910, type: 2}
+  - {fileID: 11400000, guid: 68539719efb414541975f9029d91ae61, type: 2}
+  - {fileID: 11400000, guid: 04f7998c95ff87c428cfc15fd37899c7, type: 2}
+  - {fileID: 11400000, guid: faad77d7c0620454bbcb6ca119677aba, type: 2}
+  - {fileID: 11400000, guid: 579cff85f8a43754b8ec550ffc877aac, type: 2}
+  - {fileID: 11400000, guid: 7a98cf51e8eaf4a4091d982171867e9f, type: 2}
+  - {fileID: 11400000, guid: 5cd71e62ad98aa345bed8852a097dbbd, type: 2}
+  - {fileID: 11400000, guid: 44078cfedabde2c48b2c9ce68bf1fc97, type: 2}
+  - {fileID: 11400000, guid: ce9fbbd93e8487447a3fb80c1a68765d, type: 2}
+  - {fileID: 11400000, guid: a7986940779e0674f8cf51a78bfbdc9b, type: 2}
+  - {fileID: 11400000, guid: 7e0e11bd686d276419d8f8944b36ac5c, type: 2}

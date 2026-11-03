@@ -8,14 +8,13 @@ public class BlockDefinition : ScriptableObject
     public Sprite icon;
     public string displayText;
     public string fullName;
-    [TextArea(2, 5)]
-    public string description;
-
+    [TextArea(2, 5)] public string description;
     [Header("Value")]
     public bool hasValue;
     public int minValue = 1;
     public int maxValue = 1;
-
-    [Header("Weapon Scope (WEAP 트리거 전용)")]
-    public WeaponDefinition targetWeapon; // 비워두면 "모든 무기"(WEAP), 지정하면 그 무기만
+    [Header("Weapon Scope (WEAP trigger)")]
+    public WeaponDefinition targetWeapon;
+    [Header("Shop")]
+    public ShopItemSettings shop = new ShopItemSettings();
 }

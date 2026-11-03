@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e21fe5ec4cb74fb42953230eeac5e082, type: 3}
+  m_Name: ShopItemDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::ShopItemDatabase
+  blocks:
+  - {fileID: 11400000, guid: 06294ca83d560cc4da0fba9705d1135a, type: 2}
+  - {fileID: 11400000, guid: 14d4cefec43bca64d9a0882495e6ec6e, type: 2}
+  - {fileID: 11400000, guid: 24659c613f531be42849015df7ba2612, type: 2}
+  - {fileID: 11400000, guid: 32c38e1b18cb59447874e82cb2cb585c, type: 2}
+  - {fileID: 11400000, guid: 39b9cdd5e7c54a19b372294d9c98b8af, type: 2}
+  - {fileID: 11400000, guid: 4bacbcc3a7491fa468edfb08196e8b95, type: 2}
+  - {fileID: 11400000, guid: 5137371f47f015342a351798189532c1, type: 2}
+  - {fileID: 11400000, guid: 698ad67847fdee149a7248163646cc69, type: 2}
+  - {fileID: 11400000, guid: 7b9ee68cdae0d2d409a6de896d9a6150, type: 2}
+  - {fileID: 11400000, guid: 9fe864a6ce79b314a8222b6d48dab199, type: 2}
+  - {fileID: 11400000, guid: a127d18b1841273428045947e8997cc6, type: 2}
+  - {fileID: 11400000, guid: b52d0acc498dd6c41a064cf3243d87aa, type: 2}
+  - {fileID: 11400000, guid: bf361cfc80435d144974e60f8cfa7e7a, type: 2}
+  - {fileID: 11400000, guid: c037f90e539bc6d4db15532393f43c56, type: 2}
+  - {fileID: 11400000, guid: ccd8d6eabff08e24f986f6d3ae61396f, type: 2}
+  - {fileID: 11400000, guid: d24e00f528b08794d93cc8eb67fd58b8, type: 2}
+  - {fileID: 11400000, guid: e55025b26e9c9b741b135f78cd03c967, type: 2}
+  - {fileID: 11400000, guid: f27b6524d1cb4111a0af61382c7c9b45, type: 2}
+  - {fileID: 11400000, guid: fc32d9ed94339024ba40c23178f5f4f3, type: 2}
+  passives:
+  - {fileID: 11400000, guid: 6c1f64c9392a417ea074e241463e3e26, type: 2}
+  - {fileID: 11400000, guid: c4c82026976b4c42ae193a9bb52e72dd, type: 2}
+  - {fileID: 11400000, guid: ca220696c54edb0469d7126a431d7af6, type: 2}

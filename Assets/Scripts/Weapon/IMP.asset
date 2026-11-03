@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ba6c9723474b214ea65239c9b95c196, type: 3}
+  m_Name: IMP
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
+  weaponName: IMP
+  displayText: Impact Device
+  description: 충격파로 주변 적에게 기본 피해의 50%를 입힙니다.
+  damage: 80
+  distance: 5
+  rotationSpeed: 540
+  size: 2
+  rotationAccelerationDuration: 0.4
+  rotationAccelerationEase: 9
+  rotationDecelerationDuration: 0.4
+  rotationDecelerationEase: 9
+  specialEffect: 1
+  shockwaveRadius: 2
+  shockwaveDamageMultiplier: 0.5
+  continuousCutInterval: 0.25
+  chainLightningRadius: 3
+  chainLightningTargets: 3
+  chainLightningDamageMultiplier: 0.7
+  icon: {fileID: 751451447170813573, guid: 2d3e0a5e04f894245b9bcb1394c83f07, type: 3}
+  prefab: {fileID: 2733827392254455992, guid: 4f8d96a117184875bd91fe39b2da0401, type: 3}

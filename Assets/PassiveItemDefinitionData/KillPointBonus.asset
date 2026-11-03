@@ -12,11 +12,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f27fdcd10a1d7764991e29e7e782a569, type: 3}
   m_Name: KillPointBonus
   m_EditorClassIdentifier: Assembly-CSharp::PassiveItemDefinition
-  itemName: "\uD3EC\uC778\uD2B8 \uC218\uC9D1\uAC00"
+  itemName: "\uB0A1\uC740 \uB3D9\uC804\uB4E4"
   description: "\uC801 \uCC98\uCE58 \uC2DC P \uD68D\uB4DD\uB7C9\uC744 [value] \uB9CC\uD07C
     \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4."
-  icon: {fileID: 0}
+  icon: {fileID: 8196477386286816704, guid: d48f475b946925144abbac3563705fcf, type: 3}
   effectType: 2
   targetBlockType: 7
   bonusValue: 0.5
   targetWeapon: {fileID: 0}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 100
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers:
+    - minValue: 2
+      maxValue: 2
+      rarity: 0
+      price: 20
+    - minValue: 3
+      maxValue: 4
+      rarity: 1
+      price: 50
+    - minValue: 5
+      maxValue: 2147483647
+      rarity: 2
+      price: 150

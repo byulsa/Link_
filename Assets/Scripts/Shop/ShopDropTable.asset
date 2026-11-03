@@ -12,68 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82c5cc8e5cf12574894eceffa4f8184c, type: 3}
   m_Name: ShopDropTable
   m_EditorClassIdentifier: Assembly-CSharp::ShopDropTable
-  simpleEntries:
-  - block: {fileID: 11400000, guid: 4bacbcc3a7491fa468edfb08196e8b95, type: 2}
-    price: 10
+  database: {fileID: 11400000, guid: f95c5c3f41cc34f488b21fb125c0dd0c, type: 2}
+  rarityWeights:
+  - rarity: 0
+    weight: 70
+  - rarity: 1
+    weight: 25
+  - rarity: 2
+    weight: 4
+  - rarity: 3
     weight: 1
-  - block: {fileID: 11400000, guid: 32c38e1b18cb59447874e82cb2cb585c, type: 2}
-    price: 10
-    weight: 1
-  - block: {fileID: 11400000, guid: f27b6524d1cb4111a0af61382c7c9b45, type: 2}
-    price: 20
-    weight: 1
-  - block: {fileID: 11400000, guid: 39b9cdd5e7c54a19b372294d9c98b8af, type: 2}
-    price: 10
-    weight: 1
-  valueEntries:
-  - block: {fileID: 11400000, guid: c037f90e539bc6d4db15532393f43c56, type: 2}
-    valueOptions:
-    - value: 1
-      price: 10
-      weight: 1
-    - value: 2
-      price: 10
-      weight: 1
-    - value: 3
-      price: 10
-      weight: 1
-    - value: 4
-      price: 10
-      weight: 1
-    - value: 5
-      price: 10
-      weight: 1
-  - block: {fileID: 11400000, guid: 9fe864a6ce79b314a8222b6d48dab199, type: 2}
-    valueOptions:
-    - value: 1
-      price: 10
-      weight: 1
-    - value: 2
-      price: 10
-      weight: 1
-    - value: 3
-      price: 10
-      weight: 1
-    - value: 4
-      price: 10
-      weight: 1
-    - value: 5
-      price: 10
-      weight: 1
-  weaponEntries:
-  - block: {fileID: 11400000, guid: fc32d9ed94339024ba40c23178f5f4f3, type: 2}
-    price: 100
-    weight: 3
-  - block: {fileID: 11400000, guid: fc32d9ed94339024ba40c23178f5f4f3, type: 2}
-    price: 100
-    weight: 3
-  passiveEntries:
-  - passive: {fileID: 11400000, guid: ca220696c54edb0469d7126a431d7af6, type: 2}
-    price: 100
-    weight: 1
-  - passive: {fileID: 11400000, guid: 6c1f64c9392a417ea074e241463e3e26, type: 2}
-    price: 100
-    weight: 1
-  - passive: {fileID: 11400000, guid: c4c82026976b4c42ae193a9bb52e72dd, type: 2}
-    price: 100
-    weight: 1
+
+  valueBlockWeight: 70
+  codeBlockWeight: 20
+  passiveWeight: 10
+

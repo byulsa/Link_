@@ -14,9 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
   blockType: 14
   category: 4
+  icon: {fileID: 0}
   displayText: CIR
-  fullName: Circle Weapon
+  fullName: '-'
+  description: 
   hasValue: 0
   minValue: 1
   maxValue: 1
   targetWeapon: {fileID: 11400000, guid: 620444e7582a4fb4880ee708e0da7e46, type: 2}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 100
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers:
+    - minValue: 2
+      maxValue: 2
+      rarity: 0
+      price: 20
+    - minValue: 3
+      maxValue: 4
+      rarity: 1
+      price: 50
+    - minValue: 5
+      maxValue: 2147483647
+      rarity: 2
+      price: 150

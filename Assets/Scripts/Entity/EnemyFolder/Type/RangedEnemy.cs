@@ -11,6 +11,14 @@ public class RangedEnemy : Enemy
     [SerializeField]
     private Animator animator;
 
+    [Header("Laser")]
+    [SerializeField]
+    private Transform laserFirePoint;
+
+    private LineRenderer laserLineRenderer;
+    private Material laserMaterial;
+    private Coroutine laserVisualCoroutine;
+
     private float attackTimer;
 
     private bool isRetreating;
@@ -41,6 +49,26 @@ public class RangedEnemy : Enemy
         isRetreating = false;
         isAttacking = false;
         isAttackRecovering = false;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+
+        if (laserVisualCoroutine != null)
+        {
+            StopCoroutine(laserVisualCoroutine);
+            laserVisualCoroutine = null;
+        }
+
+        if (laserLineRenderer != null)
+            laserLineRenderer.enabled = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (laserMaterial != null)
+            Destroy(laserMaterial);
     }
 
     protected override void Update()
@@ -176,13 +204,121 @@ public class RangedEnemy : Enemy
 
     public void FireLaser()
     {
-        if (PlayerTransform == null)
+        if (rangedData == null
+            || rangedData.attackType != RangedAttackType.Laser
+            || PlayerTransform == null)
             return;
 
-        Debug.Log($"[RangedEnemy] {name} 레이저 발사!");
+        Vector2 direction = (PlayerTransform.position - transform.position).normalized;
+        if (direction == Vector2.zero)
+            return;
 
-        // TODO:
-        // 실제 레이저 판정
+        Vector3 start = GetLaserFirePosition(direction);
+        float maxDistance = Mathf.Max(0.01f, rangedData.laserMaxDistance);
+        Vector3 end = start + (Vector3)(direction * maxDistance);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(start, direction, maxDistance);
+        RaycastHit2D nearestHit = default;
+        float nearestHitDistance = float.MaxValue;
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null
+                || hit.collider.transform == transform
+                || hit.collider.transform.IsChildOf(transform))
+                continue;
+
+            if (hit.distance >= nearestHitDistance)
+                continue;
+
+            nearestHitDistance = hit.distance;
+            nearestHit = hit;
+            end = hit.point;
+        }
+
+        if (nearestHit.collider != null)
+        {
+            Entity hitEntity = nearestHit.collider.GetComponentInParent<Entity>();
+            if (hitEntity != null && hitEntity.Is(EntityType.Player))
+            {
+                IDamageable damageable = nearestHit.collider.GetComponentInParent<IDamageable>();
+                damageable?.TakeDamage(BaseDamage * Mathf.Max(0f, rangedData.laserDamageMultiplier));
+            }
+        }
+
+        ShowLaser(start, end);
+    }
+
+    private Vector3 GetLaserFirePosition(Vector2 direction)
+    {
+        if (laserFirePoint == null)
+            return transform.position + new Vector3(direction.x >= 0f ? 0.45f : -0.45f, 0.15f, 0f);
+
+        Vector3 localPosition = laserFirePoint.localPosition;
+        localPosition.x = Mathf.Abs(localPosition.x) * (direction.x >= 0f ? 1f : -1f);
+        laserFirePoint.localPosition = localPosition;
+        return laserFirePoint.position;
+    }
+
+    private void ShowLaser(Vector3 start, Vector3 end)
+    {
+        if (!EnsureLaserLineRenderer())
+            return;
+
+        if (laserVisualCoroutine != null)
+            StopCoroutine(laserVisualCoroutine);
+
+        laserLineRenderer.startWidth = rangedData.laserWidth;
+        laserLineRenderer.endWidth = rangedData.laserWidth * 0.35f;
+        laserLineRenderer.startColor = rangedData.laserColor;
+        Color endColor = rangedData.laserColor;
+        endColor.a = 0f;
+        laserLineRenderer.endColor = endColor;
+        laserLineRenderer.SetPosition(0, start);
+        laserLineRenderer.SetPosition(1, end);
+        laserLineRenderer.enabled = true;
+
+        laserVisualCoroutine = StartCoroutine(HideLaserAfterDelay(rangedData.laserDuration));
+    }
+
+    private bool EnsureLaserLineRenderer()
+    {
+        if (laserLineRenderer != null)
+            return true;
+
+        GameObject laserObject = new("LaserLine");
+        laserObject.transform.SetParent(transform, false);
+        laserLineRenderer = laserObject.AddComponent<LineRenderer>();
+        laserLineRenderer.positionCount = 2;
+        laserLineRenderer.useWorldSpace = true;
+        laserLineRenderer.alignment = LineAlignment.View;
+        laserLineRenderer.numCapVertices = 4;
+        laserLineRenderer.sortingOrder = 10;
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+            laserLineRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
+
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+        {
+            Debug.LogError("[RangedEnemy] 레이저 LineRenderer용 Sprites/Default 셰이더를 찾을 수 없습니다.", this);
+            Destroy(laserObject);
+            laserLineRenderer = null;
+            return false;
+        }
+
+        laserMaterial = new Material(shader);
+        laserLineRenderer.material = laserMaterial;
+        return true;
+    }
+
+    private IEnumerator HideLaserAfterDelay(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+
+        if (laserLineRenderer != null)
+            laserLineRenderer.enabled = false;
+
+        laserVisualCoroutine = null;
     }
 
     // Animation 마지막 프레임

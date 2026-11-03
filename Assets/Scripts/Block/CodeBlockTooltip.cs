@@ -63,11 +63,37 @@ public class CodeBlockTooltip : MonoBehaviour
         if (block == null || block.Definition == null)
             return;
 
+        Show(block.Definition, pointerPosition);
+    }
+
+    public static void Show(BlockDefinition definition, Vector2 pointerPosition)
+    {
+        if (definition == null)
+            return;
+
         Show(
-            block.Definition.fullName,
-            block.Definition.displayText,
-            block.Definition.category.ToString(),
-            block.Definition.description,
+            definition.fullName,
+            definition.displayText,
+            definition.category.ToString(),
+            definition.description,
+            pointerPosition
+        );
+    }
+
+    public static void Show(WeaponDefinition weapon, Vector2 pointerPosition)
+    {
+        if (weapon == null)
+            return;
+
+        string displayName = string.IsNullOrWhiteSpace(weapon.displayText)
+            ? weapon.weaponName
+            : weapon.displayText;
+
+        Show(
+            displayName,
+            "Weapon",
+            "Weapon",
+            weapon.description,
             pointerPosition
         );
     }
@@ -86,13 +112,7 @@ public class CodeBlockTooltip : MonoBehaviour
         );
     }
 
-    private static void Show(
-        string fullName,
-        string fallbackName,
-        string category,
-        string description,
-        Vector2 pointerPosition
-    )
+    private static void Show(string fullName, string fallbackName, string category, string description, Vector2 pointerPosition)
     {
         if (instance == null)
             instance = FindFirstObjectByType<CodeBlockTooltip>(FindObjectsInactive.Include);

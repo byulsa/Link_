@@ -28,8 +28,11 @@ public class ShopSlot
 
     public string GetDisplayName() => Type switch
     {
-        ShopItemType.Block or ShopItemType.Weapon =>
+        ShopItemType.Block =>
             Block.hasValue ? $"{Block.displayText}{Value}" : Block.displayText,
+        ShopItemType.Weapon => string.IsNullOrWhiteSpace(Block.targetWeapon.displayText)
+            ? Block.targetWeapon.weaponName
+            : Block.targetWeapon.displayText,
         ShopItemType.Passive => Passive.itemName,
         _ => "???"
     };
@@ -37,8 +40,10 @@ public class ShopSlot
     {
         return Type switch
         {
-            ShopItemType.Block or ShopItemType.Weapon =>
-                Block.icon,
+            ShopItemType.Block => Block.icon,
+            ShopItemType.Weapon => Block.targetWeapon.icon != null
+                ? Block.targetWeapon.icon
+                : Block.icon,
 
             ShopItemType.Passive =>
                 Passive.icon,

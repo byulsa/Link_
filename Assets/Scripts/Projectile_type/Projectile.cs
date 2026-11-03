@@ -128,6 +128,11 @@ public class Projectile : MonoBehaviour
         Destroy(gameObject);
     }
 
+    public void Block()
+    {
+        Destroy(gameObject);
+    }
+
     private void Explode()
     {
         Debug.Log("[Projectile] 폭발!");

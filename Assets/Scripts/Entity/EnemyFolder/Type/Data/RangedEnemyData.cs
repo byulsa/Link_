@@ -34,4 +34,11 @@ public class RangedEnemyData : EnemyData
     [Header("Projectile Pattern")]
     public int projectileCount = 1;
     public float[] projectileAngles;
+
+    [Header("Laser")]
+    [Min(0.01f)] public float laserMaxDistance = 10f;
+    [Min(0f)] public float laserDamageMultiplier = 1f;
+    [Min(0.01f)] public float laserWidth = 0.12f;
+    [Min(0.01f)] public float laserDuration = 0.15f;
+    public Color laserColor = Color.red;
 }

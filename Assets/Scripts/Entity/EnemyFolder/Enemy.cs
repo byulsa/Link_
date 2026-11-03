@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using DG.Tweening;
 
 enum EnmeyTrigger
 {
@@ -23,6 +24,22 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     [Header("Visual")]
     [SerializeField]
     private SpriteRenderer spriteRenderer;
+    private Color defaultSpriteColor = Color.white;
+    private Vector3 defaultSpriteScale = Vector3.one;
+    private Coroutine damageColorCoroutine;
+    private Tween damageScaleTween;
+    private Tween deathTween;
+
+    [Header("Death Animation")]
+    [SerializeField]
+    private Animator deathAnimator;
+    [SerializeField]
+    private string deathTriggerName = "Die";
+    [SerializeField, Min(0f)]
+    private float deathAnimationDuration = 0.5f;
+    private Coroutine deathAnimationCoroutine;
+    private Collider2D[] enemyColliders;
+    private bool[] colliderEnabledOnAwake;
 
     [Header("Movement")]
     [SerializeField]
@@ -67,6 +84,20 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        enemyColliders = GetComponentsInChildren<Collider2D>();
+        colliderEnabledOnAwake = new bool[enemyColliders.Length];
+        for (int i = 0; i < enemyColliders.Length; i++)
+            colliderEnabledOnAwake[i] = enemyColliders[i].enabled;
+
+        if (deathAnimator == null)
+            deathAnimator = GetComponentInChildren<Animator>();
+
+        if (spriteRenderer != null)
+        {
+            defaultSpriteColor = spriteRenderer.color;
+            defaultSpriteScale = spriteRenderer.transform.localScale;
+        }
+
         if (spriteRenderer == null)
             //spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             if (enemyData != null)
@@ -81,6 +112,20 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         isKnockedBack = false;
         isDead = false;
+        SetCollidersEnabled(true);
+        deathTween?.Kill();
+        deathTween = null;
+        if (deathAnimationCoroutine != null)
+        {
+            StopCoroutine(deathAnimationCoroutine);
+            deathAnimationCoroutine = null;
+        }
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = defaultSpriteColor;
+            spriteRenderer.transform.localScale = defaultSpriteScale;
+        }
 
         if (playerTransform == null)
         {
@@ -107,6 +152,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         knockbackDuration = data.knockbackDuration;
 
         pointReward = data.PointDropNum;
+        defaultSpriteColor = Color.white;
+        if (spriteRenderer != null)
+            spriteRenderer.color = defaultSpriteColor;
     }
 
     // -------------------------
@@ -136,13 +184,76 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         {
             ApplyKnockback(hitDirection);
         }
-
+        DamgeColor();
+        DmgTween();
         if (currentHealth <= 0f)
         {
             Debug.Log("[Enemy] currentHealth <= 0, Die() 호출 준비");
 
             Die();
         }
+    }
+    public void DamgeColor()
+    {
+        if (spriteRenderer != null)
+        {
+            if (damageColorCoroutine != null)
+                StopCoroutine(damageColorCoroutine);
+
+            spriteRenderer.color = Color.red;
+            damageColorCoroutine = StartCoroutine(DamageColorRoutine());
+        }
+    }
+    public IEnumerator DamageColorRoutine()
+    {
+        if (spriteRenderer == null)
+            yield break;
+
+        yield return new WaitForSeconds(0.2f);
+
+        spriteRenderer.color = defaultSpriteColor;
+        damageColorCoroutine = null;
+    }
+
+    protected virtual void OnDisable()
+    {
+        if (damageColorCoroutine != null)
+        {
+            StopCoroutine(damageColorCoroutine);
+            damageColorCoroutine = null;
+        }
+
+        if (deathAnimationCoroutine != null)
+        {
+            StopCoroutine(deathAnimationCoroutine);
+            deathAnimationCoroutine = null;
+        }
+
+        damageScaleTween?.Kill();
+        damageScaleTween = null;
+        deathTween?.Kill();
+        deathTween = null;
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = defaultSpriteColor;
+            spriteRenderer.transform.localScale = defaultSpriteScale;
+        }
+    }
+    public void DmgTween()//피격시 크기가 커졌다가 원래대로 돌아오는 트윈
+    {
+        if (spriteRenderer == null)
+            return;
+
+        damageScaleTween?.Kill();
+        Transform spriteTransform = spriteRenderer.transform;
+        spriteTransform.localScale = defaultSpriteScale;
+
+        Sequence tween = DOTween.Sequence();
+        tween.Append(spriteTransform.DOScale(defaultSpriteScale * 1.2f, 0.1f));
+        tween.Append(spriteTransform.DOScale(defaultSpriteScale, 0.1f));
+        tween.OnComplete(() => damageScaleTween = null);
+        damageScaleTween = tween;
     }
 
     protected void UpdateFacing(Vector2 movementDirection)
@@ -288,6 +399,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         Debug.Log($"[Enemy] {name} 사망 / DeathType: {deathType}");
 
+        StopMovement();
+        SetCollidersEnabled(false);
+
         try
         {
             OnEnemyDeath?.Invoke(this, deathType);
@@ -299,7 +413,92 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             Debug.LogError(ex.StackTrace);
         }
 
+        if (HasDeathAnimationTrigger())
+        {
+            deathAnimator.SetTrigger(deathTriggerName);
+            deathAnimationCoroutine = StartCoroutine(WaitForDeathAnimation());
+        }
+        else
+        {
+            PlayFallbackDeathAnimation();
+        }
+    }
+
+    private bool HasDeathAnimationTrigger()
+    {
+        if (deathAnimator == null || string.IsNullOrEmpty(deathTriggerName))
+            return false;
+
+        foreach (AnimatorControllerParameter parameter in deathAnimator.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Trigger
+                && parameter.name == deathTriggerName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private IEnumerator WaitForDeathAnimation()
+    {
+        if (deathAnimationDuration > 0f)
+            yield return new WaitForSeconds(deathAnimationDuration);
+
+        CompleteDeathAnimation();
+    }
+
+    private void PlayFallbackDeathAnimation()
+    {
+        if (spriteRenderer == null || deathAnimationDuration <= 0f)
+        {
+            CompleteDeathAnimation();
+            return;
+        }
+
+        Transform visualTransform = spriteRenderer.transform;
+        Sequence sequence = DOTween.Sequence();
+        sequence.Join(spriteRenderer.DOFade(0f, deathAnimationDuration));
+        sequence.Join(visualTransform.DOScale(defaultSpriteScale * 0.2f, deathAnimationDuration));
+        sequence.SetLink(gameObject, LinkBehaviour.KillOnDestroy);
+        sequence.OnComplete(CompleteDeathAnimation);
+        deathTween = sequence;
+    }
+
+    public void AnimationEvent_DeathComplete()
+    {
+        if (isDead)
+            CompleteDeathAnimation();
+    }
+
+    private void CompleteDeathAnimation()
+    {
+        if (!isDead)
+            return;
+
+        if (deathAnimationCoroutine != null)
+        {
+            StopCoroutine(deathAnimationCoroutine);
+            deathAnimationCoroutine = null;
+        }
+
+        deathTween?.Kill();
+        deathTween = null;
         gameObject.SetActive(false);
+    }
+
+    private void SetCollidersEnabled(bool isEnabled)
+    {
+        if (enemyColliders == null)
+            return;
+
+        for (int i = 0; i < enemyColliders.Length; i++)
+        {
+            Collider2D enemyCollider = enemyColliders[i];
+            if (enemyCollider != null)
+                enemyCollider.enabled = isEnabled && colliderEnabledOnAwake[i];
+        }
     }
 
     public int GetPointAmount()

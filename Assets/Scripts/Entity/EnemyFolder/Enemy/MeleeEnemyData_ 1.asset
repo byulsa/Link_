@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: MeleeEnemyData_ 1
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyData
   enemyName: Dummy
-  maxHealth: 50
+  maxHealth: 150
   baseDamage: 5
-  moveSpeed: 15
+  moveSpeed: 2
   knockbackForce: 5
   knockbackDuration: 0.2
+  attackRecoveryTime: 0.5
   enemyPrefab: {fileID: 2171883001476934377, guid: a6de6c27c9439cd409ff35cd32adb329, type: 3}
   PointDropNum: 5
   attackRange: 1.5

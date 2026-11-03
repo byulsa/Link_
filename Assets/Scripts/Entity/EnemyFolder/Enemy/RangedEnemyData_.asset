@@ -26,10 +26,15 @@ MonoBehaviour:
   retreatEndRange: 5
   attackCooldown: 1
   behavior: 1
-  attackType: 0
+  attackType: 1
   projectilePrefab: {fileID: 4196148461194105619, guid: a7296dd39faf79e4c903e5c674dda589, type: 3}
   projectileCount: 3
   projectileAngles:
   - 20
   - 0
   - -20
+  laserMaxDistance: 10
+  laserDamageMultiplier: 1
+  laserWidth: 1
+  laserDuration: 0.15
+  laserColor: {r: 1, g: 0.1, b: 0.1, a: 1}

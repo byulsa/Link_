@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee4ca94534276674580dfb34356e525e, type: 3}
+  m_Name: Wave_08
+  m_EditorClassIdentifier: Assembly-CSharp::WaveData
+  maxTime: 45
+  timeLines:
+  - startTime: 0
+    endTime: 15
+    enemyData:
+    - {fileID: 11400000, guid: 57afb27979d9daa4d858aa5f1d6222f2, type: 2}
+    - {fileID: 11400000, guid: 57afb27979d9daa4d858aa5f1d6222f2, type: 2}
+    - {fileID: 11400000, guid: 2d06072b78b24ca4494e4b44a0667768, type: 2}
+    - {fileID: 11400000, guid: 76b391f9bcc1302429e0303b0bd6ed39, type: 2}
+    spawnInterval: 1.8974999
+  - startTime: 15
+    endTime: 30
+    enemyData:
+    - {fileID: 11400000, guid: 57afb27979d9daa4d858aa5f1d6222f2, type: 2}
+    - {fileID: 11400000, guid: 2d06072b78b24ca4494e4b44a0667768, type: 2}
+    - {fileID: 11400000, guid: 76b391f9bcc1302429e0303b0bd6ed39, type: 2}
+    spawnInterval: 1.65
+  - startTime: 30
+    endTime: 45
+    enemyData:
+    - {fileID: 11400000, guid: 57afb27979d9daa4d858aa5f1d6222f2, type: 2}
+    - {fileID: 11400000, guid: 2d06072b78b24ca4494e4b44a0667768, type: 2}
+    - {fileID: 11400000, guid: 2d06072b78b24ca4494e4b44a0667768, type: 2}
+    - {fileID: 11400000, guid: 76b391f9bcc1302429e0303b0bd6ed39, type: 2}
+    spawnInterval: 1.4025

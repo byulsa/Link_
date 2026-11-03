@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Weapon : MonoBehaviour
 {
     private CodeController codeController;
     private WeaponBase weaponBase;
+    private readonly Dictionary<Enemy, float> nextCutHitTime = new();
 
     private void Awake()
     {
@@ -16,37 +18,68 @@ public class Weapon : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log($"[Weapon] 충돌 발생: {other.name}");
+        if (TryBlockProjectile(other))
+            return;
 
         Entity target = other.GetComponent<Entity>();
+        if (target == null)
+            target = other.GetComponentInParent<Entity>();
 
         if (target == null)
             return;
 
-        Debug.Log($"[Weapon] Target = {target.name}, " + $"Type = {target.Type}");
-
         if (!target.Is(EntityType.Enemy))
-        {
-            Debug.Log("[Weapon] Enemy가 아니므로 무시");
-
             return;
-        }
 
-        // 코드가 데미지를 직접 처리했는지 확인
-        bool dealtDamage = false;
+        TryHitEnemy(target);
+    }
 
-        if (codeController != null)
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (weaponBase == null || !weaponBase.IsContinuousCut)
+            return;
+
+        Entity target = other.GetComponent<Entity>();
+        if (target == null)
+            target = other.GetComponentInParent<Entity>();
+
+        if (target != null && target.Is(EntityType.Enemy))
+            TryHitEnemy(target);
+    }
+
+    private bool TryBlockProjectile(Collider2D other)
+    {
+        if (weaponBase == null)
+            return false;
+
+        Projectile projectile = other.GetComponent<Projectile>();
+        if (projectile == null)
+            projectile = other.GetComponentInParent<Projectile>();
+
+        return weaponBase.TryBlockProjectile(projectile);
+    }
+
+    private void TryHitEnemy(Entity target)
+    {
+        if (weaponBase == null)
+            return;
+
+        Enemy enemy = target.GetComponent<Enemy>();
+        if (enemy == null)
+            enemy = target.GetComponentInParent<Enemy>();
+
+        if (enemy == null)
+            return;
+
+        if (weaponBase.IsContinuousCut)
         {
-            dealtDamage = codeController.ExecuteWeapon(target);
+            if (nextCutHitTime.TryGetValue(enemy, out float nextHitTime) && Time.time < nextHitTime)
+                return;
+
+            nextCutHitTime[enemy] = Time.time + weaponBase.ContinuousCutInterval;
         }
 
-        // DMG 코드가 없다면 기본 데미지
-        if (!dealtDamage)
-        {
-            if (weaponBase != null)
-            {
-                weaponBase.Hit(target);
-            }
-        }
+        bool dealtDamage = codeController != null && codeController.ExecuteWeapon(target);
+        weaponBase.Hit(target, !dealtDamage);
     }
 }

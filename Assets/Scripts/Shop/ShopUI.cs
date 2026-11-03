@@ -79,7 +79,7 @@ public class ShopUI : MonoBehaviour
     {
         if (slotUI == null) return;
 
-        if (slotIndex < slots.Count)
+        if (slotIndex < slots.Count && slots[slotIndex] != null)
         {
             slotUI.gameObject.SetActive(true);
             slotUI.Setup(slotIndex, slots[slotIndex], shopManager);

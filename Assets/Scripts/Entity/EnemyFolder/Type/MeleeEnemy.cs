@@ -5,7 +5,8 @@ public class MeleeEnemy : Enemy
     [Header("Melee Data")]
     [SerializeField]
     private MeleeEnemyData meleeData;
-
+    [SerializeField] private Animator animator;
+    private bool isAttacking;
     private float attackTimer;
 
     protected override void Awake()
@@ -20,16 +21,19 @@ public class MeleeEnemy : Enemy
 
     protected override void Update()
     {
-        if (IsDead)
-            return;
-
-        if (meleeData == null)
+        if (IsDead || meleeData == null)
             return;
 
         if (IsKnockedBack)
             return;
 
         attackTimer -= Time.deltaTime;
+
+        if (isAttacking)
+        {
+            StopMovement();
+            return;
+        }
 
         if (PlayerDistance() <= meleeData.attackRange)
         {
@@ -52,26 +56,28 @@ public class MeleeEnemy : Enemy
 
     private void TryAttack()
     {
-        if (attackTimer > 0f)
+        if (attackTimer > 0f || isAttacking)
             return;
 
-        Attack();
-
+        isAttacking = true;
         attackTimer = meleeData.attackCooldown;
+        StopMovement();
+        animator.SetTrigger("Attack");
     }
 
-    private void Attack()
+    public void AnimationEvent_Attack()
     {
-        Debug.Log($"[MeleeEnemy] {name} 공격!");
-
-        if (PlayerTransform == null)
+        if (IsDead || PlayerTransform == null)
             return;
 
-        IDamageable damageable = PlayerTransform.GetComponent<IDamageable>();
-
-        if (damageable == null)
+        if (PlayerDistance() > meleeData.attackRange)
             return;
 
-        damageable.TakeDamage(BaseDamage);
+        if (PlayerTransform.TryGetComponent<IDamageable>(out var target))
+            target.TakeDamage(BaseDamage);
+    }
+    public void AnimationEvent_AttackEnd()
+    {
+        isAttacking = false;
     }
 }

@@ -1,11 +1,12 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 // 개별 Code 보상 슬롯의 표시/선택 상태를 담당한다.
 // Shop 슬롯처럼 균일한 사각형이 아니라, 실제 CodeBlock과 같은 방식(글자 수 x cellSize)으로
 // 너비가 정해지고, 카테고리별 색상도 CodeBlock과 동일하게 적용해서 "진짜 코드"처럼 보이게 한다.
-public class RewardSlotUI : MonoBehaviour
+public class RewardSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandler, IPointerExitHandler
 {
     [SerializeField]
     private TMP_Text blockText;
@@ -29,6 +30,7 @@ public class RewardSlotUI : MonoBehaviour
     private RectTransform rectTransform;
     private int slotIndex;
     private DataCollectionUI dataCollectionUI;
+    private BlockDefinition blockDefinition;
 
     private void Awake()
     {
@@ -44,6 +46,7 @@ public class RewardSlotUI : MonoBehaviour
     {
         slotIndex = index;
         dataCollectionUI = ui;
+        blockDefinition = entry.Block;
 
         string displayText = GetDisplayText(entry);
 
@@ -85,6 +88,21 @@ public class RewardSlotUI : MonoBehaviour
     private void OnClick()
     {
         dataCollectionUI.OnSlotClicked(slotIndex);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Show(blockDefinition, eventData.position);
+    }
+
+    public void OnPointerMove(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Move(eventData.position);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        CodeBlockTooltip.Hide();
     }
 
     public void SetSelected(bool selected)

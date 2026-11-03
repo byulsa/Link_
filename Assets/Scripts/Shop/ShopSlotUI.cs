@@ -24,6 +24,25 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
     private ShopSlot slot;
     private int slotIndex;
     private ShopManager shopManager;
+    private RectTransform nameTextRect;
+    private Vector2 originalNameAnchorMin;
+    private Vector2 originalNameAnchorMax;
+    private Vector2 originalNameOffsetMin;
+    private Vector2 originalNameOffsetMax;
+    private TextAlignmentOptions originalNameAlignment;
+
+    private void Awake()
+    {
+        if (nameText == null)
+            return;
+
+        nameTextRect = nameText.rectTransform;
+        originalNameAnchorMin = nameTextRect.anchorMin;
+        originalNameAnchorMax = nameTextRect.anchorMax;
+        originalNameOffsetMin = nameTextRect.offsetMin;
+        originalNameOffsetMax = nameTextRect.offsetMax;
+        originalNameAlignment = nameText.alignment;
+    }
 
     private void OnEnable()
     {
@@ -43,7 +62,8 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
         slotIndex = index;
         shopManager = manager;
 
-        nameText.text = slot.GetDisplayName();
+        if (nameText != null)
+            nameText.text = slot.GetDisplayName();
 
         switch (slot.Type)
         {
@@ -56,18 +76,24 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
                 break;
         }
 
-        priceText.text = $"{slot.Price} P";
+        if (priceText != null)
+            priceText.text = $"{slot.Price} P";
         SetSold(slot.IsSold);
 
         if (PointManager.Instance != null)
             UpdatePriceColor(PointManager.Instance.CurrentPoint);
 
-        buyButton.onClick.RemoveAllListeners();
-        buyButton.onClick.AddListener(OnClickBuy);
+        if (buyButton != null)
+        {
+            buyButton.onClick.RemoveAllListeners();
+            buyButton.onClick.AddListener(OnClickBuy);
+        }
     }
 
     private void SetupCode()
     {
+        SetNameTextArea(false);
+
         if (itemPreview != null)
             itemPreview.SetActive(false);
 
@@ -86,6 +112,8 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
 
     private void SetupImageItem()
     {
+        SetNameTextArea(true);
+
         if (itemPreview != null)
             itemPreview.SetActive(true);
 
@@ -93,7 +121,28 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
             codePreview.SetActive(false);
 
         if (iconImage != null)
+        {
             iconImage.sprite = slot.GetIcon();
+            iconImage.preserveAspect = true;
+        }
+    }
+
+    private void SetNameTextArea(bool reserveIconSpace)
+    {
+        if (nameTextRect == null)
+            return;
+
+        nameTextRect.anchorMin = reserveIconSpace
+            ? new Vector2(0.3f, originalNameAnchorMin.y)
+            : originalNameAnchorMin;
+        nameTextRect.anchorMax = originalNameAnchorMax;
+        nameTextRect.offsetMin = reserveIconSpace
+            ? new Vector2(0f, originalNameOffsetMin.y)
+            : originalNameOffsetMin;
+        nameTextRect.offsetMax = originalNameOffsetMax;
+        nameText.alignment = reserveIconSpace
+            ? TextAlignmentOptions.MidlineLeft
+            : originalNameAlignment;
     }
 
     private void UpdatePriceColor(int currentPoint)
@@ -101,7 +150,8 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
         if (slot == null)
             return;
 
-        priceText.color = currentPoint >= slot.Price ? affordableColor : unaffordableColor;
+        if (priceText != null)
+            priceText.color = currentPoint >= slot.Price ? affordableColor : unaffordableColor;
     }
 
     private void OnClickBuy()
@@ -112,7 +162,12 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (slot != null && slot.Type == ShopItemType.Passive && !slot.IsSold)
+        if (slot == null || slot.IsSold)
+            return;
+
+        if (slot.Type == ShopItemType.Weapon)
+            CodeBlockTooltip.Show(slot.Block.targetWeapon, eventData.position);
+        else if (slot.Type == ShopItemType.Passive)
             CodeBlockTooltip.Show(slot.Passive, eventData.position);
     }
 
@@ -131,10 +186,14 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
         if (buyButton != null)
             buyButton.interactable = !sold;
 
-        nameText.text = sold ? $"NULL" : slot.GetDisplayName();
-        priceText.text = sold ? $"<s>{slot.Price} P</s>" : $"{slot.Price} P";
-        iconImage.gameObject.SetActive(!sold);
-        codeBlock.gameObject.SetActive(!sold);
+        if (nameText != null)
+            nameText.text = sold ? "NULL" : slot.GetDisplayName();
+        if (priceText != null)
+            priceText.text = sold ? $"<s>{slot.Price} P</s>" : $"{slot.Price} P";
+        if (iconImage != null)
+            iconImage.gameObject.SetActive(!sold);
+        if (codeBlock != null)
+            codeBlock.gameObject.SetActive(!sold);
 
 
         if (soldOverlay != null)

@@ -12,6 +12,7 @@ public class EnemySpawner : MonoBehaviour
     private float spawnTimer;
     private float spawnInterval = 2f;
     private bool waveEnded;
+    private bool spawningFinished;
 
     private class PooledEnemy
     {
@@ -31,6 +32,7 @@ public class EnemySpawner : MonoBehaviour
         elapsedTime = 0f;
         spawnTimer = 0f;
         waveEnded = false;
+        spawningFinished = false;
 
         SetNextSpawnInterval();
     }
@@ -44,8 +46,13 @@ public class EnemySpawner : MonoBehaviour
         spawnTimer += Time.deltaTime;
 
         if (elapsedTime >= currentWave.maxTime)
+            spawningFinished = true;
+
+        if (spawningFinished)
         {
-            EndWave();
+            if (!HasActiveEnemies())
+                EndWave();
+
             return;
         }
 
@@ -55,6 +62,17 @@ public class EnemySpawner : MonoBehaviour
             Spawn();
             SetNextSpawnInterval();
         }
+    }
+
+    private bool HasActiveEnemies()
+    {
+        foreach (PooledEnemy pooledEnemy in poolList)
+        {
+            if (pooledEnemy.Instance != null && pooledEnemy.Instance.activeInHierarchy)
+                return true;
+        }
+
+        return false;
     }
 
     private WaveTimeLineData GetCurrentTimeline()

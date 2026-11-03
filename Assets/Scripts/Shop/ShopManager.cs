@@ -19,8 +19,6 @@ public class ShopManager : MonoBehaviour
     [Header("Shop Layout (DATA EXCHANGE)")]
     [SerializeField] private int topSlotCount = 5;     // 상단: 코드 블록 + 패시브
     [SerializeField] private int weaponSlotCount = 2;  // 하단: 무기 고정
-    [SerializeField, Range(0, 2)] private int minPassiveCount = 0;
-    [SerializeField, Range(0, 2)] private int maxPassiveCount = 2;
 
     private readonly List<ShopSlot> currentSlots = new();
     public IReadOnlyList<ShopSlot> CurrentSlots => currentSlots;
@@ -39,12 +37,7 @@ public class ShopManager : MonoBehaviour
             return;
         }
 
-        // ── 상단: 패시브 0~2개 + 나머지는 블록 ──
-        int passiveCount = UnityEngine.Random.Range(minPassiveCount, maxPassiveCount + 1);
-        passiveCount = Mathf.Min(passiveCount, topSlotCount);
-        int blockCount = topSlotCount - passiveCount;
-
-        List<ShopSlot> topSlots = new List<ShopSlot>();
+        // Each top slot independently rolls Value / Code / Passive at 70 / 20 / 10.
         HashSet<PassiveItemDefinition> excludedPassives = new();
         if (PassiveEffectManager.Instance != null)
         {
@@ -52,46 +45,33 @@ public class ShopManager : MonoBehaviour
                 excludedPassives.Add(passive);
         }
 
-        for (int i = 0; i < passiveCount; i++)
+        for (int i = 0; i < topSlotCount; i++)
         {
-            if (
-                dropTable.TrySelectPassiveOnly(
-                    excludedPassives,
-                    out ShopDropTable.ShopDropResult result
-                )
-            )
+            if (!dropTable.TrySelectTopItem(excludedPassives, out ShopDropTable.ShopDropResult result))
             {
-                topSlots.Add(new ShopSlot(result.passive, result.price));
+                // Reserve the index so weapon slots never move into the top row.
+                currentSlots.Add(null);
+                continue;
+            }
+            if (result.type == ShopItemType.Passive)
+            {
+                currentSlots.Add(new ShopSlot(result.passive, result.price));
                 excludedPassives.Add(result.passive);
             }
+            else
+                currentSlots.Add(new ShopSlot(result.block, result.price, result.value));
         }
-
-        for (int i = 0; i < blockCount; i++)
-        {
-            if (dropTable.TrySelectBlockOnly(out ShopDropTable.ShopDropResult result))
-                topSlots.Add(new ShopSlot(result.block, result.price, result.value));
-        }
-
-        Shuffle(topSlots); // 패시브 슬롯이 항상 뒤쪽에 몰리지 않도록 순서 섞기
-        currentSlots.AddRange(topSlots);
 
         // ── 하단: 무기 고정 ──
         for (int i = 0; i < weaponSlotCount; i++)
         {
             if (dropTable.TrySelectWeaponOnly(out ShopDropTable.ShopDropResult result))
-                currentSlots.Add(new ShopSlot(result.block, result.price));
+                currentSlots.Add(new ShopSlot(result.block, result.price, result.value));
+            else
+                currentSlots.Add(null);
         }
 
         OnShopRefreshed?.Invoke();
-    }
-
-    private void Shuffle(List<ShopSlot> list)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int j = UnityEngine.Random.Range(0, i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
     }
 
     public bool TryPurchase(int slotIndex)
@@ -99,7 +79,7 @@ public class ShopManager : MonoBehaviour
         if (slotIndex < 0 || slotIndex >= currentSlots.Count) return false;
 
         ShopSlot slot = currentSlots[slotIndex];
-        if (slot.IsSold) return false;
+        if (slot == null || slot.IsSold) return false;
 
         return slot.Type switch
         {
@@ -119,10 +99,14 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        int blockWidth = GetBlockWidth(slot.Block, slot.Value);
+        bool shouldPlaceBlock = slot.Type != ShopItemType.Weapon
+            || !HasWeaponCode(slot.Block.targetWeapon);
+        int blockWidth = shouldPlaceBlock ? GetBlockWidth(slot.Block, slot.Value) : 0;
 
-        if (!grid.TryFindEmptyPosition(blockWidth, out Vector2Int position) ||
-            !grid.CanPlace(position, blockWidth, null))
+        Vector2Int position = default;
+        if (shouldPlaceBlock &&
+            (!grid.TryFindEmptyPosition(blockWidth, out position) ||
+             !grid.CanPlace(position, blockWidth, null)))
         {
             OnPurchaseFailed?.Invoke(slotIndex);
             return false;
@@ -134,7 +118,8 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        editor.CreateDropBlock(slot.Block, position, slot.Value);
+        if (shouldPlaceBlock)
+            editor.CreateDropBlock(slot.Block, position, slot.Value);
 
         // 무기 전용 블록(targetWeapon 지정)이면 실제 무기 오브젝트도 추가 장착
         if (slot.Block.targetWeapon != null)
@@ -143,6 +128,20 @@ public class ShopManager : MonoBehaviour
         slot.MarkSold();
         OnPurchaseSucceeded?.Invoke(slotIndex);
         return true;
+    }
+
+    private bool HasWeaponCode(WeaponDefinition weapon)
+    {
+        if (weapon == null)
+            return false;
+
+        foreach (CodeBlock block in grid.GetBlocks())
+        {
+            if (block.Definition != null && block.Definition.targetWeapon == weapon)
+                return true;
+        }
+
+        return false;
     }
 
     private bool TryPurchasePassive(ShopSlot slot, int slotIndex)
