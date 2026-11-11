@@ -8,6 +8,8 @@ public class WaveTimeLineData
     public float endTime;
     public List<EnemyData> enemyData;
     [Min(0.5f)] public float spawnInterval = 2f;
+    public bool overrideSelfDestructCondition;
+    public SelfDestructCondition selfDestructCondition = SelfDestructCondition.OnDeathOrPlayerNearby;
 }
 
 [CreateAssetMenu(fileName = "Wave_", menuName = "Wave/Wave", order = 1)]
@@ -15,4 +17,10 @@ public class WaveData : ScriptableObject
 {
     public float maxTime = 90f;
     public List<WaveTimeLineData> timeLines;
+
+    [Header("Intermission Dialogue")]
+    public WaveDialogue dialogueAfterWave;
+    public WaveDialogue dialogueAfterCodeCollection;
+    public WaveDialogue dialogueAfterShop;
+    public WaveDialogue dialogueAfterCodeEditor;
 }

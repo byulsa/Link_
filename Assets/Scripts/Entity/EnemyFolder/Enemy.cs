@@ -17,6 +17,8 @@ public enum DeathType
 
 public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 {
+    private const float MaxMoveSpeedMultiplier = 2.5f;
+
     [Header("Data Reference")]
     [SerializeField]
     private EnemyData enemyData;
@@ -76,6 +78,24 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
     public float BaseDamage => baseDamage;
+    public float MoveSpeed => moveSpeed;
+    public float StatMultiplier { get; private set; } = 1f;
+
+    protected float ScaleAttackDuration(float duration) => duration / StatMultiplier;
+
+    // Always rebuild from shared base data, including when an instance is pooled.
+    public void InitializeForSpawn(EnemyData data, float statMultiplier)
+    {
+        InitializeFromData(data);
+        StatMultiplier = Mathf.Max(1f, statMultiplier);
+        maxHealth = data.maxHealth * StatMultiplier;
+        currentHealth = maxHealth;
+        baseDamage = data.baseDamage * StatMultiplier;
+        float moveSpeedMultiplier = Mathf.Min(Mathf.Sqrt(StatMultiplier), MaxMoveSpeedMultiplier);
+        moveSpeed = data.moveSpeed * moveSpeedMultiplier;
+        knockbackForce = data.knockbackForce / StatMultiplier;
+        knockbackDuration = data.knockbackDuration / StatMultiplier;
+    }
 
     [SerializeField]
     private CodeDropTable codeDropTable;
@@ -83,6 +103,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected virtual void Awake()
     {
+        DamageNumberPool.WarmUp();
         rb = GetComponent<Rigidbody2D>();
         enemyColliders = GetComponentsInChildren<Collider2D>();
         colliderEnabledOnAwake = new bool[enemyColliders.Length];
@@ -98,12 +119,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             defaultSpriteScale = spriteRenderer.transform.localScale;
         }
 
-        if (spriteRenderer == null)
-            //spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            if (enemyData != null)
-            {
-                InitializeFromData(enemyData);
-            }
+        if (enemyData != null)
+            InitializeFromData(enemyData);
     }
 
     protected virtual void OnEnable()
@@ -112,6 +129,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
         isKnockedBack = false;
         isDead = false;
+        if (deathAnimator != null)
+        {
+            deathAnimator.speed = 1f;
+            deathAnimator.Rebind();
+            deathAnimator.Update(0f);
+        }
         SetCollidersEnabled(true);
         deathTween?.Kill();
         deathTween = null;
@@ -138,9 +161,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         }
     }
 
-    public void InitializeFromData(EnemyData data)
+    public virtual void InitializeFromData(EnemyData data)
     {
         enemyData = data;
+        StatMultiplier = 1f;
 
         maxHealth = data.maxHealth;
         baseDamage = data.baseDamage;
@@ -175,8 +199,11 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     public virtual void TakeDamage(float damage, Vector2 hitDirection)
     {
-        currentHealth -= damage;
-        currentHealth = Mathf.Max(0f, currentHealth);
+        if (isDead || !(damage > 0f)) return;
+        float appliedDamage = Mathf.Min(damage, currentHealth);
+        currentHealth -= appliedDamage;
+        if (appliedDamage > 0f)
+            ShowDamageNumber(appliedDamage);
 
         Debug.Log($"[Enemy] 피해: {damage} " + $"HP: {currentHealth}/{maxHealth}");
 
@@ -193,6 +220,18 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             Die();
         }
     }
+    private void ShowDamageNumber(float damage)
+    {
+        Vector3 position = transform.position;
+        if (spriteRenderer != null)
+        {
+            Bounds bounds = spriteRenderer.bounds;
+            position = bounds.center;
+            position.y = bounds.max.y;
+        }
+        DamageNumberPool.Show(damage, position, spriteRenderer);
+    }
+
     public void DamgeColor()
     {
         if (spriteRenderer != null)
@@ -217,6 +256,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected virtual void OnDisable()
     {
+        CancelKnockback();
         if (damageColorCoroutine != null)
         {
             StopCoroutine(damageColorCoroutine);
@@ -264,12 +304,12 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         if (movementDirection.x > 0.01f)
         {
             // 오른쪽 이동
-            spriteRenderer.flipX = true;
+            spriteRenderer.flipX = false;
         }
         else if (movementDirection.x < -0.01f)
         {
             // 왼쪽 이동
-            spriteRenderer.flipX = false;
+            spriteRenderer.flipX = true;
         }
     }
 
@@ -364,6 +404,14 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         rb.linearVelocity = direction * moveSpeed;
     }
 
+    protected void CancelKnockback()
+    {
+        if (coroutineKnockback != null) StopCoroutine(coroutineKnockback);
+        coroutineKnockback = null;
+        isKnockedBack = false;
+        StopMovement();
+    }
+
     protected void StopMovement()
     {
         if (rb != null)
@@ -396,6 +444,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             return;
 
         isDead = true;
+        CancelKnockback();
+        if (deathAnimator != null) deathAnimator.speed = 1f;
 
         Debug.Log($"[Enemy] {name} 사망 / DeathType: {deathType}");
 
@@ -449,7 +499,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         CompleteDeathAnimation();
     }
 
-    private void PlayFallbackDeathAnimation()
+    protected virtual void PlayFallbackDeathAnimation()
     {
         if (spriteRenderer == null || deathAnimationDuration <= 0f)
         {

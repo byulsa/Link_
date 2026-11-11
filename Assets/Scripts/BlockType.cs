@@ -19,4 +19,5 @@ public enum BlockType
     PARENTHESIS_BUNDLE,
     PARENTHESIS_OPEN,
     PARENTHESIS_CLOSE,
+    HP,
 }

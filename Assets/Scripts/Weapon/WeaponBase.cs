@@ -31,11 +31,13 @@ public class WeaponBase : MonoBehaviour
     private float currentAngle;
 
     public WeaponDefinition Definition => definition;
-    public float Damage =>
+    public float Damage => ClampDamage(
         damage
         + (PassiveEffectManager.Instance != null
             ? PassiveEffectManager.Instance.GetWeaponDamageBonus(definition)
-            : 0f);
+            : 0f));
+
+    public static float ClampDamage(float value) => value >= 1f ? value : 1f;
     public float Distance => distance;
     public float RotationSpeed => rotationSpeed;
     public float Size => size;
@@ -339,7 +341,7 @@ public class WeaponBase : MonoBehaviour
             if (enemy == null || !damagedEnemies.Add(enemy) || enemy.CurrentHealth <= 0f)
                 continue;
 
-            enemy.TakeDamage(splashDamage);
+            enemy.TakeDamage(ClampDamage(splashDamage));
         }
     }
 
@@ -362,7 +364,7 @@ public class WeaponBase : MonoBehaviour
                 break;
 
             hitEnemies.Add(nextTarget);
-            nextTarget.TakeDamage(chainDamage);
+            nextTarget.TakeDamage(ClampDamage(chainDamage));
             previousTarget = nextTarget;
             chainDamage *= damageMultiplier;
         }

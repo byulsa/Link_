@@ -12,8 +12,17 @@ public class WeaponManager : MonoBehaviour
     [SerializeField]
     private CodeEditor codeEditor; // 씬의 단일 CodeEditor
 
+    [SerializeField]
+    private WeaponDefinition startingWeapon;
+
     private readonly List<WeaponBase> activeWeapons = new();
     public IReadOnlyList<WeaponBase> ActiveWeapons => activeWeapons;
+
+    private void Awake()
+    {
+        if (startingWeapon != null)
+            AddWeapon(startingWeapon);
+    }
 
     public WeaponBase AddWeapon(WeaponDefinition definition)
     {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CodeEditor : MonoBehaviour
 {
@@ -19,18 +20,12 @@ public class CodeEditor : MonoBehaviour
     [SerializeField]
     private CodeValidator validator;
 
-    [Header("Test Blocks")]
-    [SerializeField]
-    private BlockDefinition testWEAP;
+    [Header("Starting Code")]
+    [SerializeField, FormerlySerializedAs("testWEAP")]
+    private BlockDefinition startingWeaponCode;
 
-    [SerializeField]
-    private BlockDefinition testDMG;
-
-    [SerializeField]
-    private BlockDefinition testPLUS5;
-
-    [SerializeField]
-    private BlockDefinition testMULT;
+    [SerializeField, FormerlySerializedAs("testDMG")]
+    private BlockDefinition startingActionCode;
 
     private readonly List<CodeChain> chains = new List<CodeChain>();
 
@@ -44,7 +39,7 @@ public class CodeEditor : MonoBehaviour
 
     private void Start()
     {
-        CreateTestCode();
+        CreateStartingCode();
     }
 
     public void RefreshCode()
@@ -155,33 +150,52 @@ public class CodeEditor : MonoBehaviour
 
     private void ValidateChains()
     {
+        WaveManager waveManager = WaveManager.Instance;
+        List<string> errors = waveManager != null && waveManager.IsCodingLogUnlocked
+            ? new List<string>() : null;
+
         foreach (CodeChain chain in chains)
         {
-            if (chain.nodes[0].blockType == BlockType.WEAP)
-            {
-                bool valid = CodeValidator.IsValidWeaponChain(chain.nodes);
-                if (!valid)
-                {
-                    foreach (CodeBlock block in chain.sourceBlocks)
-                        block.SetError(true);
-                }
+            ValidationResult result = ValidateChain(chain);
+            if (result.IsValid)
                 continue;
-            }
 
-            ValidationResult result = validator.Validate(chain.sourceBlocks);
-            if (!result.IsValid)
+            foreach (CodeBlock block in result.InvalidBlocks)
+                block.SetError(true);
+
+            if (errors != null)
             {
-                foreach (CodeBlock block in result.InvalidBlocks)
-                    block.SetError(true);
+                Vector2Int start = chain.sourceBlocks[0].GridPosition;
+                string sequence = string.Join(" → ", chain.sourceBlocks.Select(block => block.GetDisplayText()));
+                errors.Add($"[문법 오류 · {start.y + 1}행 {start.x + 1}열] {sequence}\n{result.ErrorMessage}");
             }
+        }
+
+        if (errors != null)
+            waveManager.UpdateCodingErrors(errors);
+    }
+
+    private ValidationResult ValidateChain(CodeChain chain)
+    {
+        switch (chain.nodes[0].blockType)
+        {
+            case BlockType.PL:
+                return CodeValidator.IsValidPlayerStatChain(chain.nodes) ? ValidationResult.Success() :
+                    new ValidationResult(false, chain.sourceBlocks, CodeValidator.PlayerStatSyntaxError);
+            case BlockType.WEAP:
+                return CodeValidator.IsValidWeaponChain(chain.nodes) ? ValidationResult.Success() :
+                    new ValidationResult(false, chain.sourceBlocks, CodeValidator.WeaponSyntaxError);
+            default:
+                return validator.Validate(chain.sourceBlocks);
         }
     }
 
-    public void CreateTestCode()
+    private void CreateStartingCode()
     {
         ClearAllBlocks();
-        CreateBlock(testWEAP, new Vector2Int(0, 0));
-        CreateBlock(testDMG, new Vector2Int(4, 0));
+        CodeBlock weaponBlock = CreateBlock(startingWeaponCode, Vector2Int.zero);
+        int actionColumn = weaponBlock != null ? weaponBlock.GridWidth : 0;
+        CreateBlock(startingActionCode, new Vector2Int(actionColumn, 0));
         RefreshCode();
     }
 

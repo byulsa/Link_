@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15eb871bb55be1f49a29c00635b0f74b, type: 3}
+  m_Name: PL
+  m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
+  blockType: 6
+  category: 2
+  icon: {fileID: 0}
+  displayText: PL
+  fullName: Player
+  description: "\ud50c\ub808\uc774\uc5b4 \ub2a5\ub825\uce58\ub97c \ubcc0\uacbd\ud558\ub294 \ucf54\ub4dc\uc785\ub2c8\ub2e4. PL \u2192 SPD \u2192 +5\ub294 \uc774\ub3d9\uc18d\ub3c4\ub97c 5 \uc99d\uac00\uc2dc\ud0a4\uace0, PL \u2192 HP \u2192 +50\uc740 \ucd5c\ub300 \uccb4\ub825\uc744 50 \uc99d\uac00\uc2dc\ud0b5\ub2c8\ub2e4. \uc801 \ub2a5\ub825\uce58 \ubcc0\uacbd\uc740 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+  hasValue: 0
+  minValue: 1
+  maxValue: 1
+  targetWeapon: {fileID: 0}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 80
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers: []

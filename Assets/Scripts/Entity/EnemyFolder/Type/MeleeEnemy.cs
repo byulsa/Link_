@@ -19,6 +19,19 @@ public class MeleeEnemy : Enemy
         }
     }
 
+    public override void InitializeFromData(EnemyData data)
+    {
+        base.InitializeFromData(data);
+        meleeData = data as MeleeEnemyData;
+    }
+
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        isAttacking = false;
+        attackTimer = 0f;
+    }
+
     protected override void Update()
     {
         if (IsDead || meleeData == null)
@@ -60,8 +73,9 @@ public class MeleeEnemy : Enemy
             return;
 
         isAttacking = true;
-        attackTimer = meleeData.attackCooldown;
+        attackTimer = ScaleAttackDuration(meleeData.attackCooldown);
         StopMovement();
+        animator.speed = StatMultiplier;
         animator.SetTrigger("Attack");
     }
 
@@ -78,6 +92,8 @@ public class MeleeEnemy : Enemy
     }
     public void AnimationEvent_AttackEnd()
     {
+        if (IsDead) return;
+        if (animator != null) animator.speed = 1f;
         isAttacking = false;
     }
 }

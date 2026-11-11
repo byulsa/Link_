@@ -13,6 +13,8 @@ public class CameraController : MonoBehaviour
     [SerializeField]
     private float playerPadding = 0.5f;
 
+    [SerializeField] private PlayerHitFeedback hitFeedback;
+
     private void Awake()
     {
         if (!targetCamera)
@@ -30,7 +32,7 @@ public class CameraController : MonoBehaviour
         float halfHeight = targetCamera.orthographicSize;
         float halfWidth = halfHeight * targetCamera.aspect;
 
-        Vector3 cameraPosition = targetCamera.transform.position;
+        Vector3 cameraPosition = targetCamera.transform.position - (hitFeedback != null ? hitFeedback.WorldShakeOffset : Vector3.zero);
 
         float minX = cameraPosition.x - halfWidth + playerPadding;
         float maxX = cameraPosition.x + halfWidth - playerPadding;

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: SHD
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: SHD
-  displayText: Shield Device
-  description: 플레이어 주위를 공전하며 접촉한 적 투사체를 차단합니다.
+  displayText: "\uBC29\uC5B4\uD615 \uB4DC\uB860"
+  description: "\uD50C\uB808\uC774\uC5B4 \uC8FC\uC704\uB97C \uACF5\uC804\uD558\uBA70
+    \uC811\uCD09\uD55C \uC801 \uD22C\uC0AC\uCCB4\uB97C \uCC28\uB2E8\uD569\uB2C8\uB2E4."
   damage: 0
   distance: 4
   rotationSpeed: 360
@@ -30,5 +31,5 @@ MonoBehaviour:
   chainLightningRadius: 3
   chainLightningTargets: 3
   chainLightningDamageMultiplier: 0.7
-  icon: {fileID: 751451447170813573, guid: 2d3e0a5e04f894245b9bcb1394c83f07, type: 3}
+  icon: {fileID: -4919475350962850766, guid: 25ad7097d293f894ba73cba2179b2b8c, type: 3}
   prefab: {fileID: 2733827392254455992, guid: 39a7a4857ee44a7a9ce1824574e8f91a, type: 3}

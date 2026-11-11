@@ -16,7 +16,7 @@ MonoBehaviour:
   category: 4
   icon: {fileID: 0}
   displayText: ARC
-  fullName: '-'
+  fullName: "\uC5F0\uC1C4\uC7A5\uCE58"
   description: "\uC801\uC911\uD55C \uC801\uC5D0\uC11C \uC8FC\uBCC0 \uC801 3\uBA85\uAE4C\uC9C0
     \uC5F0\uC1C4 \uBC29\uC804\uD569\uB2C8\uB2E4. \uC804\uC774\uB9C8\uB2E4 \uD53C\uD574\uAC00
     30% \uAC10\uC18C\uD569\uB2C8\uB2E4."

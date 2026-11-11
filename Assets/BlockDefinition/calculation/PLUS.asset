@@ -22,7 +22,7 @@ MonoBehaviour:
     5\uB294 \uACF5\uACA9\uB825\uC5D0 5\uB97C \uB354\uD558\uB294 \uC870\uD569\uC785\uB2C8\uB2E4"
   hasValue: 1
   minValue: 1
-  maxValue: 5
+  maxValue: 50
   targetWeapon: {fileID: 0}
   shop:
     available: 1
@@ -32,15 +32,15 @@ MonoBehaviour:
     pricePerValue: 0
     useValueTiers: 1
     valueTiers:
-    - minValue: 2
-      maxValue: 2
+    - minValue: 1
+      maxValue: 10
       rarity: 0
       price: 20
-    - minValue: 3
-      maxValue: 4
+    - minValue: 11
+      maxValue: 30
       rarity: 1
       price: 50
-    - minValue: 5
-      maxValue: 8
+    - minValue: 31
+      maxValue: 50
       rarity: 2
       price: 150

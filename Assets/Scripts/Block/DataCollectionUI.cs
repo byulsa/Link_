@@ -26,6 +26,7 @@ public class DataCollectionUI : MonoBehaviour
 
     [SerializeField]
     private Button confirmButton;
+    [SerializeField] private WindowTutorial collectionTutorial;
 
     [Header("Shop 연결 (선택)")]
     [SerializeField]
@@ -33,6 +34,7 @@ public class DataCollectionUI : MonoBehaviour
 
     [SerializeField]
     private ShopManager shopManager;
+    [SerializeField] private WindowTutorial shopTutorial;
 
     private readonly List<RewardSlotUI> spawnedSlots = new();
 
@@ -62,6 +64,7 @@ public class DataCollectionUI : MonoBehaviour
 
         RenderSlots();
         UpdateSelectionText();
+        collectionTutorial?.ShowOnce();
     }
 
     public void Close()
@@ -123,18 +126,37 @@ public class DataCollectionUI : MonoBehaviour
 
     private void OnClickConfirm()
     {
+        if (collectionTutorial != null && collectionTutorial.IsShowing)
+            return;
+
         rewardManager.ConfirmSelection();
 
         Close();
 
-        if (shopPanel != null)
-        {
-            shopPanel.SetActive(true);
+        WaveManager waveManager = WaveManager.Instance;
+        if (waveManager == null || (!waveManager.TryFinishCodeCollection() && waveManager.IsShopUnlocked))
+            TryOpenShop();
+    }
 
-            if (shopManager != null)
-                shopManager.RefreshShop();
-            else
-                Debug.LogError("[DataCollectionUI] ShopManager가 설정되지 않아 상점을 갱신하지 못했습니다.", this);
-        }
+    public void ConvertPendingRewardsToPoints()
+    {
+        if (rewardManager != null)
+            rewardManager.ConvertPendingRewardsToPoints();
+    }
+
+    public bool TryOpenShop()
+    {
+        if (shopPanel == null)
+            return false;
+
+        shopPanel.SetActive(true);
+
+        if (shopManager != null)
+            shopManager.RefreshShop();
+        else
+            Debug.LogError("[DataCollectionUI] ShopManager가 설정되지 않아 상점을 갱신하지 못했습니다.", this);
+
+        shopTutorial?.ShowOnce();
+        return true;
     }
 }

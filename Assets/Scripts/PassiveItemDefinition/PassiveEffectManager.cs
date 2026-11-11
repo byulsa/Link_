@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ public class PassiveEffectManager : MonoBehaviour
 
     private readonly List<PassiveItemDefinition> acquired = new();
     public IReadOnlyList<PassiveItemDefinition> AcquiredPassives => acquired;
+    public event Action OnPassivesChanged;
 
     private void Awake()
     {
@@ -18,11 +20,17 @@ public class PassiveEffectManager : MonoBehaviour
         Instance = this;
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     public void Acquire(PassiveItemDefinition passive)
     {
         if (passive == null || acquired.Contains(passive))
             return;
         acquired.Add(passive);
+        OnPassivesChanged?.Invoke();
     }
 
     public bool HasAcquired(PassiveItemDefinition passive)

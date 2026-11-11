@@ -38,10 +38,12 @@ public class Projectile : MonoBehaviour
 
     private float damage;
     private float currentSpeed;
+    private float speedMultiplier = 1f;
     private float traveledDistance;
     private bool initialized;
+    private bool destroyed;
 
-    public void Initialize(Vector2 initialDirection, float damage, Transform player)
+    public void Initialize(Vector2 initialDirection, float damage, Transform player, float statMultiplier = 1f)
     {
         direction = initialDirection.normalized;
 
@@ -49,14 +51,16 @@ public class Projectile : MonoBehaviour
         playerTransform = player;
 
         traveledDistance = 0f;
-        currentSpeed = normalSpeed;
+        destroyed = false;
+        speedMultiplier = Mathf.Max(1f, statMultiplier);
+        currentSpeed = normalSpeed * speedMultiplier;
 
         initialized = true;
     }
 
     private void Update()
     {
-        if (!initialized)
+        if (!initialized || destroyed)
             return;
 
         UpdateDirection();
@@ -83,7 +87,7 @@ public class Projectile : MonoBehaviour
 
         float slowAmount = Mathf.InverseLerp(0f, 90f, angle);
 
-        float targetSpeed = Mathf.Lerp(normalSpeed, trackingSpeed, slowAmount);
+        float targetSpeed = Mathf.Lerp(normalSpeed, trackingSpeed, slowAmount) * speedMultiplier;
 
         currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, speedChangeRate * Time.deltaTime);
     }
@@ -104,22 +108,20 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Player"))
-            return;
+        if (!initialized || destroyed) return;
+        if (other.GetComponentInParent<WeaponBase>() != null) return;
 
-        IDamageable damageable = other.GetComponent<IDamageable>();
-
-        if (damageable == null)
-            return;
-
-        // 일단 테스트용
-        damageable.TakeDamage(1f);
+        Player player = other.GetComponentInParent<Player>();
+        if (player == null) return;
+        player.TakeDamage(damage);
 
         DestroyProjectile();
     }
 
     private void DestroyProjectile()
     {
+        if (destroyed) return;
+        destroyed = true;
         if (explodeOnDestroy)
         {
             Explode();
@@ -130,6 +132,7 @@ public class Projectile : MonoBehaviour
 
     public void Block()
     {
+        destroyed = true;
         Destroy(gameObject);
     }
 

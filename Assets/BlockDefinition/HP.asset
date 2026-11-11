@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15eb871bb55be1f49a29c00635b0f74b, type: 3}
+  m_Name: HP
+  m_EditorClassIdentifier: Assembly-CSharp::BlockDefinition
+  blockType: 19
+  category: 1
+  icon: {fileID: 0}
+  displayText: HP
+  fullName: Health
+  description: "\ud50c\ub808\uc774\uc5b4\uc758 \ucd5c\ub300 \uccb4\ub825\uc744 \uc870\uc808\ud569\ub2c8\ub2e4. PL \u2192 HP \u2192 +50\ucc98\ub7fc \uc5f0\uacb0\ud569\ub2c8\ub2e4. \uccb4\ub825 \ube44\uc728\uc740 \uc720\uc9c0\ub418\uba70, \uac19\uc740 \ucf54\ub4dc\ub97c \ub2e4\uc2dc \uc801\uc6a9\ud574\ub3c4 \ud68c\ubcf5\ub418\uac70\ub098 \uc911\ubcf5 \ub204\uc801\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+  hasValue: 0
+  minValue: 1
+  maxValue: 1
+  targetWeapon: {fileID: 0}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 80
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers: []

@@ -87,9 +87,9 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -9121725763675076809, guid: ea913e1028c06634f922092c4f750603, type: 3}
+  m_Sprite: {fileID: 3249918587035394733, guid: 851a704a62bc97446bcc78a3553e4bfa, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
+  m_FlipX: 1
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -171,6 +171,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemy
   enemyData: {fileID: 11400000, guid: b3bb586419f3ca341a1575c9bb1090ba, type: 2}
   spriteRenderer: {fileID: 8275963648752711431}
+  deathAnimator: {fileID: 0}
+  deathTriggerName: Die
+  deathAnimationDuration: 0.5
   playerTag: Player
   knockbackForce: 5
   knockbackDuration: 0.2

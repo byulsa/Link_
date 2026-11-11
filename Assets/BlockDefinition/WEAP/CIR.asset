@@ -16,8 +16,9 @@ MonoBehaviour:
   category: 4
   icon: {fileID: 0}
   displayText: CIR
-  fullName: '-'
-  description: 
+  fullName: CIRDrone
+  description: "\uAC00\uC7A5 \uAE30\uBCF8\uC801\uC778 \uB4DC\uB860\uC785\uB2C8\uB2E4.
+    \uC2E4\uD5D8\uCCB4 \uC8FC\uC704\uB97C \uB3CC\uBA70 \uD638\uC704\uD569\uB2C8\uB2E4"
   hasValue: 0
   minValue: 1
   maxValue: 1

@@ -99,19 +99,16 @@ public static class CodeExecutor
         {
             BlockType action = CodeChainEvaluator.GetWeaponAction(actions, i);
             float baseValue = CodeChainEvaluator.GetWeaponBaseValue(weapon.Definition, action);
-            float finalValue = Mathf.Max(
-                0f,
-                CodeChainEvaluator.CalculateValue(baseValue, chain, 2)
-            );
+            float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2);
 
             if (action == BlockType.DMG)
             {
-                enemy.TakeDamage(finalValue);
+                enemy.TakeDamage(WeaponBase.ClampDamage(finalValue));
                 dealtDamage = true;
             }
             else
             {
-                weapon.SetStat(action, finalValue);
+                weapon.SetStat(action, Mathf.Max(0f, finalValue));
             }
         }
 

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: SAW
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: SAW
-  displayText: Saw Device
-  description: 적에게 접촉하는 동안 0.25초 간격으로 반복 피해를 입힙니다.
+  displayText: "\uD1B1\uB2C8 \uB4DC\uB860"
+  description: "\uC801\uC5D0\uAC8C \uC811\uCD09\uD558\uB294 \uB3D9\uC548 0.25\uCD08
+    \uAC04\uACA9\uC73C\uB85C \uBC18\uBCF5 \uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4."
   damage: 35
   distance: 5
   rotationSpeed: 720

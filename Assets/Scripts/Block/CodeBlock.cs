@@ -125,7 +125,7 @@ public class CodeBlock
         ClearError();
     }
 
-    private string GetDisplayText()
+    public string GetDisplayText()
     {
         if (definition == null)
             return string.Empty;

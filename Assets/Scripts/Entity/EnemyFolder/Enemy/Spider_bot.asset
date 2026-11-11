@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ab53d25b3ad8e346a1671c6f5263cc0, type: 3}
+  m_Name: Spider_bot
+  m_EditorClassIdentifier: Assembly-CSharp::SuicideEnemyData
+  enemyName: Spider_bot
+  maxHealth: 20
+  baseDamage: 5
+  moveSpeed: 3
+  knockbackForce: 2
+  knockbackDuration: 0.1
+  attackRecoveryTime: 0.5
+  enemyPrefab: {fileID: 4238303603443355389, guid: dab878c01828d3e4399f2e86944b079e, type: 3}
+  PointDropNum: 5
+  condition: 2
+  triggerRange: 1.5
+  explosionRange: 2.5
+  explosionDamage: 30

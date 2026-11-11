@@ -32,6 +32,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e55025b26e9c9b741b135f78cd03c967, type: 2}
   - {fileID: 11400000, guid: f27b6524d1cb4111a0af61382c7c9b45, type: 2}
   - {fileID: 11400000, guid: fc32d9ed94339024ba40c23178f5f4f3, type: 2}
+  - {fileID: 11400000, guid: 4506d795b55a44d2a3b311d936429120, type: 2}
+  - {fileID: 11400000, guid: ed33b716b4d94ab58903a019b714bb11, type: 2}
   passives:
   - {fileID: 11400000, guid: 6c1f64c9392a417ea074e241463e3e26, type: 2}
   - {fileID: 11400000, guid: c4c82026976b4c42ae193a9bb52e72dd, type: 2}

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd5f7255e558e8b41bc41c067d770067, type: 3}
+  m_Name: Training Drone
+  m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyData
+  enemyName: Training Drone
+  maxHealth: 45
+  baseDamage: 8
+  moveSpeed: 2.5
+  knockbackForce: 5
+  knockbackDuration: 0.2
+  attackRecoveryTime: 0.35
+  enemyPrefab: {fileID: 6502239556403405395, guid: 8797fcbb8e9d7a2419ce35db86511f0d, type: 3}
+  PointDropNum: 5
+  attackRange: 7
+  retreatRange: 3
+  retreatEndRange: 5
+  attackCooldown: 1.2
+  behavior: 1
+  attackType: 0
+  projectilePrefab: {fileID: 4196148461194105619, guid: 1d4924f9d8414bfd871e1fdbe44856a7, type: 3}
+  projectileCount: 1
+  projectileAngles:
+  - 0
+  laserMaxDistance: 10
+  laserDamageMultiplier: 1
+  laserWidth: 1
+  laserDuration: 0.15
+  laserColor: {r: 1, g: 0.1, b: 0.1, a: 1}

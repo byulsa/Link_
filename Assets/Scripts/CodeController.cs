@@ -12,6 +12,7 @@ public class CodeController : MonoBehaviour
     private Entity owner;
 
     public Entity Owner => owner;
+    public CodeEditor Editor => editor;
 
     private void Awake()
     {

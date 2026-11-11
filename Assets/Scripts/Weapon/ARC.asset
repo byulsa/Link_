@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: ARC
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: ARC
-  displayText: Arc Device
-  description: 적중한 적에서 주변 적 3명까지 연쇄 방전합니다. 전이마다 피해가 30% 감소합니다.
+  displayText: "\uC5F0\uC1C4\uC7A5\uCE58"
+  description: "\uC801\uC911\uD55C \uC801\uC5D0\uC11C \uC8FC\uBCC0 \uC801 3\uBA85\uAE4C\uC9C0
+    \uC5F0\uC1C4 \uBC29\uC804\uD569\uB2C8\uB2E4. \uC804\uC774\uB9C8\uB2E4 \uD53C\uD574\uAC00
+    30% \uAC10\uC18C\uD569\uB2C8\uB2E4."
   damage: 60
   distance: 5
   rotationSpeed: 600
@@ -30,5 +32,5 @@ MonoBehaviour:
   chainLightningRadius: 3
   chainLightningTargets: 3
   chainLightningDamageMultiplier: 0.7
-  icon: {fileID: 751451447170813573, guid: 2d3e0a5e04f894245b9bcb1394c83f07, type: 3}
+  icon: {fileID: 3921896466215229028, guid: e2d97da59186756488fb2ce1acc5c74c, type: 3}
   prefab: {fileID: 2733827392254455992, guid: d0c77f50871b43b9ace680f30de368d1, type: 3}

@@ -19,6 +19,8 @@ public class RangedEnemy : Enemy
     private Material laserMaterial;
     private Coroutine laserVisualCoroutine;
 
+    private Coroutine recoveryCoroutine;
+    private bool hasFired;
     private float attackTimer;
 
     private bool isRetreating;
@@ -40,11 +42,18 @@ public class RangedEnemy : Enemy
         }
     }
 
+    public override void InitializeFromData(EnemyData data)
+    {
+        base.InitializeFromData(data);
+        rangedData = data as RangedEnemyData;
+    }
+
     protected override void OnEnable()
     {
         base.OnEnable();
 
         attackTimer = 0f;
+        hasFired = false;
 
         isRetreating = false;
         isAttacking = false;
@@ -53,6 +62,8 @@ public class RangedEnemy : Enemy
 
     protected override void OnDisable()
     {
+        if (recoveryCoroutine != null) StopCoroutine(recoveryCoroutine);
+        recoveryCoroutine = null;
         base.OnDisable();
 
         if (laserVisualCoroutine != null)
@@ -84,7 +95,10 @@ public class RangedEnemy : Enemy
 
         // 공격 또는 공격 후 Recovery 중
         if (isAttacking || isAttackRecovering)
+        {
+            StopMovement();
             return;
+        }
 
         attackTimer -= Time.deltaTime;
 
@@ -181,6 +195,7 @@ public class RangedEnemy : Enemy
     private void StartAttack()
     {
         isAttacking = true;
+        hasFired = false;
 
         StopMovement();
         FacePlayer();
@@ -188,12 +203,14 @@ public class RangedEnemy : Enemy
 
         if (animator != null)
         {
+            animator.speed = StatMultiplier;
             animator.SetTrigger("Attack");
         }
         else
         {
             Debug.LogWarning($"[RangedEnemy] {name} Animator가 없습니다.");
 
+            AnimationEvent_Fire();
             FinishAttack();
         }
     }
@@ -202,9 +219,41 @@ public class RangedEnemy : Enemy
     // Animation Event
     // -------------------------
 
+    public void AnimationEvent_Fire()
+    {
+        if (IsDead || !isAttacking || hasFired || rangedData == null) return;
+        if (rangedData.attackType == RangedAttackType.Projectile) FireProjectile();
+        else if (rangedData.attackType == RangedAttackType.Laser) FireLaser();
+    }
+
+    public void FireProjectile()
+    {
+        if (IsDead || !isAttacking || hasFired || rangedData == null ||
+            rangedData.attackType != RangedAttackType.Projectile || PlayerTransform == null ||
+            rangedData.projectilePrefab == null) return;
+        Vector2 direction = (PlayerTransform.position - transform.position).normalized;
+        if (direction == Vector2.zero) return;
+        hasFired = true;
+        int count = Mathf.Max(1, rangedData.projectileCount);
+        for (int i = 0; i < count; i++)
+        {
+            float angle = rangedData.projectileAngles != null && i < rangedData.projectileAngles.Length
+                ? rangedData.projectileAngles[i] : 0f;
+            Vector2 shotDirection = Quaternion.Euler(0f, 0f, angle) * direction;
+            GameObject shot = Instantiate(rangedData.projectilePrefab, GetLaserFirePosition(direction), Quaternion.identity);
+            if (shot.TryGetComponent<Projectile>(out var projectile))
+                projectile.Initialize(shotDirection, BaseDamage, PlayerTransform, StatMultiplier);
+            else
+            {
+                Debug.LogError("[RangedEnemy] Projectile component is missing from projectilePrefab.", shot);
+                Destroy(shot);
+            }
+        }
+    }
+
     public void FireLaser()
     {
-        if (rangedData == null
+        if (IsDead || !isAttacking || hasFired || rangedData == null
             || rangedData.attackType != RangedAttackType.Laser
             || PlayerTransform == null)
             return;
@@ -213,6 +262,7 @@ public class RangedEnemy : Enemy
         if (direction == Vector2.zero)
             return;
 
+        hasFired = true;
         Vector3 start = GetLaserFirePosition(direction);
         float maxDistance = Mathf.Max(0.01f, rangedData.laserMaxDistance);
         Vector3 end = start + (Vector3)(direction * maxDistance);
@@ -324,6 +374,8 @@ public class RangedEnemy : Enemy
     // Animation 마지막 프레임
     public void FinishAttack()
     {
+        if (IsDead || !isAttacking) return;
+        if (animator != null) animator.speed = 1f;
         isAttacking = false;
 
         StartAttackRecovery();
@@ -337,12 +389,12 @@ public class RangedEnemy : Enemy
     {
         if (rangedData.attackRecoveryTime <= 0f)
         {
-            attackTimer = rangedData.attackCooldown;
+            attackTimer = ScaleAttackDuration(rangedData.attackCooldown);
 
             return;
         }
 
-        StartCoroutine(AttackRecoveryRoutine());
+        recoveryCoroutine = StartCoroutine(AttackRecoveryRoutine());
     }
 
     private IEnumerator AttackRecoveryRoutine()
@@ -351,10 +403,11 @@ public class RangedEnemy : Enemy
 
         StopMovement();
 
-        yield return new WaitForSeconds(rangedData.attackRecoveryTime);
+        yield return new WaitForSeconds(ScaleAttackDuration(rangedData.attackRecoveryTime));
 
         isAttackRecovering = false;
+        recoveryCoroutine = null;
 
-        attackTimer = rangedData.attackCooldown;
+        attackTimer = ScaleAttackDuration(rangedData.attackCooldown);
     }
 }

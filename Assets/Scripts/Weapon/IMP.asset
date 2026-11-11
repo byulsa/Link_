@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: IMP
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponName: IMP
-  displayText: Impact Device
-  description: 충격파로 주변 적에게 기본 피해의 50%를 입힙니다.
+  displayText: "\uC911\uACA9\uC7A5\uCE58"
+  description: "\uCDA9\uACA9\uD30C\uB85C \uC8FC\uBCC0 \uC801\uC5D0\uAC8C \uAE30\uBCF8
+    \uD53C\uD574\uC758 50%\uB97C \uC785\uD799\uB2C8\uB2E4."
   damage: 80
   distance: 5
   rotationSpeed: 540
@@ -30,5 +31,5 @@ MonoBehaviour:
   chainLightningRadius: 3
   chainLightningTargets: 3
   chainLightningDamageMultiplier: 0.7
-  icon: {fileID: 751451447170813573, guid: 2d3e0a5e04f894245b9bcb1394c83f07, type: 3}
+  icon: {fileID: -2543233688874379947, guid: 127a2d5707ae68240ae68b55171bff50, type: 3}
   prefab: {fileID: 2733827392254455992, guid: 4f8d96a117184875bd91fe39b2da0401, type: 3}

@@ -52,6 +52,9 @@ public static class CodeChainEvaluator
             return value;
 
         PassiveEffectManager passiveEffects = PassiveEffectManager.Instance;
+        float sum = 0f;
+        float term = value;
+        bool subtractTerm = false;
         for (int i = startIndex; i < chain.nodes.Count; i++)
         {
             CodeNode node = chain.nodes[i];
@@ -62,16 +65,24 @@ public static class CodeChainEvaluator
             if (passiveEffects != null)
                 modifier += passiveEffects.GetModifierBonus(node.blockType);
 
-            value = node.blockType switch
+            switch (node.blockType)
             {
-                BlockType.PLUS => value + modifier,
-                BlockType.MINUS => value - modifier,
-                BlockType.MULT => value * modifier,
-                BlockType.DIV => modifier == 0f ? value : value / modifier,
-                _ => value,
-            };
+                case BlockType.PLUS:
+                case BlockType.MINUS:
+                    sum = subtractTerm ? sum - term : sum + term;
+                    term = modifier;
+                    subtractTerm = node.blockType == BlockType.MINUS;
+                    break;
+                case BlockType.MULT:
+                    term *= modifier;
+                    break;
+                case BlockType.DIV:
+                    if (modifier != 0f)
+                        term /= modifier;
+                    break;
+            }
         }
 
-        return value;
+        return subtractTerm ? sum - term : sum + term;
     }
 }

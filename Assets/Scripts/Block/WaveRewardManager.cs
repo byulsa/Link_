@@ -106,11 +106,21 @@ public class WaveRewardManager : MonoBehaviour
     // 2) 선택되지 않은 Code -> Point로 환산하여 PointManager에 지급
     public void ConfirmSelection()
     {
+        ConfirmSelection(true);
+    }
+
+    public void ConvertPendingRewardsToPoints()
+    {
+        ConfirmSelection(false);
+    }
+
+    private void ConfirmSelection(bool placeSelectedBlocks)
+    {
         int unselectedCount = 0;
 
         foreach (RewardEntry entry in currentRewards)
         {
-            if (entry.IsSelected)
+            if (placeSelectedBlocks && entry.IsSelected)
             {
                 if (!TryPlaceBlock(entry))
                 {

@@ -145,6 +145,7 @@ public class CodeBlockTooltip : MonoBehaviour
         instance.descriptionText.text = description;
         instance.pointerPosition = pointerPosition;
         instance.showRequested = true;
+        instance.transform.SetAsLastSibling();
         instance.gameObject.SetActive(true);
         instance.showRequested = false;
         Canvas.ForceUpdateCanvases();

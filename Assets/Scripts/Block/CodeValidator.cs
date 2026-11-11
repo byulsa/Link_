@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class CodeValidator : MonoBehaviour
 {
+    public const string PlayerStatSyntaxError = "PL → SPD 또는 HP → Modifier 순서로 연결하세요.";
+    public const string WeaponSyntaxError = "무기 문법은 WEAP → 대상 → Modifier 또는 WEAP → (대상 대상...) → Modifier 순서여야 합니다.";
+
     [SerializeField]
     private CodeGrammarRules grammarRules;
 
@@ -21,6 +24,13 @@ public class CodeValidator : MonoBehaviour
         }
 
         Debug.Log($"[CodeValidator] Validate 호출 - " + $"blocks.Count: {blocks.Count}");
+
+        if (blocks[0].CodeType == BlockType.PL)
+        {
+            var nodes = blocks.Select(block => new CodeNode { blockType = block.CodeType }).ToList();
+            return IsValidPlayerStatChain(nodes) ? ValidationResult.Success() :
+                new ValidationResult(false, new List<CodeBlock>(blocks), PlayerStatSyntaxError);
+        }
 
         BlockCategory firstCategory = blocks[0].Definition.category;
 
@@ -57,7 +67,7 @@ public class CodeValidator : MonoBehaviour
         return new ValidationResult(
             false,
             new List<CodeBlock> { blocks[0] },
-            "코드는 Trigger(TOU) 또는 Weapon(WEAP)으로 시작해야 합니다."
+            "코드는 PL, Trigger(TOU), Weapon(WEAP)으로 시작해야 합니다."
         );
     }
 
@@ -93,8 +103,25 @@ public class CodeValidator : MonoBehaviour
         return new ValidationResult(
             false,
             new List<CodeBlock>(blocks),
-            "무기 문법은 WEAP → 대상 → Modifier 또는 WEAP → (대상 대상...) → Modifier 순서여야 합니다."
+            WeaponSyntaxError
         );
+    }
+
+    public static bool IsValidPlayerStatChain(IReadOnlyList<CodeNode> nodes)
+    {
+        if (nodes == null || nodes.Count < 3 || nodes[0] == null || nodes[1] == null ||
+            nodes[0].blockType != BlockType.PL) return false;
+        CodeNode actions = nodes[1];
+        if (actions.blockType == BlockType.PARENTHESIS_BUNDLE)
+        {
+            if (actions.groupTargets == null || actions.groupTargets.Count == 0 ||
+                actions.groupTargets.Any(type => type != BlockType.SPD && type != BlockType.HP) ||
+                actions.groupTargets.Distinct().Count() != actions.groupTargets.Count) return false;
+        }
+        else if (actions.blockType != BlockType.SPD && actions.blockType != BlockType.HP) return false;
+        for (int i = 2; i < nodes.Count; i++)
+            if (nodes[i] == null || !IsModifier(nodes[i].blockType)) return false;
+        return true;
     }
 
     public static bool IsValidWeaponChain(IReadOnlyList<CodeNode> nodes)
