@@ -28,9 +28,11 @@ public class Player : MonoBehaviour, IDamageable
 
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
+    public Collider2D BodyCollider { get; private set; }
 
     private void Awake()
     {
+        BodyCollider = GetComponent<Collider2D>();
         if (entity == null)
         {
             entity = GetComponent<Entity>();
@@ -42,6 +44,7 @@ public class Player : MonoBehaviour, IDamageable
         }
 
         movement = GetComponent<PlayerMovement>();
+        maxHealth = Mathf.Max(1f, CombatStat.Round(maxHealth));
         baseMaxHealth = maxHealth;
         baseMoveSpeed = movement != null ? movement.Speed : 0f;
         currentHealth = maxHealth;
@@ -87,8 +90,8 @@ public class Player : MonoBehaviour, IDamageable
         }
         // Keep the health ratio so repeatedly editing/reapplying code cannot heal or resurrect the player.
         float ratio = maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 1f;
-        maxHealth = float.IsNaN(health) || float.IsInfinity(health) ? baseMaxHealth : Mathf.Max(1f, health);
-        currentHealth = maxHealth * ratio;
+        maxHealth = float.IsNaN(health) || float.IsInfinity(health) ? baseMaxHealth : Mathf.Max(1f, CombatStat.Round(health));
+        currentHealth = ratio > 0f ? Mathf.Max(1f, CombatStat.Round(maxHealth * ratio)) : 0f;
         if (movement != null) movement.SetCodeSpeed(float.IsNaN(speed) || float.IsInfinity(speed) ? baseMoveSpeed : speed);
     }
 
@@ -98,6 +101,7 @@ public class Player : MonoBehaviour, IDamageable
 
         Debug.Log("[Player] OnEnemyDeath 구독");
         Enemy.OnEnemyDeath += HandleEnemyDeath;
+        WaveManager.WaveStarted += HealForWave;
         CodeEditor.OnCodeRefreshed += HandleCodeRefreshed;
         if (started) { BindPassives(); RefreshStatsFromCode(); }
     }
@@ -105,18 +109,71 @@ public class Player : MonoBehaviour, IDamageable
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= HandleEnemyDeath;
+        WaveManager.WaveStarted -= HealForWave;
         CodeEditor.OnCodeRefreshed -= HandleCodeRefreshed;
         if (passiveEffects != null) passiveEffects.OnPassivesChanged -= RefreshStatsFromCode;
     }
 
-    public void TakeDamage(float damage)
+    private void HealForWave()
     {
-        if (damage <= 0f || currentHealth <= 0f || float.IsNaN(damage))
+        HealFraction(0.25f);
+    }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    private bool debugInvulnerable;
+
+    private void Update()
+    {
+        if (currentHealth <= 0f || Time.timeScale == 0f)
             return;
 
-        float appliedDamage = Mathf.Min(damage, currentHealth);
+        if (Input.GetKeyDown(KeyCode.F1))
+            HealFraction(1f);
+        if (Input.GetKeyDown(KeyCode.F2))
+            FindAnyObjectByType<WeaponManager>()?.SummonDebugDrones();
+        if (Input.GetKeyDown(KeyCode.F3))
+        {
+            debugInvulnerable = !debugInvulnerable;
+            Debug.Log($"[Debug] Invulnerability: {(debugInvulnerable ? "ON" : "OFF")}", this);
+        }
+    }
+
+    internal void ResetHealthForBossTest()
+    {
+        currentHealth = maxHealth;
+    }
+#endif
+
+    private void HealFraction(float fraction)
+    {
+        if (currentHealth <= 0f)
+            return;
+
+        float healed = Mathf.Min(maxHealth - currentHealth, CombatStat.Round(maxHealth * Mathf.Max(0f, fraction)));
+        if (healed <= 0f)
+            return;
+
+        currentHealth += healed;
+        ShowHealthChange(healed);
+    }
+
+    public void TakeDamage(float damage) => ApplyDamage(damage);
+
+    internal float ApplyDamage(float damage)
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (debugInvulnerable)
+            return 0f;
+#endif
+        if (damage <= 0f || currentHealth <= 0f || float.IsNaN(damage))
+            return 0f;
+
+        float appliedDamage = Mathf.Min(CombatStat.Round(damage), currentHealth);
+        if (appliedDamage <= 0f)
+            return 0f;
         currentHealth -= appliedDamage;
         currentHealth = Mathf.Max(0f, currentHealth);
+        ShowHealthChange(-appliedDamage);
 
         Debug.Log($"[Player] 피해: {damage} / HP: {currentHealth}/{maxHealth}");
 
@@ -126,11 +183,25 @@ public class Player : MonoBehaviour, IDamageable
         {
             Die();
         }
+        return appliedDamage;
+    }
+
+    private void ShowHealthChange(float amount)
+    {
+        SpriteRenderer visual = GetComponent<SpriteRenderer>();
+        Vector3 position = visual != null
+            ? new Vector3(visual.bounds.center.x, visual.bounds.max.y, transform.position.z)
+            : transform.position;
+        DamageNumberPool.ShowPlayerChange(amount, position, visual);
     }
 
     private void Die()
     {
+        GameplaySfx.Play(GameplaySound.PlayerDeath);
         Debug.Log("[Player] 사망");
+        if (!TryGetComponent<PlayerDeathTransition>(out var transition))
+            transition = gameObject.AddComponent<PlayerDeathTransition>();
+        transition.Play();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -150,19 +221,23 @@ public class Player : MonoBehaviour, IDamageable
 
     private void HandleEnemyDeath(Enemy enemy, DeathType deathType)
     {
-        if (enemy == null)
+        if (enemy == null || deathType == DeathType.BossSlash)
             return;
 
         Debug.Log($"[Player] Enemy 사망 감지: {enemy.name} / {deathType}");
 
         if (deathType == DeathType.Normal)
-        {
             codeController.ExecuteDeath(enemy.GetComponent<Entity>());
 
-            if (codeDropManager == null)
-                Debug.LogError("[Player] CodeDropManager가 설정되지 않아 코드 드롭을 처리하지 못했습니다.", this);
-            else
-                codeDropManager.TryDrop(enemy.CodeDropTable);
-        }
+        if (deathType == DeathType.SelfDestruct && enemy.CurrentHealth > 0f)
+            return;
+
+        if (passiveEffects != null)
+            HealFraction(passiveEffects.GetBonus(PassiveEffectType.KillHeal));
+
+        if (codeDropManager == null)
+            Debug.LogError("[Player] CodeDropManager가 설정되지 않아 코드 드롭을 처리하지 못했습니다.", this);
+        else
+            codeDropManager.TryDrop(enemy.CodeDropTable);
     }
 }

@@ -29,6 +29,7 @@ public class WeaponBase : MonoBehaviour
     private float size;
 
     private float currentAngle;
+    private BlockType? orbitModifier;
 
     public WeaponDefinition Definition => definition;
     public float Damage => ClampDamage(
@@ -37,7 +38,7 @@ public class WeaponBase : MonoBehaviour
             ? PassiveEffectManager.Instance.GetWeaponDamageBonus(definition)
             : 0f));
 
-    public static float ClampDamage(float value) => value >= 1f ? value : 1f;
+    public static float ClampDamage(float value) => value >= 1f ? CombatStat.Round(value) : 1f;
     public float Distance => distance;
     public float RotationSpeed => rotationSpeed;
     public float Size => size;
@@ -61,7 +62,7 @@ public class WeaponBase : MonoBehaviour
         CodeEditor.OnCodeRefreshed -= HandleCodeRefreshed;
     }
 
-    private void HandleCodeRefreshed(IReadOnlyList<CodeChain> chains)
+    internal void HandleCodeRefreshed(IReadOnlyList<CodeChain> chains)
     {
         ResetStats();
         if (chains == null)
@@ -76,6 +77,7 @@ public class WeaponBase : MonoBehaviour
             if (scope != null && scope != definition)
                 continue;
 
+            orbitModifier = CodeChainEvaluator.GetOrbitModifier(chain) ?? orbitModifier;
             int actionCount = CodeChainEvaluator.GetWeaponActionCount(actions);
             for (int i = 0; i < actionCount; i++)
             {
@@ -84,7 +86,7 @@ public class WeaponBase : MonoBehaviour
                     continue;
 
                 float baseValue = CodeChainEvaluator.GetWeaponBaseValue(definition, action);
-                float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2);
+                float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2, action);
                 SetStat(action, Mathf.Max(0f, finalValue));
             }
         }
@@ -106,6 +108,7 @@ public class WeaponBase : MonoBehaviour
         damage = definition.damage;
         distance = definition.distance;
         size = definition.size;
+        orbitModifier = null;
 
         UpdateRotationSpeed(definition.rotationSpeed);
 
@@ -123,7 +126,7 @@ public class WeaponBase : MonoBehaviour
         switch (action)
         {
             case BlockType.DMG:
-                damage = value;
+                damage = CombatStat.Round(value);
                 break;
 
             case BlockType.SPD:
@@ -131,11 +134,11 @@ public class WeaponBase : MonoBehaviour
                 break;
 
             case BlockType.DST:
-                distance = value;
+                distance = CombatStat.Round(value * 10f) / 10f;
                 break;
 
             case BlockType.SZ:
-                size = value;
+                size = CombatStat.Round(value * 10f) / 10f;
                 transform.localScale = Vector3.one * (1f + (size * 0.1f));
                 break;
         }
@@ -150,7 +153,8 @@ public class WeaponBase : MonoBehaviour
         currentAngle = Mathf.Repeat(currentAngle + deltaAngle, 360f);
         rotatedAngleSinceResonance += Mathf.Abs(deltaAngle);
 
-        float remainingAngle = Mathf.Abs(rotationSpeed) - rotatedAngleSinceResonance;
+        float cycleMultiplier = definition != null ? Mathf.Max(0.1f, definition.rotationCycleMultiplier) : 1f;
+        float remainingAngle = Mathf.Abs(rotationSpeed) * cycleMultiplier - rotatedAngleSinceResonance;
         if (!isAccelerating
             && !isDecelerating
             && !Mathf.Approximately(rotationSpeed, 0f)
@@ -160,12 +164,13 @@ public class WeaponBase : MonoBehaviour
         }
 
         float radian = currentAngle * Mathf.Deg2Rad;
-
-        Vector3 offset = new Vector3(
-            Mathf.Cos(radian),
-            Mathf.Sin(radian),
-            0f
-        ) * distance;
+        Vector2 orbit = orbitModifier switch
+        {
+            BlockType.SIN => new Vector2(Mathf.Sin(radian), 0.55f * Mathf.Sin(2f * radian)),
+            BlockType.COS => new Vector2(Mathf.Cos(radian), 0.55f * Mathf.Sin(radian)),
+            _ => new Vector2(Mathf.Cos(radian), Mathf.Sin(radian))
+        };
+        Vector3 offset = (Vector3)(orbit * distance);
 
         transform.position = ownerTransform.position + offset;
     }
@@ -173,6 +178,7 @@ public class WeaponBase : MonoBehaviour
     {
         rotationTween?.Kill();
 
+        targetSpeed = CombatStat.Round(targetSpeed);
         rotationSpeed = targetSpeed;
         rotatedAngleSinceResonance = 0f;
         isDecelerating = false;
@@ -306,8 +312,8 @@ public class WeaponBase : MonoBehaviour
             case WeaponSpecialEffect.Shockwave:
                 ApplyShockwave(enemy);
                 break;
-            case WeaponSpecialEffect.ChainLightning:
-                ApplyChainLightning(enemy);
+            case WeaponSpecialEffect.Bleed:
+                enemy.ApplyBleed(definition.bleedMaxHealthFraction, definition.bleedDurationSeconds);
                 break;
         }
     }
@@ -343,53 +349,5 @@ public class WeaponBase : MonoBehaviour
 
             enemy.TakeDamage(ClampDamage(splashDamage));
         }
-    }
-
-    private void ApplyChainLightning(Enemy primaryTarget)
-    {
-        int maxTargets = Mathf.Max(0, definition.chainLightningTargets);
-        float radius = Mathf.Max(0f, definition.chainLightningRadius);
-        if (maxTargets <= 0 || radius <= 0f)
-            return;
-
-        HashSet<Enemy> hitEnemies = new() { primaryTarget };
-        Enemy previousTarget = primaryTarget;
-        float damageMultiplier = Mathf.Clamp01(definition.chainLightningDamageMultiplier);
-        float chainDamage = Damage * damageMultiplier;
-
-        for (int i = 0; i < maxTargets; i++)
-        {
-            Enemy nextTarget = FindNearestEnemy(previousTarget.transform.position, radius, hitEnemies);
-            if (nextTarget == null)
-                break;
-
-            hitEnemies.Add(nextTarget);
-            nextTarget.TakeDamage(ClampDamage(chainDamage));
-            previousTarget = nextTarget;
-            chainDamage *= damageMultiplier;
-        }
-    }
-
-    private static Enemy FindNearestEnemy(Vector2 position, float radius, HashSet<Enemy> excluded)
-    {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(position, radius);
-        Enemy nearestEnemy = null;
-        float nearestDistanceSquared = float.MaxValue;
-
-        foreach (Collider2D hit in hits)
-        {
-            Enemy enemy = hit.GetComponentInParent<Enemy>();
-            if (enemy == null || enemy.CurrentHealth <= 0f || excluded.Contains(enemy))
-                continue;
-
-            float distanceSquared = ((Vector2)enemy.transform.position - position).sqrMagnitude;
-            if (distanceSquared >= nearestDistanceSquared)
-                continue;
-
-            nearestEnemy = enemy;
-            nearestDistanceSquared = distanceSquared;
-        }
-
-        return nearestEnemy;
     }
 }

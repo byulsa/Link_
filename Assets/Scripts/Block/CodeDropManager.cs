@@ -33,7 +33,9 @@ public class CodeDropManager : MonoBehaviour
 
         if (definition.hasValue)
         {
-            value = Random.Range(definition.minValue, definition.maxValue + 1);
+            int max = Mathf.Min(30, definition.maxValue);
+            int min = Mathf.Min(definition.minValue, max);
+            value = Mathf.Min(Random.Range(min, max + 1), Random.Range(min, max + 1));
         }
 
         // WaveRewardManager가 연결되어 있으면 즉시 CodeGrid에 넣지 않고

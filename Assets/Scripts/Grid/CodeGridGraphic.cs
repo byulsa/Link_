@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CodeGridGraphic : Graphic
+public class CodeGridGraphic : MaskableGraphic
 {
     [SerializeField]
     private int width = 10;
@@ -19,16 +19,20 @@ public class CodeGridGraphic : Graphic
     {
         vh.Clear();
 
-        float totalWidth = width * cellSize;
-        float totalHeight = height * cellSize;
+        CodeGrid grid = GetComponent<CodeGrid>();
+        int columns = grid != null ? grid.Width : width;
+        int rows = grid != null ? grid.Height : height;
+        float spacing = grid != null ? grid.CellSize : cellSize;
+        float totalWidth = columns * spacing;
+        float totalHeight = rows * spacing;
 
         float startX = -totalWidth * 0.5f;
         float startY = -totalHeight * 0.5f;
 
         // 세로선
-        for (int x = 0; x <= width; x++)
+        for (int x = 0; x <= columns; x++)
         {
-            float xPosition = startX + x * cellSize;
+            float xPosition = startX + x * spacing;
 
             AddLine(
                 vh,
@@ -38,9 +42,9 @@ public class CodeGridGraphic : Graphic
         }
 
         // 가로선
-        for (int y = 0; y <= height; y++)
+        for (int y = 0; y <= rows; y++)
         {
-            float yPosition = startY + y * cellSize;
+            float yPosition = startY + y * spacing;
 
             AddLine(
                 vh,

@@ -5,8 +5,9 @@ public class MeleeEnemy : Enemy
     [Header("Melee Data")]
     [SerializeField]
     private MeleeEnemyData meleeData;
-    [SerializeField] private Animator animator;
+    [SerializeField] protected Animator animator;
     private bool isAttacking;
+    protected bool IsAttacking => isAttacking;
     private float attackTimer;
 
     protected override void Awake()
@@ -73,22 +74,33 @@ public class MeleeEnemy : Enemy
             return;
 
         isAttacking = true;
-        attackTimer = ScaleAttackDuration(meleeData.attackCooldown);
+        attackTimer = meleeData.attackCooldown;
         StopMovement();
-        animator.speed = StatMultiplier;
         animator.SetTrigger("Attack");
     }
 
     public void AnimationEvent_Attack()
     {
-        if (IsDead || PlayerTransform == null)
+        if (IsDead || !isAttacking || PlayerTransform == null)
             return;
+
+        GameplaySfx.Play(GameplaySound.MeleeAttack);
 
         if (PlayerDistance() > meleeData.attackRange)
             return;
 
-        if (PlayerTransform.TryGetComponent<IDamageable>(out var target))
-            target.TakeDamage(BaseDamage);
+        HitPlayer(PlayerTarget, BaseDamage);
+    }
+
+    protected virtual void HitPlayer(Player player, float damage)
+    {
+        player.TakeDamage(damage);
+    }
+
+    protected void CancelMeleeAttack()
+    {
+        isAttacking = false;
+        animator.ResetTrigger("Attack");
     }
     public void AnimationEvent_AttackEnd()
     {

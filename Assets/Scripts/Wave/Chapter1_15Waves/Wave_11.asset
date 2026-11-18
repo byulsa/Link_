@@ -21,7 +21,9 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
     - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
-    spawnInterval: 1.4
+    spawnInterval: 1
+    overrideSelfDestructCondition: 0
+    selfDestructCondition: 2
   - startTime: 14
     endTime: 28
     enemyData:
@@ -30,7 +32,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
     - {fileID: 11400000, guid: c73d36cfa9d2456d84cf839a50b1e158, type: 2}
-    spawnInterval: 1.26
+    spawnInterval: 1
     overrideSelfDestructCondition: 1
     selfDestructCondition: 1
   - startTime: 28
@@ -41,6 +43,12 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
     - {fileID: 11400000, guid: c73d36cfa9d2456d84cf839a50b1e158, type: 2}
-    spawnInterval: 1.12
+    spawnInterval: 0.75
     overrideSelfDestructCondition: 1
     selfDestructCondition: 1
+  boss: {fileID: 0}
+  bossMusic: {fileID: 0}
+  dialogueAfterWave: {fileID: 0}
+  dialogueAfterCodeCollection: {fileID: 0}
+  dialogueAfterShop: {fileID: 0}
+  dialogueAfterCodeEditor: {fileID: 0}

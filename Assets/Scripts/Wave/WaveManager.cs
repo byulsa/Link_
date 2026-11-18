@@ -22,7 +22,7 @@ public class WaveManager : MonoBehaviour
         DialogueReward.UnlockShop | DialogueReward.UnlockCodeCollection;
 
     [Header("Enemy Stat Growth")]
-    [SerializeField, Range(1.1f, 1.3f)] private float waveStatGrowth = 1.2f;
+    [SerializeField, Range(1f, 1.3f)] private float waveStatGrowth = 1.15f;
     [SerializeField, Min(1f)] private float chapterStatGrowth = 1.5f;
     [SerializeField] private List<ChapterData> followingChapters = new List<ChapterData>();
     private int nextChapterIndex;
@@ -32,6 +32,7 @@ public class WaveManager : MonoBehaviour
 
     private int currentWaveIndex = -1;
     private IntermissionStep intermissionStep;
+    public bool CanEditCode => intermissionStep == IntermissionStep.CodeEditor && !IsBattleActive && !IsDialoguePlaying;
     private const int CodingLogLimit = 9;
     private readonly Queue<string> codingLog = new Queue<string>();
     private readonly List<string> activeCodingErrors = new List<string>();
@@ -43,6 +44,7 @@ public class WaveManager : MonoBehaviour
     public string LastRewardLog { get; private set; } = string.Empty;
     public IReadOnlyCollection<string> CodingLog => codingLog;
     public static event Action ProgressChanged;
+    public static event Action WaveStarted;
     public int CurrentWaveNumber => currentWaveIndex + 1;
     public int TotalWaves => chapterData != null && chapterData.waves != null ? chapterData.waves.Count : 0;
     public string CurrentChapterName => chapterData != null ? chapterData.chapterName : string.Empty;
@@ -79,6 +81,27 @@ public class WaveManager : MonoBehaviour
         StartWave(0);
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.F8) || Time.timeScale == 0f || enemySpawner == null || TotalWaves == 0)
+            return;
+
+        int bossWaveIndex = chapterData.waves.FindIndex(wave => wave != null && wave.boss != null);
+        if (bossWaveIndex < 0 || (IsBattleActive && currentWaveIndex == bossWaveIndex))
+            return;
+
+        dialogueView?.Cancel();
+        dataCollectionUI?.CloseForBossTest();
+        codePanel?.SetOpen(false);
+        intermissionStep = IntermissionStep.None;
+        IsBattleActive = false;
+        enemySpawner.ResetForBossTest();
+        FindAnyObjectByType<Player>()?.ResetHealthForBossTest();
+        StartWave(bossWaveIndex);
+    }
+#endif
+
     public void StartWave(int index)
     {
         if (chapterData == null || chapterData.waves == null)
@@ -105,8 +128,10 @@ public class WaveManager : MonoBehaviour
         currentWaveIndex = index;
         IsBattleActive = true;
 
-        CurrentStatMultiplier = chapterStartMultiplier * Mathf.Pow(Mathf.Clamp(waveStatGrowth, 1.1f, 1.3f), index);
+        CurrentStatMultiplier = chapterStartMultiplier * Mathf.Pow(Mathf.Clamp(waveStatGrowth, 1f, 1.3f), index);
+        WaveStarted?.Invoke();
         enemySpawner.StartWave(wave, CurrentStatMultiplier);
+        GameplaySfx.Play(GameplaySound.WaveStart);
         ProgressChanged?.Invoke();
     }
 
@@ -114,9 +139,6 @@ public class WaveManager : MonoBehaviour
     {
         if (!IsBattleActive) return;
         IsBattleActive = false;
-        if (codePanel != null)
-            codePanel.SetOpen(false);
-
         ProgressChanged?.Invoke();
         PlayDialogueThen(CurrentWave?.dialogueAfterWave, OpenCodeCollection);
     }
@@ -281,6 +303,7 @@ public class WaveManager : MonoBehaviour
         chapterStartMultiplier = CurrentStatMultiplier * Mathf.Max(1f, chapterStatGrowth);
         chapterData = nextChapter;
         CurrentChapterNumber++;
+        unlockedFeatures |= DialogueReward.UnlockShop;
         currentWaveIndex = -1;
         IsChapterComplete = false;
         StartWave(0);

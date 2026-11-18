@@ -15,6 +15,24 @@ public class WeaponManager : MonoBehaviour
     [SerializeField]
     private WeaponDefinition startingWeapon;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    [SerializeField] private WeaponDefinition[] debugDrones;
+    private bool summonedDebugDrones;
+
+    internal void SummonDebugDrones()
+    {
+        if (summonedDebugDrones || debugDrones == null || debugDrones.Length == 0)
+            return;
+
+        summonedDebugDrones = true;
+        foreach (WeaponDefinition drone in debugDrones)
+        {
+            if (drone != null && !activeWeapons.Exists(weapon => weapon != null && weapon.Definition == drone))
+                AddWeapon(drone);
+        }
+    }
+#endif
+
     private readonly List<WeaponBase> activeWeapons = new();
     public IReadOnlyList<WeaponBase> ActiveWeapons => activeWeapons;
 
@@ -51,6 +69,8 @@ public class WeaponManager : MonoBehaviour
         // 여러 무기가 한 지점에서 겹치지 않도록 시작 각도 분산
         float startAngle = activeWeapons.Count * (360f / (activeWeapons.Count + 1));
         weaponBase.Initialize(definition, ownerTransform, startAngle);
+        if (codeEditor != null && codeEditor.IsReady)
+            weaponBase.HandleCodeRefreshed(codeEditor.Chains);
 
         activeWeapons.Add(weaponBase);
         return weaponBase;

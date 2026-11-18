@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MeleeEnemyData_
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyData
   enemyName: Dummy
-  maxHealth: 100
+  maxHealth: 90
   baseDamage: 5
   moveSpeed: 5
   knockbackForce: 2

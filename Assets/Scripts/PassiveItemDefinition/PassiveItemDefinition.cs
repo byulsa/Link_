@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum PassiveEffectType { ModifierBonus, WeaponDamageBonus, PointRewardBonus }
+public enum PassiveEffectType { ModifierBonus, WeaponDamageBonus, PointRewardBonus, KillHeal, EnemyDamageBonus }
 
 [CreateAssetMenu(menuName = "Shop/Passive Item Definition", fileName = "NewPassiveItem")]
 public class PassiveItemDefinition : ScriptableObject
@@ -20,7 +20,8 @@ public class PassiveItemDefinition : ScriptableObject
     {
         string value = effectType switch
         {
-            PassiveEffectType.PointRewardBonus => $"{bonusValue * 100f:0.##}%",
+            PassiveEffectType.PointRewardBonus or PassiveEffectType.KillHeal or PassiveEffectType.EnemyDamageBonus
+                => $"{bonusValue * 100f:0.##}%",
             _ => $"{bonusValue:0.##}"
         };
         return (description ?? "").Replace("[value]", $"<color=#FFD166>{value}</color>");

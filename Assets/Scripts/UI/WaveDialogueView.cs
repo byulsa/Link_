@@ -126,11 +126,19 @@ public class WaveDialogueView : MonoBehaviour
             return;
         }
 
-        panelRoot.SetActive(false);
-        lines = null;
         Action onCompleted = completed;
-        completed = null;
+        Cancel();
         onCompleted?.Invoke();
+    }
+
+    internal void Cancel()
+    {
+        if (!IsPlaying)
+            return;
+
+        lines = null;
+        completed = null;
+        panelRoot.SetActive(false);
     }
 
     private void ApplyCharacterFade()

@@ -29,6 +29,10 @@ public class CodeBlock
     private RectTransform rectTransform;
     private Canvas canvas;
     private bool isDragging;
+    public bool IsDragging => isDragging;
+    public CodeBlock PairedBracket { get; private set; }
+    private Image background;
+    private Color backgroundColor;
     private Vector3 dragWorldOffset;
     private Vector2Int dragOriginalPosition;
     private BlockType? runtimeBlockType;
@@ -56,6 +60,9 @@ public class CodeBlock
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
+        background = GetComponent<Image>();
+        if (background != null)
+            backgroundColor = background.color;
 
         canvas = GetComponentInParent<Canvas>();
         if (outline == null)
@@ -182,7 +189,8 @@ public class CodeBlock
     {
         GridPosition = position;
 
-        transform.position = grid.GridToWorldCenter(position, GridWidth);
+        // Blocks can be placed while the closed panel's world scale is zero.
+        rectTransform.localPosition = grid.GridToLocalCenter(position, GridWidth);
     }
 
     public void SetError(bool value)
@@ -203,7 +211,20 @@ public class CodeBlock
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        Debug.Log($"블록 선택: {definition.displayText}");
+        if (!isPreview && grid != null && grid.CanEditBlock(this) && eventData.button == PointerEventData.InputButton.Left)
+            grid.SelectBlock(this);
+    }
+
+    public void SetSelected(bool selected)
+    {
+        if (background != null)
+            background.color = selected ? new Color(0.14f, 0.34f, 0.43f, backgroundColor.a) : backgroundColor;
+    }
+
+    public void PairWith(CodeBlock bracket)
+    {
+        PairedBracket = bracket;
+        bracket.PairedBracket = this;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -225,11 +246,12 @@ public class CodeBlock
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (
-            isPreview
+            eventData.button != PointerEventData.InputButton.Left
+            || isPreview
             || grid == null
             || canvas == null
             || definition == null
-            || WaveManager.IsBattleActive
+            || !grid.CanEditBlock(this)
         )
         {
             isDragging = false;
@@ -260,7 +282,7 @@ public class CodeBlock
         if (!isDragging || canvas == null || grid == null)
             return;
 
-        if (WaveManager.IsBattleActive)
+        if (!grid.CanEdit)
         {
             isDragging = false;
             SetGridPosition(dragOriginalPosition);
@@ -272,19 +294,34 @@ public class CodeBlock
 
     }
 
+    public void CancelDrag()
+    {
+        if (!isDragging)
+            return;
+
+        isDragging = false;
+        SetGridPosition(dragOriginalPosition);
+    }
+
     public void OnEndDrag(PointerEventData eventData)
     {
         if (!isDragging)
             return;
 
         isDragging = false;
-        if (WaveManager.IsBattleActive)
+        if (!grid.CanEdit)
         {
             SetGridPosition(dragOriginalPosition);
             return;
         }
 
         Debug.Log($"드래그 종료: {definition.displayText}");
+
+        if (!grid.IsOverEditingViewport(eventData.position, eventData.pressEventCamera))
+        {
+            SetGridPosition(dragOriginalPosition);
+            return;
+        }
 
         Vector2Int pointerGridPosition = grid.WorldToGrid(GetWorldPosition(eventData));
 
@@ -296,6 +333,8 @@ public class CodeBlock
             );
             if (!grid.TryExpandParenthesisBundle(this, bundlePosition))
                 SetGridPosition(GridPosition);
+            else
+                GameplaySfx.Play(GameplaySound.CodePlacement);
 
             return;
         }
@@ -305,19 +344,13 @@ public class CodeBlock
             pointerGridPosition.y
         );
 
-        if (!grid.CanPlace(targetPosition, GridWidth, this))
+        if (!grid.TryMoveBlock(this, targetPosition, pointerGridPosition))
         {
             SetGridPosition(dragOriginalPosition);
             return;
         }
 
-        grid.UnregisterBlock(this);
-
-        SetGridPosition(targetPosition);
-
-        grid.RegisterBlock(this);
-
-        grid.NotifyCodeChanged();
+        GameplaySfx.Play(GameplaySound.CodePlacement);
     }
 
     private bool IsParenthesisBundle()
@@ -327,10 +360,10 @@ public class CodeBlock
 
     private Vector3 GetWorldPosition(PointerEventData eventData)
     {
-        RectTransform canvasRect = canvas.transform as RectTransform;
+        RectTransform gridRect = (RectTransform)grid.transform;
 
         RectTransformUtility.ScreenPointToWorldPointInRectangle(
-            canvasRect,
+            gridRect,
             eventData.position,
             eventData.pressEventCamera,
             out Vector3 worldPosition

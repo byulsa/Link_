@@ -13,6 +13,7 @@ public enum DeathType
 {
     Normal,
     SelfDestruct,
+    BossSlash,
 }
 
 public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
@@ -29,6 +30,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     private Color defaultSpriteColor = Color.white;
     private Vector3 defaultSpriteScale = Vector3.one;
     private Coroutine damageColorCoroutine;
+    private Coroutine bleedCoroutine;
+    private int bleedTicksRemaining;
+    private float bleedMaxHealthFraction;
     private Tween damageScaleTween;
     private Tween deathTween;
 
@@ -64,8 +68,8 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     private float baseDamage;
     private float moveSpeed;
 
-    private Transform playerTransform;
-    protected Transform PlayerTransform => playerTransform;
+    protected Player PlayerTarget { get; private set; }
+    protected Transform PlayerTransform => PlayerTarget != null ? PlayerTarget.transform : null;
 
     private Rigidbody2D rb;
 
@@ -77,22 +81,29 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     public float MaxHealth => maxHealth;
     public float CurrentHealth => currentHealth;
+    public EnemyData Data => enemyData;
     public float BaseDamage => baseDamage;
     public float MoveSpeed => moveSpeed;
+    protected void RestoreHealth(float amount)
+    {
+        if (!isDead && amount > 0f)
+            currentHealth = Mathf.Min(maxHealth, currentHealth + CombatStat.Round(amount));
+    }
     public float StatMultiplier { get; private set; } = 1f;
 
-    protected float ScaleAttackDuration(float duration) => duration / StatMultiplier;
+    protected virtual bool UsesWaveStatMultiplier => true;
 
     // Always rebuild from shared base data, including when an instance is pooled.
-    public void InitializeForSpawn(EnemyData data, float statMultiplier)
+    public void InitializeForSpawn(EnemyData data, float statMultiplier, int bonusPoints = 0)
     {
         InitializeFromData(data);
-        StatMultiplier = Mathf.Max(1f, statMultiplier);
-        maxHealth = data.maxHealth * StatMultiplier;
+        pointReward += Mathf.Max(0, bonusPoints);
+        StatMultiplier = UsesWaveStatMultiplier ? Mathf.Max(1f, statMultiplier) : 1f;
+        maxHealth = Mathf.Max(1f, CombatStat.Round(data.maxHealth * StatMultiplier));
         currentHealth = maxHealth;
-        baseDamage = data.baseDamage * StatMultiplier;
+        baseDamage = CombatStat.Round(data.baseDamage * StatMultiplier);
         float moveSpeedMultiplier = Mathf.Min(Mathf.Sqrt(StatMultiplier), MaxMoveSpeedMultiplier);
-        moveSpeed = data.moveSpeed * moveSpeedMultiplier;
+        moveSpeed = CombatStat.Round(data.moveSpeed * moveSpeedMultiplier);
         knockbackForce = data.knockbackForce / StatMultiplier;
         knockbackDuration = data.knockbackDuration / StatMultiplier;
     }
@@ -150,13 +161,14 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
             spriteRenderer.transform.localScale = defaultSpriteScale;
         }
 
-        if (playerTransform == null)
+        if (PlayerTarget == null)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
-
-            if (playerObj != null)
+            foreach (GameObject candidate in GameObject.FindGameObjectsWithTag(playerTag))
             {
-                playerTransform = playerObj.transform;
+                if (!candidate.TryGetComponent<Player>(out var player))
+                    continue;
+                PlayerTarget = player;
+                break;
             }
         }
     }
@@ -166,9 +178,9 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         enemyData = data;
         StatMultiplier = 1f;
 
-        maxHealth = data.maxHealth;
-        baseDamage = data.baseDamage;
-        moveSpeed = data.moveSpeed;
+        maxHealth = Mathf.Max(1f, CombatStat.Round(data.maxHealth));
+        baseDamage = CombatStat.Round(data.baseDamage);
+        moveSpeed = CombatStat.Round(data.moveSpeed);
 
         currentHealth = maxHealth;
 
@@ -189,21 +201,60 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
     {
         Vector2 knockbackDir = Vector2.zero;
 
-        if (playerTransform != null)
+        if (PlayerTransform != null)
         {
-            knockbackDir = (transform.position - playerTransform.position).normalized;
+            knockbackDir = (transform.position - PlayerTransform.position).normalized;
         }
 
-        TakeDamage(damage, knockbackDir);
+        float bonus = PassiveEffectManager.Instance != null
+            ? PassiveEffectManager.Instance.GetBonus(PassiveEffectType.EnemyDamageBonus)
+            : 0f;
+        TakeDamage(damage * (1f + bonus), knockbackDir);
     }
 
-    public virtual void TakeDamage(float damage, Vector2 hitDirection)
+    public virtual void TakeDamage(float damage, Vector2 hitDirection) =>
+        ApplyIncomingDamage(damage, hitDirection, roundDamage: true);
+
+    public void ApplyBleed(float maxHealthFraction, int durationSeconds)
+    {
+        if (isDead || currentHealth <= 0f || !isActiveAndEnabled || maxHealthFraction <= 0f || durationSeconds <= 0)
+            return;
+
+        bleedMaxHealthFraction = maxHealthFraction;
+        bleedTicksRemaining = durationSeconds;
+        if (bleedCoroutine == null)
+            bleedCoroutine = StartCoroutine(TickBleed());
+    }
+
+    private IEnumerator TickBleed()
+    {
+        WaitForSeconds second = new WaitForSeconds(1f);
+        while (!isDead && currentHealth > 0f && bleedTicksRemaining > 0)
+        {
+            yield return second;
+            if (isDead || currentHealth <= 0f)
+                break;
+
+            bleedTicksRemaining--;
+            ApplyIncomingDamage(maxHealth * bleedMaxHealthFraction, Vector2.zero, roundDamage: false);
+        }
+
+        bleedCoroutine = null;
+    }
+
+    protected virtual void ApplyIncomingDamage(float damage, Vector2 hitDirection, bool roundDamage)
     {
         if (isDead || !(damage > 0f)) return;
-        float appliedDamage = Mathf.Min(damage, currentHealth);
+        float appliedDamage = Mathf.Min(roundDamage ? CombatStat.Round(damage) : damage, currentHealth);
+        if (appliedDamage <= 0f)
+            return;
+
         currentHealth -= appliedDamage;
-        if (appliedDamage > 0f)
-            ShowDamageNumber(appliedDamage);
+        Vector3 hitPosition = spriteRenderer != null ? spriteRenderer.bounds.center : transform.position;
+        EnemyHitParticles.Emit(hitPosition, hitDirection);
+        if (currentHealth > 0f)
+            GameplaySfx.Play(GameplaySound.EnemyHit);
+        ShowDamageNumber(appliedDamage);
 
         Debug.Log($"[Enemy] 피해: {damage} " + $"HP: {currentHealth}/{maxHealth}");
 
@@ -256,6 +307,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected virtual void OnDisable()
     {
+        if (bleedCoroutine != null)
+            StopCoroutine(bleedCoroutine);
+        bleedCoroutine = null;
+        bleedTicksRemaining = 0;
         CancelKnockback();
         if (damageColorCoroutine != null)
         {
@@ -315,10 +370,10 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected void FacePlayer()
     {
-        if (playerTransform == null || spriteRenderer == null)
+        if (PlayerTransform == null || spriteRenderer == null)
             return;
 
-        float directionX = playerTransform.position.x - transform.position.x;
+        float directionX = PlayerTransform.position.x - transform.position.x;
 
         if (directionX > 0f)
         {
@@ -386,20 +441,20 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected void MoveToPlayer()
     {
-        if (playerTransform == null || rb == null)
+        if (PlayerTransform == null || rb == null)
             return;
 
-        Vector2 direction = (playerTransform.position - transform.position).normalized;
+        Vector2 direction = (PlayerTransform.position - transform.position).normalized;
         UpdateFacing(direction);
         rb.linearVelocity = direction * moveSpeed;
     }
 
     protected void MoveAwayFromPlayer()
     {
-        if (playerTransform == null || rb == null)
+        if (PlayerTransform == null || rb == null)
             return;
 
-        Vector2 direction = (transform.position - playerTransform.position).normalized;
+        Vector2 direction = (transform.position - PlayerTransform.position).normalized;
         UpdateFacing(direction);
         rb.linearVelocity = direction * moveSpeed;
     }
@@ -440,11 +495,23 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
 
     protected virtual void Die(DeathType deathType = DeathType.Normal)
     {
+        CompleteDeath(deathType);
+    }
+
+    internal void KillByBossSlash()
+    {
+        currentHealth = 0f;
+        CompleteDeath(DeathType.BossSlash);
+    }
+
+    private void CompleteDeath(DeathType deathType)
+    {
         if (isDead)
             return;
 
         isDead = true;
         CancelKnockback();
+        GameplaySfx.Play(deathType == DeathType.SelfDestruct ? GameplaySound.Explosion : GameplaySound.EnemyDeath);
         if (deathAnimator != null) deathAnimator.speed = 1f;
 
         Debug.Log($"[Enemy] {name} 사망 / DeathType: {deathType}");
@@ -538,7 +605,7 @@ public abstract class Enemy : MonoBehaviour, IDamageable, IPointDrop
         gameObject.SetActive(false);
     }
 
-    private void SetCollidersEnabled(bool isEnabled)
+    protected void SetCollidersEnabled(bool isEnabled)
     {
         if (enemyColliders == null)
             return;

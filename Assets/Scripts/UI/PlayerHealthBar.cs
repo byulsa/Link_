@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,6 +7,7 @@ public sealed class PlayerHealthBar : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private Image healthFill;
     [SerializeField] private Image damageTrail;
+    [SerializeField] private TMP_Text healthLabel;
     [SerializeField, Min(0.01f)] private float healthDuration = 0.16f;
     [SerializeField, Min(0f)] private float trailDelay = 0.22f;
     [SerializeField, Min(0.01f)] private float trailDuration = 0.36f;
@@ -16,6 +18,27 @@ public sealed class PlayerHealthBar : MonoBehaviour
     private float elapsed;
     private bool initialized;
     private bool animating;
+    private int displayedHealth = -1;
+    private int displayedMaxHealth = -1;
+
+    private void Awake()
+    {
+        if (healthLabel != null)
+            return;
+
+        GameObject label = new GameObject("HP Value", typeof(RectTransform));
+        label.layer = gameObject.layer;
+        var rect = (RectTransform)label.transform;
+        rect.SetParent(transform, false);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        healthLabel = label.AddComponent<TextMeshProUGUI>();
+        healthLabel.alignment = TextAlignmentOptions.Center;
+        healthLabel.fontSize = 15f;
+        healthLabel.fontStyle = FontStyles.Bold;
+        healthLabel.raycastTarget = false;
+    }
 
     private void OnEnable()
     {
@@ -27,6 +50,15 @@ public sealed class PlayerHealthBar : MonoBehaviour
     {
         if (player == null || healthFill == null || damageTrail == null)
             return;
+
+        int health = Mathf.CeilToInt(player.CurrentHealth);
+        int maxHealth = Mathf.CeilToInt(player.MaxHealth);
+        if (health != displayedHealth || maxHealth != displayedMaxHealth)
+        {
+            healthLabel.SetText("HP {0} / {1}", health, maxHealth);
+            displayedHealth = health;
+            displayedMaxHealth = maxHealth;
+        }
 
         float ratio = player.MaxHealth > 0f
             ? Mathf.Clamp01(player.CurrentHealth / player.MaxHealth)

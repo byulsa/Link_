@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gardian Ex
   m_EditorClassIdentifier: Assembly-CSharp::MeleeEnemyData
   enemyName: Gardian Ex
-  maxHealth: 250
+  maxHealth: 225
   baseDamage: 15
   moveSpeed: 5
   knockbackForce: 3

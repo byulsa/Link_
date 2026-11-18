@@ -6,7 +6,7 @@ public enum WeaponSpecialEffect
     None,
     Shockwave,
     ContinuousCut,
-    ChainLightning,
+    Bleed,
     ProjectileDefense
 }
 
@@ -24,6 +24,7 @@ public class WeaponDefinition : ScriptableObject
     public float rotationSpeed = 180f;
     public float size = 1f;
     [Header("Orbit Motion")]
+    [Min(0.1f)] public float rotationCycleMultiplier = 1f;
     public float rotationAccelerationDuration = 0.4f;
     public Ease rotationAccelerationEase = Ease.OutCubic;
     public float rotationDecelerationDuration = 0.4f;
@@ -34,9 +35,8 @@ public class WeaponDefinition : ScriptableObject
     [Min(0f)] public float shockwaveRadius = 2f;
     [Min(0f)] public float shockwaveDamageMultiplier = 0.5f;
     [Min(0.01f)] public float continuousCutInterval = 0.25f;
-    [Min(0f)] public float chainLightningRadius = 3f;
-    [Min(0)] public int chainLightningTargets = 3;
-    [Range(0f, 1f)] public float chainLightningDamageMultiplier = 0.7f;
+    [Range(0f, 1f)] public float bleedMaxHealthFraction = 0.01f;
+    [Min(1)] public int bleedDurationSeconds = 3;
 
     [Header("Visual")]
     public Sprite icon;

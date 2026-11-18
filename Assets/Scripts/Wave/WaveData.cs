@@ -18,6 +18,14 @@ public class WaveData : ScriptableObject
     public float maxTime = 90f;
     public List<WaveTimeLineData> timeLines;
 
+    [Header("Wave Balance")]
+    [Min(0)] public int enemyPoolLimitOverride;
+    [Min(0)] public int bonusPointsPerKill;
+
+    [Header("Boss Wave")]
+    public EnemyData boss;
+    public AudioClip bossMusic;
+
     [Header("Intermission Dialogue")]
     public WaveDialogue dialogueAfterWave;
     public WaveDialogue dialogueAfterCodeCollection;

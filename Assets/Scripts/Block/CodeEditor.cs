@@ -26,8 +26,10 @@ public class CodeEditor : MonoBehaviour
 
     [SerializeField, FormerlySerializedAs("testDMG")]
     private BlockDefinition startingActionCode;
+    [SerializeField] private BlockDefinition tutorialPlusCode;
 
     private readonly List<CodeChain> chains = new List<CodeChain>();
+    private int validChainCount;
 
     public IReadOnlyList<CodeChain> Chains => chains;
     public bool IsReady { get; private set; }
@@ -55,6 +57,38 @@ public class CodeEditor : MonoBehaviour
         ValidateChains();
         IsReady = true;
         OnCodeRefreshed?.Invoke(chains);
+    }
+
+    public string CheckInstalledCode(CodeBlock selectedBlock)
+    {
+        RefreshCode();
+        if (chains.Count == 0)
+            return "No code installed";
+
+        string summary = $"Valid chains: {validChainCount} / {chains.Count}";
+        if (selectedBlock == null)
+            return summary;
+
+        CodeChain chain = chains.Find(candidate => candidate.sourceBlocks.Contains(selectedBlock));
+        WeaponDefinition weapon = chain?.FirstBlock?.Definition?.targetWeapon;
+        if (weapon == null || !CodeChainEvaluator.TryGetWeaponActions(chain, out CodeNode actions))
+            return summary;
+
+        var values = new List<string>();
+        BlockType? orbit = CodeChainEvaluator.GetOrbitModifier(chain);
+        if (orbit.HasValue)
+            values.Add(orbit == BlockType.SIN ? "SIN (figure eight)" : "COS (ellipse)");
+        int actionCount = CodeChainEvaluator.GetWeaponActionCount(actions);
+        for (int i = 0; i < actionCount; i++)
+        {
+            BlockType action = CodeChainEvaluator.GetWeaponAction(actions, i);
+            float baseValue = CodeChainEvaluator.GetWeaponBaseValue(weapon, action);
+            float result = CodeChainEvaluator.CalculateValue(baseValue, chain, 2, action);
+            float preview = action == BlockType.DMG ? WeaponBase.ClampDamage(result) : Mathf.Max(0f, result);
+            values.Add($"{action} {baseValue:0.##} > {preview:0.##}");
+        }
+
+        return $"{summary}\n{weapon.weaponName}: {string.Join(" / ", values)}";
     }
 
     private void BuildChains(List<CodeBlock> blocks)
@@ -86,32 +120,20 @@ public class CodeEditor : MonoBehaviour
 
     private static void FoldParenthesisGroups(CodeChain chain)
     {
-        for (int i = 0; i < chain.nodes.Count; i++)
-        {
-            if (chain.nodes[i].blockType != BlockType.PARENTHESIS_OPEN)
-                continue;
+        if (chain.nodes.Count < 4 || chain.nodes[0].blockType is not (BlockType.WEAP or BlockType.PL) ||
+            chain.nodes[1].blockType != BlockType.PARENTHESIS_OPEN)
+            return;
 
-            int closeIndex = -1;
-            for (int j = i + 1; j < chain.nodes.Count; j++)
-            {
-                if (chain.nodes[j].blockType == BlockType.PARENTHESIS_CLOSE)
-                {
-                    closeIndex = j;
-                    break;
-                }
-            }
+        int closeIndex = chain.nodes.FindIndex(2, node => node.blockType == BlockType.PARENTHESIS_CLOSE);
+        if (closeIndex <= 2)
+            return;
 
-            if (closeIndex <= i + 1)
-                continue;
-
-            List<BlockType> targets = new List<BlockType>();
-            for (int j = i + 1; j < closeIndex; j++)
-                targets.Add(chain.nodes[j].blockType);
-
-            chain.nodes[i].blockType = BlockType.PARENTHESIS_BUNDLE;
-            chain.nodes[i].groupTargets = targets;
-            chain.nodes.RemoveRange(i + 1, closeIndex - i);
-        }
+        // Only the group in the action slot represents multiple targets. Later groups are arithmetic.
+        CodeNode actions = chain.nodes[1];
+        actions.blockType = BlockType.PARENTHESIS_BUNDLE;
+        for (int i = 2; i < closeIndex; i++)
+            actions.groupTargets.Add(chain.nodes[i].blockType);
+        chain.nodes.RemoveRange(2, closeIndex - 1);
     }
 
     private CodeBlock FindNextBlock(
@@ -150,6 +172,7 @@ public class CodeEditor : MonoBehaviour
 
     private void ValidateChains()
     {
+        validChainCount = 0;
         WaveManager waveManager = WaveManager.Instance;
         List<string> errors = waveManager != null && waveManager.IsCodingLogUnlocked
             ? new List<string>() : null;
@@ -158,7 +181,10 @@ public class CodeEditor : MonoBehaviour
         {
             ValidationResult result = ValidateChain(chain);
             if (result.IsValid)
+            {
+                validChainCount++;
                 continue;
+            }
 
             foreach (CodeBlock block in result.InvalidBlocks)
                 block.SetError(true);
@@ -185,6 +211,9 @@ public class CodeEditor : MonoBehaviour
             case BlockType.WEAP:
                 return CodeValidator.IsValidWeaponChain(chain.nodes) ? ValidationResult.Success() :
                     new ValidationResult(false, chain.sourceBlocks, CodeValidator.WeaponSyntaxError);
+            case BlockType.DTH:
+                return CodeValidator.IsValidDeathChain(chain.nodes) ? ValidationResult.Success() :
+                    new ValidationResult(false, chain.sourceBlocks, "DTH 뒤에는 POINT와 연산 블록을 연결하세요.");
             default:
                 return validator.Validate(chain.sourceBlocks);
         }
@@ -193,10 +222,37 @@ public class CodeEditor : MonoBehaviour
     private void CreateStartingCode()
     {
         ClearAllBlocks();
+        if (tutorialPlusCode != null && grid.Width >= 9 && grid.Height >= 4)
+        {
+            CreateTutorialCode();
+            RefreshCode();
+            return;
+        }
+
         CodeBlock weaponBlock = CreateBlock(startingWeaponCode, Vector2Int.zero);
         int actionColumn = weaponBlock != null ? weaponBlock.GridWidth : 0;
         CreateBlock(startingActionCode, new Vector2Int(actionColumn, 0));
         RefreshCode();
+    }
+
+    private void CreateTutorialCode()
+    {
+        int targetRow = grid.Height / 2;
+        var rows = new List<int>();
+        for (int row = 0; row < grid.Height; row++)
+            if (row != targetRow)
+                rows.Add(row);
+
+        var blocks = new CodeBlock[3];
+        BlockDefinition[] definitions = { startingWeaponCode, startingActionCode, tutorialPlusCode };
+        for (int i = 0; i < blocks.Length; i++)
+        {
+            int rowIndex = UnityEngine.Random.Range(0, rows.Count);
+            int column = UnityEngine.Random.Range(0, grid.Width - 2);
+            blocks[i] = CreateBlock(definitions[i], new Vector2Int(column, rows[rowIndex]), i == 2 ? 10 : 0);
+            rows.RemoveAt(rowIndex);
+        }
+        grid.BeginTutorial(blocks, new Vector2Int((grid.Width - 9) / 2, targetRow));
     }
 
     private CodeBlock CreateBlock(
@@ -210,6 +266,8 @@ public class CodeEditor : MonoBehaviour
             return null;
 
         CodeBlock block = Instantiate(blockPrefab, grid.transform);
+        foreach (Transform child in block.GetComponentsInChildren<Transform>(true))
+            child.gameObject.layer = grid.gameObject.layer;
         block.Initialize(definition, grid, value, runtimeBlockType);
         block.SetGridPosition(position);
         grid.RegisterBlock(block);
@@ -244,12 +302,13 @@ public class CodeEditor : MonoBehaviour
                 0,
                 BlockType.PARENTHESIS_OPEN
             );
-            CreateBlock(
+            CodeBlock close = CreateBlock(
                 definition,
                 new Vector2Int(position.x + 1, position.y),
                 0,
                 BlockType.PARENTHESIS_CLOSE
             );
+            open.PairWith(close);
             RefreshCode();
             return open;
         }

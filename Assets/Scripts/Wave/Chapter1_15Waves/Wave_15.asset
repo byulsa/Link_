@@ -15,31 +15,6 @@ MonoBehaviour:
   maxTime: 52
   timeLines:
   - startTime: 0
-    endTime: 17
-    enemyData:
-    - {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
-    - {fileID: 11400000, guid: b3bb586419f3ca341a1575c9bb1090ba, type: 2}
-    - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
-    - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
-    - {fileID: 11400000, guid: c73d36cfa9d2456d84cf839a50b1e158, type: 2}
-    - {fileID: 11400000, guid: cb3f15e3d093f5444a3c6dff5e7d0fd8, type: 2}
-    spawnInterval: 1.0
-    overrideSelfDestructCondition: 1
-    selfDestructCondition: 2
-  - startTime: 17
-    endTime: 34
-    enemyData:
-    - {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
-    - {fileID: 11400000, guid: b3bb586419f3ca341a1575c9bb1090ba, type: 2}
-    - {fileID: 11400000, guid: 19435c694971452c8b256abd54fa43ee, type: 2}
-    - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
-    - {fileID: 11400000, guid: c73d36cfa9d2456d84cf839a50b1e158, type: 2}
-    - {fileID: 11400000, guid: cb3f15e3d093f5444a3c6dff5e7d0fd8, type: 2}
-    - {fileID: 11400000, guid: cb3f15e3d093f5444a3c6dff5e7d0fd8, type: 2}
-    spawnInterval: 0.9
-    overrideSelfDestructCondition: 1
-    selfDestructCondition: 2
-  - startTime: 34
     endTime: 52
     enemyData:
     - {fileID: 11400000, guid: 437bcbe892ed54240a12ad97296abd25, type: 2}
@@ -48,7 +23,12 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 96009af7935d92f45a723c5520ad4d86, type: 2}
     - {fileID: 11400000, guid: c73d36cfa9d2456d84cf839a50b1e158, type: 2}
     - {fileID: 11400000, guid: cb3f15e3d093f5444a3c6dff5e7d0fd8, type: 2}
-    - {fileID: 11400000, guid: cb3f15e3d093f5444a3c6dff5e7d0fd8, type: 2}
-    spawnInterval: 0.8
+    spawnInterval: 1
     overrideSelfDestructCondition: 1
     selfDestructCondition: 2
+  boss: {fileID: 11400000, guid: b7aa300ac1014bd78890829a4f4be003, type: 2}
+  bossMusic: {fileID: 8300000, guid: 1d65f858668ce5d4a994e267ba431c6b, type: 3}
+  dialogueAfterWave: {fileID: 0}
+  dialogueAfterCodeCollection: {fileID: 0}
+  dialogueAfterShop: {fileID: 0}
+  dialogueAfterCodeEditor: {fileID: 0}

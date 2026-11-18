@@ -75,6 +75,15 @@ public class DataCollectionUI : MonoBehaviour
             panelRoot.SetActive(false);
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    internal void CloseForBossTest()
+    {
+        Close();
+        if (shopPanel != null)
+            shopPanel.SetActive(false);
+    }
+#endif
+
     private void RenderSlots()
     {
         ClearSlots();

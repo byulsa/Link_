@@ -16,7 +16,7 @@ public class PlayerMovement : MonoBehaviour
     private CameraController cameraController;
 
     public float Speed => speed;
-    public void SetCodeSpeed(float value) => speed = Mathf.Max(0f, value);
+    public void SetCodeSpeed(float value) => speed = Mathf.Max(0f, CombatStat.Round(value));
 
     public Rigidbody2D rb;
 

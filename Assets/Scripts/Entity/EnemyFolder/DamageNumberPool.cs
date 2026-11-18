@@ -30,6 +30,7 @@ public sealed class DamageNumberPool : MonoBehaviour
         public Renderer Renderer;
         public Vector3 Origin;
         public float Elapsed;
+        public float BaseAlpha;
     }
 
     private readonly Stack<Entry> available = new();
@@ -52,24 +53,41 @@ public sealed class DamageNumberPool : MonoBehaviour
     public static void Show(float damage, Vector3 position, SpriteRenderer enemyRenderer)
     {
         WarmUp();
-        Entry entry = instance.available.Count > 0 ? instance.available.Pop() : instance.CreateEntry();
-        position += (Vector3)instance.spawnOffset;
-        position.x += Random.Range(-instance.horizontalSpread, instance.horizontalSpread);
+        instance.ShowNumber(FormatAmount(damage), instance.textColor, position, enemyRenderer);
+    }
+
+    public static void ShowPlayerChange(float amount, Vector3 position, SpriteRenderer playerRenderer)
+    {
+        WarmUp();
+        bool healing = amount > 0f;
+        Color color = healing ? new Color(0.48f, 1f, 0.5f) : new Color(1f, 0.35f, 0.38f);
+        string sign = healing ? "+" : "-";
+        instance.ShowNumber(sign + FormatAmount(Mathf.Abs(amount)), color, position, playerRenderer);
+    }
+
+    private static string FormatAmount(float amount) => amount.ToString("0.##");
+
+    private void ShowNumber(string text, Color color, Vector3 position, SpriteRenderer sprite)
+    {
+        Entry entry = available.Count > 0 ? available.Pop() : CreateEntry();
+        position += (Vector3)spawnOffset;
+        position.x += Random.Range(-horizontalSpread, horizontalSpread);
         entry.Origin = position;
         entry.Elapsed = 0f;
+        entry.BaseAlpha = color.a;
         entry.Transform.position = position;
-        TMP_FontAsset selectedFont = instance.font != null ? instance.font : TMP_Settings.defaultFontAsset;
+        TMP_FontAsset selectedFont = font != null ? font : TMP_Settings.defaultFontAsset;
         if (selectedFont != null && entry.Label.font != selectedFont)
             entry.Label.font = selectedFont;
-        entry.Label.fontSize = instance.fontSize;
-        entry.Label.fontStyle = instance.fontStyle;
-        entry.Label.color = instance.textColor;
-        entry.Label.text = damage < 0.01f ? "<0.01" : damage.ToString("0.##");
-        entry.Renderer.sortingLayerID = enemyRenderer != null ? enemyRenderer.sortingLayerID : 0;
-        entry.Renderer.sortingOrder = (enemyRenderer != null ? enemyRenderer.sortingOrder : 0) + instance.sortingOrderOffset;
+        entry.Label.fontSize = fontSize;
+        entry.Label.fontStyle = fontStyle;
+        entry.Label.color = color;
+        entry.Label.text = text;
+        entry.Renderer.sortingLayerID = sprite != null ? sprite.sortingLayerID : 0;
+        entry.Renderer.sortingOrder = (sprite != null ? sprite.sortingOrder : 0) + sortingOrderOffset;
         entry.Object.SetActive(true);
-        instance.active.Add(entry);
-        instance.enabled = true;
+        active.Add(entry);
+        enabled = true;
     }
 
     private Entry CreateEntry()
@@ -113,7 +131,7 @@ public sealed class DamageNumberPool : MonoBehaviour
             float progress = entry.Elapsed / lifetime;
             float rise = 1f - (1f - progress) * (1f - progress);
             entry.Transform.position = entry.Origin + Vector3.up * (riseDistance * rise);
-            entry.Label.alpha = textColor.a * (1f - Mathf.InverseLerp(fadeStart, lifetime, entry.Elapsed));
+            entry.Label.alpha = entry.BaseAlpha * (1f - Mathf.InverseLerp(fadeStart, lifetime, entry.Elapsed));
         }
 
         if (active.Count == 0)

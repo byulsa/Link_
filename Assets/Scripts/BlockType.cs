@@ -20,4 +20,6 @@ public enum BlockType
     PARENTHESIS_OPEN,
     PARENTHESIS_CLOSE,
     HP,
+    SIN,
+    COS,
 }

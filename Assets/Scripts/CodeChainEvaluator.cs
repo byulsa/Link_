@@ -1,7 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class CodeChainEvaluator
 {
+    public static bool IsOrbitModifier(BlockType type) => type is BlockType.SIN or BlockType.COS;
+
+    public static BlockType? GetOrbitModifier(CodeChain chain)
+    {
+        BlockType? type = chain.nodes.Count > 2 ? chain.nodes[2]?.blockType : null;
+        return type.HasValue && IsOrbitModifier(type.Value) ? type : null;
+    }
+
     public static bool TryGetWeaponActions(CodeChain chain, out CodeNode actions)
     {
         actions = null;
@@ -46,20 +55,38 @@ public static class CodeChainEvaluator
         return baseValue;
     }
 
-    public static float CalculateValue(float value, CodeChain chain, int startIndex)
+    public static float CalculateValue(float value, CodeChain chain, int startIndex, BlockType action = default)
     {
         if (chain == null || chain.nodes == null)
             return value;
 
         PassiveEffectManager passiveEffects = PassiveEffectManager.Instance;
+        float additiveUnit = action is BlockType.DST or BlockType.SZ ? 0.1f : 1f;
+        return EvaluateModifiers(value, chain.nodes, ref startIndex, additiveUnit, passiveEffects);
+    }
+
+    private static float EvaluateModifiers(float value, IReadOnlyList<CodeNode> nodes, ref int index,
+        float additiveUnit, PassiveEffectManager passiveEffects)
+    {
         float sum = 0f;
         float term = value;
         bool subtractTerm = false;
-        for (int i = startIndex; i < chain.nodes.Count; i++)
+        while (index < nodes.Count)
         {
-            CodeNode node = chain.nodes[i];
-            if (node == null)
+            CodeNode node = nodes[index++];
+            if (node == null || IsOrbitModifier(node.blockType))
                 continue;
+
+            if (node.blockType == BlockType.PARENTHESIS_CLOSE)
+                break;
+            if (node.blockType == BlockType.PARENTHESIS_OPEN)
+            {
+                float accumulated = subtractTerm ? sum - term : sum + term;
+                term = EvaluateModifiers(accumulated, nodes, ref index, additiveUnit, passiveEffects);
+                sum = 0f;
+                subtractTerm = false;
+                continue;
+            }
 
             float modifier = node.value;
             if (passiveEffects != null)
@@ -70,7 +97,7 @@ public static class CodeChainEvaluator
                 case BlockType.PLUS:
                 case BlockType.MINUS:
                     sum = subtractTerm ? sum - term : sum + term;
-                    term = modifier;
+                    term = modifier * additiveUnit;
                     subtractTerm = node.blockType == BlockType.MINUS;
                     break;
                 case BlockType.MULT:

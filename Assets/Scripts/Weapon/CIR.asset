@@ -16,10 +16,11 @@ MonoBehaviour:
   displayText: CIRDrone
   description: "\uAC00\uC7A5 \uAE30\uBCF8\uC801\uC778 \uB4DC\uB860\uC785\uB2C8\uB2E4.
     \uC2E4\uD5D8\uCCB4 \uC8FC\uC704\uB97C \uB3CC\uBA70 \uD638\uC704\uD569\uB2C8\uB2E4"
-  damage: 40
+  damage: 30
   distance: 5
-  rotationSpeed: 360
+  rotationSpeed: 400
   size: 2
+  rotationCycleMultiplier: 1
   rotationAccelerationDuration: 0
   rotationAccelerationEase: 11
   rotationDecelerationDuration: 0
@@ -28,8 +29,7 @@ MonoBehaviour:
   shockwaveRadius: 2
   shockwaveDamageMultiplier: 0.5
   continuousCutInterval: 0.25
-  chainLightningRadius: 3
-  chainLightningTargets: 3
-  chainLightningDamageMultiplier: 0.7
+  bleedMaxHealthFraction: 0.01
+  bleedDurationSeconds: 3
   icon: {fileID: 751451447170813573, guid: 2d3e0a5e04f894245b9bcb1394c83f07, type: 3}
   prefab: {fileID: 2733827392254455992, guid: b228ad15c48ebfc458ed23cfba51b848, type: 3}

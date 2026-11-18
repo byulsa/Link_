@@ -23,6 +23,13 @@ public class ShopSlot
         Price = price;
     }
 
+    public ShopSlot(int price, int gridSize)
+    {
+        Type = ShopItemType.MemoryExpansion;
+        Price = price;
+        Value = gridSize;
+    }
+
     public void MarkSold() => IsSold = true;
     public void SetSold(bool sold) => IsSold = sold;
 
@@ -34,6 +41,7 @@ public class ShopSlot
             ? Block.targetWeapon.weaponName
             : Block.targetWeapon.displayText,
         ShopItemType.Passive => Passive.itemName,
+        ShopItemType.MemoryExpansion => $"MEM {Value}x{Value}",
         _ => "???"
     };
     public Sprite GetIcon()

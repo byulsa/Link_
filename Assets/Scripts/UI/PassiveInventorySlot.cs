@@ -1,12 +1,22 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class PassiveInventorySlot : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandler, IPointerExitHandler
 {
+    [SerializeField] private Image icon;
+    [SerializeField] private Text label;
     private PassiveItemDefinition passive;
     private bool hovered;
 
-    public void Setup(PassiveItemDefinition item) => passive = item;
+    public void Setup(PassiveItemDefinition item)
+    {
+        passive = item;
+        icon.sprite = item.icon;
+        icon.gameObject.SetActive(item.icon != null);
+        label.text = item.itemName;
+        label.gameObject.SetActive(item.icon == null);
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {

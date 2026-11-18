@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,6 +31,18 @@ public class CodeBlockTooltip : MonoBehaviour
     private Vector2 pointerPosition;
     private readonly Vector3[] worldCorners = new Vector3[4];
     private bool showRequested;
+    private Image weaponSilhouette;
+    private Vector2 descriptionPosition;
+    private Vector2 descriptionSize;
+    private bool hasDescriptionLayout;
+    private TooltipKeyword[] keywords;
+    private Regex keywordPattern;
+    private Dictionary<string, TooltipKeyword> keywordsByName;
+    private KeywordHoverPanel keywordPrefab;
+    private readonly List<KeywordHoverPanel> keywordPanels = new();
+    private float keywordHeight;
+    private float keywordWidth;
+    private const float KeywordGap = 6f;
 
     private void Awake()
     {
@@ -63,7 +78,11 @@ public class CodeBlockTooltip : MonoBehaviour
         if (block == null || block.Definition == null)
             return;
 
-        Show(block.Definition, pointerPosition);
+        WeaponDefinition weapon = block.LinkedWeapon != null ? block.LinkedWeapon : block.Definition.targetWeapon;
+        if (weapon != null)
+            Show(weapon, pointerPosition);
+        else
+            Show(block.Definition, pointerPosition);
     }
 
     public static void Show(BlockDefinition definition, Vector2 pointerPosition)
@@ -94,7 +113,8 @@ public class CodeBlockTooltip : MonoBehaviour
             "Weapon",
             "Weapon",
             weapon.description,
-            pointerPosition
+            pointerPosition,
+            weapon
         );
     }
 
@@ -112,7 +132,8 @@ public class CodeBlockTooltip : MonoBehaviour
         );
     }
 
-    private static void Show(string fullName, string fallbackName, string category, string description, Vector2 pointerPosition)
+    private static void Show(string fullName, string fallbackName, string category, string description,
+        Vector2 pointerPosition, WeaponDefinition weapon = null)
     {
         if (instance == null)
             instance = FindFirstObjectByType<CodeBlockTooltip>(FindObjectsInactive.Include);
@@ -148,9 +169,102 @@ public class CodeBlockTooltip : MonoBehaviour
         instance.transform.SetAsLastSibling();
         instance.gameObject.SetActive(true);
         instance.showRequested = false;
+        instance.SetWeaponSilhouette(weapon);
+        instance.SetKeywordPanels(description);
         Canvas.ForceUpdateCanvases();
         instance.UpdatePosition();
         missingTooltipWarningShown = false;
+    }
+
+    private void SetKeywordPanels(string description)
+    {
+        if (keywords == null)
+        {
+            keywords = Resources.LoadAll<TooltipKeyword>("TooltipKeywords");
+            keywordsByName = new Dictionary<string, TooltipKeyword>();
+            foreach (TooltipKeyword keyword in keywords)
+                if (!string.IsNullOrWhiteSpace(keyword.keyword))
+                    keywordsByName.TryAdd(keyword.keyword, keyword);
+
+            if (keywordsByName.Count > 0)
+            {
+                string terms = string.Join("|", keywordsByName.Keys.OrderByDescending(term => term.Length).Select(Regex.Escape));
+                keywordPattern = new Regex($"<[^>]*>|{terms}");
+            }
+            keywordPrefab = Resources.Load<KeywordHoverPanel>("Keyword Hover Panel");
+        }
+
+        var found = new List<TooltipKeyword>();
+        descriptionText.text = keywordPattern == null ? description : keywordPattern.Replace(description ?? "", match =>
+        {
+            if (!keywordsByName.TryGetValue(match.Value, out TooltipKeyword data))
+                return match.Value;
+
+            if (!found.Contains(data))
+                found.Add(data);
+            return $"<color=#{ColorUtility.ToHtmlStringRGB(data.highlightColor)}>{match.Value}</color>";
+        });
+        keywordHeight = keywordWidth = 0f;
+        int count = keywordPrefab != null ? found.Count : 0;
+        for (int i = 0; i < count; i++)
+        {
+            if (i == keywordPanels.Count)
+                keywordPanels.Add(Instantiate(keywordPrefab, rectTransform));
+            KeywordHoverPanel panel = keywordPanels[i];
+            panel.gameObject.SetActive(true);
+            panel.Bind(found[i]);
+            panel.Rect.anchorMin = panel.Rect.anchorMax = new Vector2(0f, 0f);
+            panel.Rect.pivot = new Vector2(0f, 1f);
+            panel.Rect.anchoredPosition = new Vector2(0f, -keywordHeight - KeywordGap);
+            keywordHeight += KeywordGap + panel.Rect.rect.height;
+            keywordWidth = Mathf.Max(keywordWidth, panel.Rect.rect.width);
+        }
+        for (int i = count; i < keywordPanels.Count; i++)
+            keywordPanels[i].gameObject.SetActive(false);
+    }
+
+    private void SetWeaponSilhouette(WeaponDefinition weapon)
+    {
+        RectTransform description = descriptionText.rectTransform;
+        if (!hasDescriptionLayout)
+        {
+            descriptionPosition = description.anchoredPosition;
+            descriptionSize = description.sizeDelta;
+            hasDescriptionLayout = true;
+        }
+
+        Sprite sprite = null;
+        if (weapon != null)
+        {
+            SpriteRenderer renderer = weapon.prefab != null
+                ? weapon.prefab.GetComponentInChildren<SpriteRenderer>(true)
+                : null;
+            sprite = renderer != null && renderer.sprite != null ? renderer.sprite : weapon.icon;
+        }
+
+        if (sprite != null && weaponSilhouette == null)
+        {
+            GameObject preview = new GameObject("Weapon Silhouette", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            preview.layer = gameObject.layer;
+            preview.transform.SetParent(rectTransform, false);
+            weaponSilhouette = preview.GetComponent<Image>();
+            weaponSilhouette.preserveAspect = true;
+            weaponSilhouette.raycastTarget = false;
+            weaponSilhouette.color = new Color32(201, 231, 244, 255);
+            weaponSilhouette.rectTransform.sizeDelta = new Vector2(122f, 122f);
+            weaponSilhouette.rectTransform.anchoredPosition =
+                descriptionPosition + Vector2.right * (descriptionSize.x * 0.5f - 61f);
+        }
+
+        if (weaponSilhouette != null)
+        {
+            weaponSilhouette.sprite = sprite;
+            weaponSilhouette.gameObject.SetActive(sprite != null);
+        }
+
+        float previewWidth = sprite != null ? 140f : 0f;
+        description.sizeDelta = descriptionSize - Vector2.right * previewWidth;
+        description.anchoredPosition = descriptionPosition - Vector2.right * (previewWidth * 0.5f);
     }
 
     public static void Move(Vector2 pointerPosition)
@@ -177,12 +291,23 @@ public class CodeBlockTooltip : MonoBehaviour
         Camera uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
         Vector2 bottomLeft = RectTransformUtility.WorldToScreenPoint(uiCamera, worldCorners[0]);
         Vector2 topRight = RectTransformUtility.WorldToScreenPoint(uiCamera, worldCorners[2]);
-        float panelWidth = Mathf.Abs(topRight.x - bottomLeft.x);
-        float panelHeight = Mathf.Abs(topRight.y - bottomLeft.y);
+        float rootWidth = Mathf.Abs(topRight.x - bottomLeft.x);
+        float rootHeight = Mathf.Abs(topRight.y - bottomLeft.y);
+        float panelWidth = rootWidth * Mathf.Max(1f, keywordWidth / Mathf.Max(1f, rectTransform.rect.width));
+        float extraHeight = rootHeight * keywordHeight / Mathf.Max(1f, rectTransform.rect.height);
+        float panelHeight = rootHeight + extraHeight;
 
         bool placeRight = Screen.width - pointerPosition.x >= panelWidth + cursorOffset + screenMargin;
         bool placeAbove = Screen.height - pointerPosition.y >= panelHeight + cursorOffset + screenMargin;
         rectTransform.pivot = new Vector2(placeRight ? 0f : 1f, placeAbove ? 0f : 1f);
+        foreach (KeywordHoverPanel panel in keywordPanels)
+        {
+            if (!panel.gameObject.activeSelf)
+                continue;
+            Vector2 position = panel.Rect.anchoredPosition;
+            position.x = placeRight ? 0f : rectTransform.rect.width - panel.Rect.rect.width;
+            panel.Rect.anchoredPosition = position;
+        }
 
         Vector2 targetScreenPosition = new Vector2(
             pointerPosition.x + (placeRight ? cursorOffset : -cursorOffset),
@@ -198,6 +323,8 @@ public class CodeBlockTooltip : MonoBehaviour
             screenMargin + (placeAbove ? 0f : panelHeight),
             Screen.height - screenMargin - (placeAbove ? panelHeight : 0f)
         );
+        if (placeAbove)
+            targetScreenPosition.y += extraHeight;
 
         if (
             RectTransformUtility.ScreenPointToWorldPointInRectangle(

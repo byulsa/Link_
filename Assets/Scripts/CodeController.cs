@@ -122,7 +122,7 @@ public class CodeController : MonoBehaviour
             if (chain == null || chain.nodes == null || chain.nodes.Count == 0)
                 continue;
 
-            if (chain.nodes[0].blockType != BlockType.DTH)
+            if (chain.nodes[0].blockType != BlockType.DTH || !CodeValidator.IsValidDeathChain(chain.nodes))
                 continue;
 
             CodeExecutor.Execute(chain, owner, target);

@@ -52,7 +52,8 @@ public static class CodeExecutor
         if (chain.nodes.Count < 4)
             return false;
 
-        if (chain.nodes[1].blockType != BlockType.EN || chain.nodes[2].blockType != BlockType.DMG)
+        if (chain.nodes[1]?.blockType != BlockType.EN || chain.nodes[2]?.blockType != BlockType.DMG ||
+            !CodeValidator.HasValidModifiers(chain.nodes, 3))
         {
             return false;
         }
@@ -99,7 +100,7 @@ public static class CodeExecutor
         {
             BlockType action = CodeChainEvaluator.GetWeaponAction(actions, i);
             float baseValue = CodeChainEvaluator.GetWeaponBaseValue(weapon.Definition, action);
-            float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2);
+            float finalValue = CodeChainEvaluator.CalculateValue(baseValue, chain, 2, action);
 
             if (action == BlockType.DMG)
             {
@@ -145,7 +146,7 @@ public static class CodeExecutor
         if (PassiveEffectManager.Instance != null)
             finalPoint *= 1f + PassiveEffectManager.Instance.GetPointRewardBonus();
 
-        pointManager.AddPoint(Mathf.Max(0, (int)finalPoint));
+        pointManager.AddPoint(Mathf.Max(0, (int)CombatStat.Round(finalPoint)));
         return true;
     }
 }

@@ -18,9 +18,12 @@ public class RangedEnemy : Enemy
     private LineRenderer laserLineRenderer;
     private Material laserMaterial;
     private Coroutine laserVisualCoroutine;
+    private Vector3 laserAimStart;
+    private Vector2 laserAimDirection;
 
     private Coroutine recoveryCoroutine;
     private bool hasFired;
+    private bool hasStartedAttack;
     private float attackTimer;
 
     private bool isRetreating;
@@ -54,6 +57,7 @@ public class RangedEnemy : Enemy
 
         attackTimer = 0f;
         hasFired = false;
+        hasStartedAttack = false;
 
         isRetreating = false;
         isAttacking = false;
@@ -137,6 +141,13 @@ public class RangedEnemy : Enemy
     {
         float distance = PlayerDistance();
 
+        if (!hasStartedAttack && distance <= rangedData.attackRange)
+        {
+            isRetreating = false;
+            TryAttack();
+            return;
+        }
+
         if (isRetreating)
         {
             if (distance >= rangedData.retreatEndRange)
@@ -194,16 +205,18 @@ public class RangedEnemy : Enemy
 
     private void StartAttack()
     {
+        hasStartedAttack = true;
         isAttacking = true;
         hasFired = false;
 
         StopMovement();
         FacePlayer();
+        if (rangedData.attackType == RangedAttackType.Laser)
+            AimLaser();
         Debug.Log($"[RangedEnemy] {name} 공격 준비");
 
         if (animator != null)
         {
-            animator.speed = StatMultiplier;
             animator.SetTrigger("Attack");
         }
         else
@@ -234,6 +247,7 @@ public class RangedEnemy : Enemy
         Vector2 direction = (PlayerTransform.position - transform.position).normalized;
         if (direction == Vector2.zero) return;
         hasFired = true;
+        GameplaySfx.Play(GameplaySound.ProjectileAttack);
         int count = Mathf.Max(1, rangedData.projectileCount);
         for (int i = 0; i < count; i++)
         {
@@ -258,18 +272,17 @@ public class RangedEnemy : Enemy
             || PlayerTransform == null)
             return;
 
-        Vector2 direction = (PlayerTransform.position - transform.position).normalized;
-        if (direction == Vector2.zero)
+        if (laserAimDirection == Vector2.zero)
             return;
 
         hasFired = true;
-        Vector3 start = GetLaserFirePosition(direction);
+        GameplaySfx.Play(GameplaySound.LaserAttack);
         float maxDistance = Mathf.Max(0.01f, rangedData.laserMaxDistance);
-        Vector3 end = start + (Vector3)(direction * maxDistance);
-        RaycastHit2D[] hits = Physics2D.RaycastAll(start, direction, maxDistance);
-        RaycastHit2D nearestHit = default;
-        float nearestHitDistance = float.MaxValue;
+        Vector3 end = laserAimStart + (Vector3)(laserAimDirection * maxDistance);
+        RaycastHit2D[] hits = Physics2D.RaycastAll(laserAimStart, laserAimDirection, maxDistance);
+        Collider2D playerBody = PlayerTarget.BodyCollider;
 
+        // RaycastAll returns nearest hits first. Trigger hitboxes on weapons and drones don't block it.
         foreach (RaycastHit2D hit in hits)
         {
             if (hit.collider == null
@@ -277,25 +290,26 @@ public class RangedEnemy : Enemy
                 || hit.collider.transform.IsChildOf(transform))
                 continue;
 
-            if (hit.distance >= nearestHitDistance)
+            if (hit.collider != playerBody && (hit.collider.isTrigger || hit.collider.GetComponentInParent<Enemy>() != null))
                 continue;
 
-            nearestHitDistance = hit.distance;
-            nearestHit = hit;
-            end = hit.point;
+            end = new Vector3(hit.point.x, hit.point.y, laserAimStart.z);
+            if (hit.collider == playerBody)
+                PlayerTarget.TakeDamage(BaseDamage * Mathf.Max(0f, rangedData.laserDamageMultiplier));
+            break;
         }
 
-        if (nearestHit.collider != null)
-        {
-            Entity hitEntity = nearestHit.collider.GetComponentInParent<Entity>();
-            if (hitEntity != null && hitEntity.Is(EntityType.Player))
-            {
-                IDamageable damageable = nearestHit.collider.GetComponentInParent<IDamageable>();
-                damageable?.TakeDamage(BaseDamage * Mathf.Max(0f, rangedData.laserDamageMultiplier));
-            }
-        }
+        ShowLaser(laserAimStart, end);
+    }
 
-        ShowLaser(start, end);
+    private void AimLaser()
+    {
+        Vector2 toPlayer = PlayerTransform.position - transform.position;
+        laserAimStart = GetLaserFirePosition(toPlayer);
+        Vector3 target = PlayerTarget.BodyCollider != null ? PlayerTarget.BodyCollider.bounds.center : PlayerTransform.position;
+        laserAimDirection = ((Vector2)(target - laserAimStart)).normalized;
+        Vector3 end = laserAimStart + (Vector3)(laserAimDirection * rangedData.laserMaxDistance);
+        DrawLaser(laserAimStart, end, 0.055f, new Color(1f, 0.4f, 0.2f, 0.55f));
     }
 
     private Vector3 GetLaserFirePosition(Vector2 direction)
@@ -311,23 +325,25 @@ public class RangedEnemy : Enemy
 
     private void ShowLaser(Vector3 start, Vector3 end)
     {
-        if (!EnsureLaserLineRenderer())
-            return;
-
         if (laserVisualCoroutine != null)
             StopCoroutine(laserVisualCoroutine);
 
-        laserLineRenderer.startWidth = rangedData.laserWidth;
-        laserLineRenderer.endWidth = rangedData.laserWidth * 0.35f;
-        laserLineRenderer.startColor = rangedData.laserColor;
-        Color endColor = rangedData.laserColor;
-        endColor.a = 0f;
-        laserLineRenderer.endColor = endColor;
+        DrawLaser(start, end, rangedData.laserWidth, rangedData.laserColor);
+        laserVisualCoroutine = StartCoroutine(HideLaserAfterDelay(rangedData.laserDuration));
+    }
+
+    private void DrawLaser(Vector3 start, Vector3 end, float width, Color color)
+    {
+        if (!EnsureLaserLineRenderer())
+            return;
+
+        laserLineRenderer.startWidth = width;
+        laserLineRenderer.endWidth = width;
+        laserLineRenderer.startColor = color;
+        laserLineRenderer.endColor = color;
         laserLineRenderer.SetPosition(0, start);
         laserLineRenderer.SetPosition(1, end);
         laserLineRenderer.enabled = true;
-
-        laserVisualCoroutine = StartCoroutine(HideLaserAfterDelay(rangedData.laserDuration));
     }
 
     private bool EnsureLaserLineRenderer()
@@ -375,10 +391,18 @@ public class RangedEnemy : Enemy
     public void FinishAttack()
     {
         if (IsDead || !isAttacking) return;
+        if (!hasFired && laserLineRenderer != null) laserLineRenderer.enabled = false;
         if (animator != null) animator.speed = 1f;
         isAttacking = false;
 
         StartAttackRecovery();
+    }
+
+    protected override void Die(DeathType deathType = DeathType.Normal)
+    {
+        if (laserLineRenderer != null)
+            laserLineRenderer.enabled = false;
+        base.Die(deathType);
     }
 
     // -------------------------
@@ -389,7 +413,7 @@ public class RangedEnemy : Enemy
     {
         if (rangedData.attackRecoveryTime <= 0f)
         {
-            attackTimer = ScaleAttackDuration(rangedData.attackCooldown);
+            attackTimer = rangedData.attackCooldown;
 
             return;
         }
@@ -403,11 +427,11 @@ public class RangedEnemy : Enemy
 
         StopMovement();
 
-        yield return new WaitForSeconds(ScaleAttackDuration(rangedData.attackRecoveryTime));
+        yield return new WaitForSeconds(rangedData.attackRecoveryTime);
 
         isAttackRecovering = false;
         recoveryCoroutine = null;
 
-        attackTimer = ScaleAttackDuration(rangedData.attackCooldown);
+        attackTimer = rangedData.attackCooldown;
     }
 }

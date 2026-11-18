@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: RangedEnemyData_
   m_EditorClassIdentifier: Assembly-CSharp::RangedEnemyData
   enemyName: Dummy
-  maxHealth: 999
+  maxHealth: 175
   baseDamage: 5
   moveSpeed: 3
   knockbackForce: 5
   knockbackDuration: 0.2
-  attackRecoveryTime: 0
+  attackRecoveryTime: 0.4
   enemyPrefab: {fileID: 2171883001476934377, guid: f0617289909795a499d43246c5355190, type: 3}
   PointDropNum: 5
-  attackRange: 7
+  attackRange: 6.5
   retreatRange: 3
   retreatEndRange: 5
-  attackCooldown: 1
+  attackCooldown: 1.6
   behavior: 1
   attackType: 1
   projectilePrefab: {fileID: 4196148461194105619, guid: a7296dd39faf79e4c903e5c674dda589, type: 3}
@@ -33,8 +33,8 @@ MonoBehaviour:
   - 20
   - 0
   - -20
-  laserMaxDistance: 10
-  laserDamageMultiplier: 1
-  laserWidth: 1
+  laserMaxDistance: 7
+  laserDamageMultiplier: 0.8
+  laserWidth: 0.2
   laserDuration: 0.15
   laserColor: {r: 1, g: 0.1, b: 0.1, a: 1}

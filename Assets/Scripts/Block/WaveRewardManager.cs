@@ -16,7 +16,7 @@ public class WaveRewardManager : MonoBehaviour
     private int maxRewardsPerWave = 8;
 
     [SerializeField, Min(0)]
-    private int pointPerUnselectedCode = 10;
+    private int pointPerUnselectedCode = 5;
 
     public class RewardEntry
     {

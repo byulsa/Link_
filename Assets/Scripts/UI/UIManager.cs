@@ -45,6 +45,6 @@ public class UIManager : MonoBehaviour
 
     private void UpdateUI(int point)
     {
-        if (pointText != null) pointText.text = $"{point}";
+        if (pointText != null) pointText.text = $"P {point}";
     }
 }

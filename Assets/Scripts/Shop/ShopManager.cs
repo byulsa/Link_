@@ -7,6 +7,7 @@ public enum ShopItemType
     Block,
     Weapon,
     Passive,
+    MemoryExpansion,
 }
 
 public class ShopManager : MonoBehaviour
@@ -19,6 +20,14 @@ public class ShopManager : MonoBehaviour
     [Header("Shop Layout (DATA EXCHANGE)")]
     [SerializeField] private int topSlotCount = 5;     // 상단: 코드 블록 + 패시브
     [SerializeField] private int weaponSlotCount = 2;  // 하단: 무기 고정
+
+    [Header("Chapter 2 Memory Expansion")]
+    [SerializeField, Min(1)] private int memoryExpansionPrice = 350;
+    [SerializeField, Min(1)] private int memoryExpansionSize = 15;
+
+    private bool CanOfferMemoryExpansion =>
+        WaveManager.Instance != null && WaveManager.Instance.CurrentChapterNumber >= 2 &&
+        grid != null && grid.Width < memoryExpansionSize && grid.Height < memoryExpansionSize;
 
     private readonly List<ShopSlot> currentSlots = new();
     public IReadOnlyList<ShopSlot> CurrentSlots => currentSlots;
@@ -47,6 +56,12 @@ public class ShopManager : MonoBehaviour
 
         for (int i = 0; i < topSlotCount; i++)
         {
+            if (i == topSlotCount - 1 && CanOfferMemoryExpansion)
+            {
+                currentSlots.Add(new ShopSlot(memoryExpansionPrice, memoryExpansionSize));
+                continue;
+            }
+
             if (!dropTable.TrySelectTopItem(excludedPassives, out ShopDropTable.ShopDropResult result))
             {
                 // Reserve the index so weapon slots never move into the top row.
@@ -86,8 +101,24 @@ public class ShopManager : MonoBehaviour
             ShopItemType.Block => TryPurchaseBlock(slot, slotIndex),
             ShopItemType.Weapon => TryPurchaseBlock(slot, slotIndex), // 무기도 결국 블록 배치 + 부수 효과
             ShopItemType.Passive => TryPurchasePassive(slot, slotIndex),
+            ShopItemType.MemoryExpansion => TryPurchaseMemoryExpansion(slot, slotIndex),
             _ => false
         };
+    }
+
+    private bool TryPurchaseMemoryExpansion(ShopSlot slot, int slotIndex)
+    {
+        if (WaveManager.IsBattleActive || !CanOfferMemoryExpansion || PointManager.Instance == null ||
+            !PointManager.Instance.TrySpendPoint(slot.Price))
+        {
+            OnPurchaseFailed?.Invoke(slotIndex);
+            return false;
+        }
+
+        grid.ExpandTo(slot.Value);
+        slot.MarkSold();
+        OnPurchaseSucceeded?.Invoke(slotIndex);
+        return true;
     }
 
     private bool TryPurchaseBlock(ShopSlot slot, int slotIndex)

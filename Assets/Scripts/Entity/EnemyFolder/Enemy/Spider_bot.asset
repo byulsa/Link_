@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Spider_bot
   m_EditorClassIdentifier: Assembly-CSharp::SuicideEnemyData
   enemyName: Spider_bot
-  maxHealth: 20
+  maxHealth: 18
   baseDamage: 5
-  moveSpeed: 3
+  moveSpeed: 4
   knockbackForce: 2
   knockbackDuration: 0.1
   attackRecoveryTime: 0.5
@@ -23,5 +23,6 @@ MonoBehaviour:
   PointDropNum: 5
   condition: 2
   triggerRange: 1.5
-  explosionRange: 2.5
+  deathChaseSpeedMultiplier: 1.35
+  explosionRange: 3.25
   explosionDamage: 30

@@ -74,6 +74,11 @@ public class ShopSlotUI : MonoBehaviour, IPointerEnterHandler, IPointerMoveHandl
             case ShopItemType.Passive:
                 SetupImageItem();
                 break;
+            case ShopItemType.MemoryExpansion:
+                SetNameTextArea(false);
+                itemPreview?.SetActive(false);
+                codePreview?.SetActive(false);
+                break;
         }
 
         if (priceText != null)

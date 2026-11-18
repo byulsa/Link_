@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e06fd069d628bdf41aa8263e168f8aba, type: 3}
+  m_Name: OrbitDrone
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  enemyName: "\uBD09\uC1C4 \uB4DC\uB860"
+  maxHealth: 65
+  baseDamage: 4
+  moveSpeed: 2.9
+  knockbackForce: 2
+  knockbackDuration: 0.12
+  attackRecoveryTime: 0.5
+  enemyPrefab: {fileID: 2171883001476934377, guid: 238004ed12e14fc0a141b332ab320956, type: 3}
+  PointDropNum: 12

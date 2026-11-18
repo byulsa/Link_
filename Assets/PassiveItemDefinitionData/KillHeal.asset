@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f27fdcd10a1d7764991e29e7e782a569, type: 3}
+  m_Name: KillHeal
+  m_EditorClassIdentifier: Assembly-CSharp::PassiveItemDefinition
+  itemName: "응급 회로"
+  description: "적 처치 시 최대 체력의 [value]를 회복합니다."
+  icon: {fileID: 8010259709166904849, guid: dcecf39974be835498197c8b101b3705, type: 3}
+  effectType: 3
+  targetBlockType: 7
+  bonusValue: 0.01
+  targetWeapon: {fileID: 0}
+  shop:
+    available: 1
+    rarity: 0
+    basePrice: 100
+    selectionWeight: 1
+    pricePerValue: 0
+    useValueTiers: 0
+    valueTiers: []

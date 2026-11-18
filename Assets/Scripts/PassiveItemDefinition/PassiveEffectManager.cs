@@ -75,12 +75,14 @@ public class PassiveEffectManager : MonoBehaviour
         return bonus;
     }
 
-    public float GetPointRewardBonus()
+    public float GetPointRewardBonus() => GetBonus(PassiveEffectType.PointRewardBonus);
+
+    public float GetBonus(PassiveEffectType effectType)
     {
         float bonus = 0f;
         foreach (PassiveItemDefinition passive in acquired)
         {
-            if (passive != null && passive.effectType == PassiveEffectType.PointRewardBonus)
+            if (passive != null && passive.effectType == effectType)
                 bonus += passive.bonusValue;
         }
 

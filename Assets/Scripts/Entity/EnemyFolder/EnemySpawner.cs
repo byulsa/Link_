@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,9 @@ public class EnemySpawner : MonoBehaviour
     [Header("Spawner")]
     [SerializeField] private WaveData currentWave;
     [SerializeField] private int poolLimit = 10;
+    [SerializeField] private AudioSource backgroundMusic;
+    [SerializeField] private BossHealthBar bossHealthBar;
+    [SerializeField] private Animator bossWarning;
 
     [Header("Off-screen Spawn")]
     [SerializeField] private Camera spawnCamera;
@@ -21,6 +25,11 @@ public class EnemySpawner : MonoBehaviour
     private float spawnInterval = 2f;
     private bool waveEnded;
     private bool spawningFinished;
+    private Enemy activeBoss;
+    private AudioSource bossMusicSource;
+    private float musicBaseVolume;
+    private bool pausedBackgroundMusic;
+    private Coroutine bossWarningPlayback;
 
     private class PooledEnemy
     {
@@ -36,12 +45,41 @@ public class EnemySpawner : MonoBehaviour
 
     public void StartWave(WaveData wave, float enemyStatMultiplier = 1f)
     {
+        StopBossMusic();
+        HideBossWarning();
+        if (bossHealthBar != null)
+            bossHealthBar.Hide();
         currentWave = wave;
         statMultiplier = Mathf.Max(1f, enemyStatMultiplier);
         elapsedTime = 0f;
         spawnTimer = 0f;
         waveEnded = false;
         spawningFinished = false;
+        activeBoss = null;
+
+        if (wave.boss != null)
+        {
+            GameObject prefab = wave.boss.enemyPrefab;
+            if (prefab != null && prefab.TryGetComponent<Enemy>(out _))
+            {
+                if (!TryGetSpawnPosition(prefab, out Vector3 position))
+                    position = transform.position + Vector3.right * 5f;
+
+                GameObject bossObject = Instantiate(prefab, position, transform.rotation);
+                activeBoss = bossObject.GetComponent<Enemy>();
+                activeBoss.InitializeForSpawn(wave.boss, statMultiplier, wave.bonusPointsPerKill);
+                bossObject.SetActive(true);
+                if (bossHealthBar != null)
+                    bossHealthBar.Bind(activeBoss);
+                if (bossWarning != null && bossWarning.runtimeAnimatorController != null)
+                    bossWarningPlayback = StartCoroutine(PlayBossWarning());
+                PlayBossMusic(wave.bossMusic);
+            }
+            else
+            {
+                Debug.LogError("[EnemySpawner] Boss enemy prefab is missing or invalid.", this);
+            }
+        }
 
         SetNextSpawnInterval();
     }
@@ -54,11 +92,13 @@ public class EnemySpawner : MonoBehaviour
         elapsedTime += Time.deltaTime;
         spawnTimer += Time.deltaTime;
 
-        if (elapsedTime >= currentWave.maxTime)
-            spawningFinished = true;
+        spawningFinished = currentWave.boss != null
+            ? activeBoss == null || activeBoss.CurrentHealth <= 0f || !activeBoss.gameObject.activeInHierarchy
+            : elapsedTime >= currentWave.maxTime;
 
         if (spawningFinished)
         {
+            StopBossMusic();
             if (!HasActiveEnemies())
                 EndWave();
 
@@ -73,8 +113,132 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    private void PlayBossMusic(AudioClip clip)
+    {
+        if (clip == null)
+            return;
+
+        if (bossMusicSource == null)
+        {
+            bossMusicSource = gameObject.AddComponent<AudioSource>();
+            bossMusicSource.playOnAwake = false;
+            bossMusicSource.loop = true;
+            bossMusicSource.spatialBlend = 0f;
+        }
+
+        if (backgroundMusic != null && backgroundMusic.isPlaying)
+        {
+            pausedBackgroundMusic = true;
+            backgroundMusic.Pause();
+        }
+
+        bossMusicSource.volume = musicBaseVolume * GameAudioSettings.Music;
+        bossMusicSource.outputAudioMixerGroup = backgroundMusic != null ? backgroundMusic.outputAudioMixerGroup : null;
+        bossMusicSource.clip = clip;
+        bossMusicSource.Play();
+    }
+
+    private void StopBossMusic()
+    {
+        if (bossMusicSource != null && bossMusicSource.isPlaying)
+            bossMusicSource.Stop();
+
+        if (pausedBackgroundMusic && backgroundMusic != null)
+            backgroundMusic.UnPause();
+
+        pausedBackgroundMusic = false;
+    }
+
+    private void Awake()
+    {
+        musicBaseVolume = backgroundMusic != null ? backgroundMusic.volume : 0.1f;
+    }
+
+    private void ApplyMusicVolume()
+    {
+        float volume = musicBaseVolume * GameAudioSettings.Music;
+        if (backgroundMusic != null)
+            backgroundMusic.volume = volume;
+        if (bossMusicSource != null)
+            bossMusicSource.volume = volume;
+    }
+
+    private void OnEnable()
+    {
+        GameAudioSettings.MusicChanged += ApplyMusicVolume;
+        ApplyMusicVolume();
+        if (activeBoss != null && activeBoss.CurrentHealth > 0f && currentWave != null)
+            PlayBossMusic(currentWave.bossMusic);
+    }
+
+    private IEnumerator PlayBossWarning()
+    {
+        bossWarning.gameObject.SetActive(true);
+        bossWarning.Rebind();
+        bossWarning.Update(0f);
+        while (bossWarning != null && bossWarning.isActiveAndEnabled)
+        {
+            AnimatorStateInfo state = bossWarning.GetCurrentAnimatorStateInfo(0);
+            if (state.length <= 0f || state.normalizedTime >= 1f)
+                break;
+            yield return null;
+        }
+
+        bossWarningPlayback = null;
+        HideBossWarning();
+    }
+
+    private void HideBossWarning()
+    {
+        if (bossWarningPlayback != null)
+        {
+            StopCoroutine(bossWarningPlayback);
+            bossWarningPlayback = null;
+        }
+        if (bossWarning != null)
+            bossWarning.gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        GameAudioSettings.MusicChanged -= ApplyMusicVolume;
+        StopBossMusic();
+        HideBossWarning();
+    }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    internal void ResetForBossTest()
+    {
+        StopBossMusic();
+        currentWave = null;
+        waveEnded = true;
+
+        foreach (PooledEnemy entry in poolList)
+        {
+            if (entry.Instance != null)
+                entry.Instance.SetActive(false);
+        }
+
+        if (activeBoss != null)
+        {
+            activeBoss.gameObject.SetActive(false);
+            Destroy(activeBoss.gameObject);
+            activeBoss = null;
+        }
+
+        foreach (Projectile projectile in FindObjectsByType<Projectile>())
+        {
+            projectile.gameObject.SetActive(false);
+            Destroy(projectile.gameObject);
+        }
+    }
+#endif
+
     private bool HasActiveEnemies()
     {
+        if (activeBoss != null && activeBoss.gameObject.activeInHierarchy)
+            return true;
+
         foreach (PooledEnemy pooledEnemy in poolList)
         {
             if (pooledEnemy.Instance != null && pooledEnemy.Instance.activeInHierarchy)
@@ -88,6 +252,10 @@ public class EnemySpawner : MonoBehaviour
     {
         if (currentWave.timeLines == null)
             return null;
+
+        // The first timeline supplies reinforcements throughout a boss fight.
+        if (currentWave.boss != null)
+            return currentWave.timeLines.Count > 0 ? currentWave.timeLines[0] : null;
 
         foreach (WaveTimeLineData data in currentWave.timeLines)
         {
@@ -149,6 +317,19 @@ public class EnemySpawner : MonoBehaviour
     private GameObject GetObjectFromPool(EnemyData enemyData, Vector3 spawnPosition)
     {
         poolList.RemoveAll(entry => entry.Instance == null);
+        int wavePoolLimit = currentWave.enemyPoolLimitOverride > 0
+            ? currentWave.enemyPoolLimitOverride
+            : poolLimit;
+
+        if (poolList.Count > wavePoolLimit)
+        {
+            int activeCount = 0;
+            foreach (PooledEnemy entry in poolList)
+            {
+                if (entry.Instance.activeSelf && ++activeCount >= wavePoolLimit)
+                    return null;
+            }
+        }
         for (int i = 0; i < poolList.Count; i++)
         {
             PooledEnemy pooledEnemy = poolList[i];
@@ -158,13 +339,13 @@ public class EnemySpawner : MonoBehaviour
                 Enemy pooledEnemyComp = pooledEnemy.Instance.GetComponent<Enemy>();
 
                 if (pooledEnemyComp != null)
-                    pooledEnemyComp.InitializeForSpawn(enemyData, statMultiplier);
+                    pooledEnemyComp.InitializeForSpawn(enemyData, statMultiplier, currentWave.bonusPointsPerKill);
 
                 return pooledEnemy.Instance;
             }
         }
 
-        if (poolList.Count >= poolLimit)
+        if (poolList.Count >= wavePoolLimit)
         {
             // Inactive enemies of an earlier wave must not block new enemy types.
             int unused = poolList.FindIndex(entry => !entry.Instance.activeSelf);
@@ -182,7 +363,7 @@ public class EnemySpawner : MonoBehaviour
         Enemy enemyComp = newObj.GetComponent<Enemy>();
 
         if (enemyComp != null)
-            enemyComp.InitializeForSpawn(enemyData, statMultiplier);
+            enemyComp.InitializeForSpawn(enemyData, statMultiplier, currentWave.bonusPointsPerKill);
 
         poolList.Add(new PooledEnemy(enemyData.enemyPrefab, newObj));
         return newObj;
@@ -238,6 +419,9 @@ public class EnemySpawner : MonoBehaviour
     {
         waveEnded = true;
         currentWave = null;
+        if (activeBoss != null)
+            Destroy(activeBoss.gameObject);
+        activeBoss = null;
 
         if (WaveManager.Instance != null)
             WaveManager.Instance.OnWaveEnded();

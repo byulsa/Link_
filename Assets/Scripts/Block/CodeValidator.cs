@@ -119,9 +119,7 @@ public class CodeValidator : MonoBehaviour
                 actions.groupTargets.Distinct().Count() != actions.groupTargets.Count) return false;
         }
         else if (actions.blockType != BlockType.SPD && actions.blockType != BlockType.HP) return false;
-        for (int i = 2; i < nodes.Count; i++)
-            if (nodes[i] == null || !IsModifier(nodes[i].blockType)) return false;
-        return true;
+        return HasValidModifiers(nodes, 2);
     }
 
     public static bool IsValidWeaponChain(IReadOnlyList<CodeNode> nodes)
@@ -144,25 +142,22 @@ public class CodeValidator : MonoBehaviour
                 return false;
             }
 
-            for (int i = 2; i < nodes.Count; i++)
-            {
-                if (nodes[i] == null || !IsModifier(nodes[i].blockType))
-                    return false;
-            }
-
-            return true;
+            return HasValidWeaponModifiers(nodes, nodes[1].groupTargets.Any(IsOrbitStat));
         }
 
         if (!IsWeaponAction(nodes[1].blockType))
             return false;
 
-        for (int i = 2; i < nodes.Count; i++)
-        {
-            if (nodes[i] == null || !IsModifier(nodes[i].blockType))
-                return false;
-        }
+        return HasValidWeaponModifiers(nodes, IsOrbitStat(nodes[1].blockType));
+    }
 
-        return true;
+    private static bool IsOrbitStat(BlockType type) => type is BlockType.SPD or BlockType.DST;
+
+    private static bool HasValidWeaponModifiers(IReadOnlyList<CodeNode> nodes, bool allowsOrbit)
+    {
+        bool hasOrbit = nodes.Count > 2 && nodes[2] != null
+            && CodeChainEvaluator.IsOrbitModifier(nodes[2].blockType);
+        return (!hasOrbit || allowsOrbit) && HasValidModifiers(nodes, hasOrbit ? 3 : 2);
     }
 
     // =========================================================
@@ -239,31 +234,42 @@ public class CodeValidator : MonoBehaviour
         // 네 번째 이후 = Modifier
         // -----------------------------------------------------
 
-        for (int i = 3; i < blocks.Count; i++)
+        var nodes = blocks.Select(block => new CodeNode { blockType = block.CodeType }).ToList();
+        return HasValidModifiers(nodes, 3) ? ValidationResult.Success() :
+            new ValidationResult(false, blocks, "DMG 뒤에 연산 블록을 넣고 괄호를 짝지어 닫으세요.");
+    }
+
+    public static bool IsValidDeathChain(IReadOnlyList<CodeNode> nodes)
+    {
+        return nodes.Count == 1 || (nodes[1]?.blockType == BlockType.POINT && HasValidModifiers(nodes, 2));
+    }
+
+    public static bool HasValidModifiers(IReadOnlyList<CodeNode> nodes, int start)
+    {
+        int depth = 0;
+        bool justOpened = false;
+        for (int i = start; i < nodes.Count; i++)
         {
-            BlockType modifierType = blocks[i].CodeType;
-
-            Debug.Log($"[CodeValidator] TOU Modifier 확인: " + $"{modifierType}");
-
-            if (!IsModifier(modifierType))
+            BlockType? type = nodes[i]?.blockType;
+            if (type == BlockType.PARENTHESIS_OPEN)
             {
-                Debug.LogWarning($"[CodeValidator] 잘못된 TOU Modifier: " + $"{modifierType}");
-
-                CodeBlock previousBlock = blocks[i - 1];
-
-                CodeBlock invalidBlock = blocks[i];
-
-                return ValidationResult.Error(
-                    previousBlock,
-                    invalidBlock,
-                    "DMG 다음에는 Modifier만 올 수 있습니다."
-                );
+                depth++;
+                justOpened = true;
+                continue;
             }
+
+            if (type == BlockType.PARENTHESIS_CLOSE)
+            {
+                if (depth == 0 || justOpened)
+                    return false;
+                depth--;
+            }
+            else if (!type.HasValue || !IsModifier(type.Value))
+                return false;
+
+            justOpened = false;
         }
-
-        Debug.Log("[CodeValidator] TOU 체인 검증 성공");
-
-        return ValidationResult.Success();
+        return depth == 0;
     }
 
     // =========================================================
